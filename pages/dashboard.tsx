@@ -32,12 +32,7 @@ export default function Dashboard(props: AppPageProps) {
 
   return (
     <>
-      <Header {...props}>
-        <div className='flex fit' key={"nothing_here"}>
-
-        </div>
-      </Header >
-      <div id="content" className={`${isMD ? 'column' : 'flex'} top center`}
+      <div className={`${isMD ? 'column' : 'flex'} top center`}
         style={{
           backgroundColor: theme.palette.background.paper,
           color: theme.palette.text.primary,

@@ -34,7 +34,6 @@ export interface DraggedEventBlockProps {
 }
 
 export default function useDraggableEventBlock(
-    containerRef: React.RefObject<HTMLElement>,
     standardHeight: number,
     topAdjustmentRef: any | null = null,
     handleUpOnMove: (props: any) => Promise<void>,
@@ -66,11 +65,13 @@ export default function useDraggableEventBlock(
             props.time + Number(computedStyle.marginTop.slice(0, -2)) / standardHeight / 2,
         );
 
+        const adjustedLeft = rectDOM.left - (16 * 2)
+
         const newEventBlock: any = {
             uuid: props.uuid,
             display: 'none',
             top: y,
-            left: rectDOM.left,
+            left: adjustedLeft,
             height: rectDOM.height,
             width: rectDOM.width,
             dragDay: props.date,
@@ -105,8 +106,20 @@ export default function useDraggableEventBlock(
         if (target.dataset.type !== 'emptyEvent') {
             return handleStartDragToMove(e, props);
         }
+        
+        const dayElement = target.parentElement;
+        const dayContainer = dayElement?.parentElement;
+        const totalView = dayContainer?.parentElement;
+        
+        console.log(target);
 
         const rect: DOMRect = target.getBoundingClientRect();
+        const totalViewRect= totalView?.getBoundingClientRect();
+
+        if (!totalViewRect) {
+            return;
+        }
+
         const isClosestToTop = rect.top - e.clientY < e.clientY - rect.bottom;
         setMode(DragMode.DragToCreate)
 
@@ -114,13 +127,14 @@ export default function useDraggableEventBlock(
 
         console.log(topAdjustmentRef);
         // const adjustedTop = (isClosestToTop ? rect.bottom : rect.top) + (topAdjustmentRef ? topAdjustmentRef.current.scrollHeight : window.scrollY);
-        const adjustedTop = (isClosestToTop ? rect.bottom : rect.top);
+        const adjustedTop = (isClosestToTop ? rect.bottom : rect.top) - totalViewRect.top;
+        const adjustedLeft = rect.left - totalViewRect.left;
 
         setBlock({
             uuid: String(uuidv4()),
             display: 'flex',
             top: adjustedTop,
-            left: rect.left,
+            left: adjustedLeft,
             width: rect.width,
             height: rect.height,
             startY: adjustedTop,
@@ -210,33 +224,44 @@ export default function useDraggableEventBlock(
 
         if (mode === DragMode.Moving) return handleMouseMoveOnMoving(e, props);
 
-        let rect: HTMLDivElement = e.target as HTMLDivElement;
+        let target: HTMLDivElement = e.target as HTMLDivElement;
 
-        if (rect.tagName === "SPAN") {
+        if (target.tagName === "SPAN") {
             return;
         }
 
-        while (!rect.classList.contains('event-block') && rect.dataset.type != 'emptyEvent') {
-            if (rect.parentElement === null) {
+        if (target.dataset.type !== 'emptyEvent') {
+            return handleStartDragToMove(e, props);
+        }
+
+        while (!target.classList.contains('event-block') && target.dataset.type != 'emptyEvent') {
+            if (target.parentElement === null) {
                 return;
             }
-            rect = rect.parentElement as HTMLDivElement;
+            target = target.parentElement as HTMLDivElement;
         }
-        const rectDOM: DOMRect = (rect as HTMLDivElement).getBoundingClientRect();
+        const rect: DOMRect = (target as HTMLDivElement).getBoundingClientRect();
+        const dayElement = target.parentElement;
+        const dayContainer = dayElement?.parentElement;
+        const totalView = dayContainer?.parentElement;
+        const totalViewRect= totalView?.getBoundingClientRect();
+
+        if (!totalViewRect) {
+            return;
+        }
+
+        const adjustedTop = rect.bottom - totalViewRect.top;
 
         if (topAdjustmentRef) {
-            const scrollRect = topAdjustmentRef.current.getBoundingClientRect();
-            const relativeY = e.clientY + topAdjustmentRef.current.scrollTop;
 
             setBlock((prev) => {
                 if (!prev) return null;
                 return {
                     ...prev,
-                    height: relativeY - prev.startY,
-                    width: rectDOM.right - prev.left,
+                    height: prev.currY - adjustedTop,
                     dragEndDay: props.date || prev.dragEndDay,
-                    currY: relativeY,
-                    currEnd: prev.dragStart.add((relativeY - prev.startY) / standardHeight / 2),
+                    currY: adjustedTop,
+                    currEnd: prev.dragStart.add((prev.startY) / standardHeight / 2),
                 };
             })
 
@@ -248,7 +273,6 @@ export default function useDraggableEventBlock(
             return {
                 ...prev,
                 height: e.pageY - prev.startY,
-                width: rectDOM.right - prev.left,
                 dragEndDay: props.date || prev.dragEndDay,
                 currY: e.pageY,
                 currEnd: prev.dragStart.add((e.pageY - prev.startY) / standardHeight / 2)
@@ -291,7 +315,7 @@ export default function useDraggableEventBlock(
                         width: block ? block.width : 0,
                         height: block ? block.height : 0,
                         left: block ? block.left : 0,
-                        borderRadius: '0.5rem',
+                        borderRadius: '0.25rem',
                         padding: '0.5rem',
                         color: theme.palette.primary.contrastText,
                     }}

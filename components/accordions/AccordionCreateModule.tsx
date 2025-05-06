@@ -1,7 +1,7 @@
 import { Accordion, AccordionDetails, AccordionSummary, Collapse, IconButton, lighten, Typography, useTheme } from '@mui/material';
 
 import { ExpandMore as ExpandMoreIcon, RemoveOutlined } from '@mui/icons-material';
-import { cloneElement, MouseEvent, ReactNode } from 'react';
+import { cloneElement, JSX, MouseEvent, ReactNode } from 'react';
 
 interface AccordionCreateModuleProps {
   children: any,

@@ -154,23 +154,23 @@ export default class Chronos {
     }
 
     if (hourAndCarry == 0) {
-      return `12:${String(minute).padStart(2, '0')}`;
+      return `12:${String(minute).padStart(2, '0')} ${amp ? `AM` : ""}`;
     }
 
     if (hourAndCarry >= 24) {
-      return `${hourAndCarry - 24}:${String(minute).padStart(2, '0')}${amp ? `AM` : ""}`;
+      return `${hourAndCarry - 24}:${String(minute).padStart(2, '0')} ${amp ? `AM` : ""}`;
     }
 
     if (hourAndCarry > 12) {
       const hourAMP = this.hour - 12 + carry;
-      return `${hourAMP}:${String(minute).padStart(2, '0')}${amp ? `PM` : ""}`;
+      return `${hourAMP}:${String(minute).padStart(2, '0')} ${amp ? `PM` : ""}`;
     }
 
     if (hourAndCarry == 12) {
-      return `${hourAndCarry}:${String(minute).padStart(2, '0')}${amp ? `PM` : ""}`;
+      return `${hourAndCarry}:${String(minute).padStart(2, '0')} ${amp ? `PM` : ""}`;
     }
 
-    return `${hourAndCarry}:${String(minute).padStart(2, '0')}${amp ? `AM` : ""}`;
+    return `${hourAndCarry}:${String(minute).padStart(2, '0')} ${amp ? `AM` : ""}`;
   }
 
   printMinute(): string {
@@ -194,15 +194,15 @@ export default class Chronos {
 
     return `${this.print(false, truncate, true)} - ${other.print(false, truncate, true)}`
 
-    if (this.getHour() === other.getHour()) {
-      return `${this.print(true, truncate, true)} - ${other.print(true, truncate, false)}`
-    }
+    // if (this.getHour() === other.getHour()) {
+    //   return `${this.print(true, truncate, true)} - ${other.print(true, truncate, false)}`
+    // }
 
 
-    if (this.getAMP() === other.getAMP()) {
-      return `${this.print(true, truncate, true)} - ${other.print(true, truncate, false)}`;
-    }
-    return `${this.print(true, truncate, true)} - ${other.print(true, truncate, true)}`
+    // if (this.getAMP() === other.getAMP()) {
+    //   return `${this.print(true, truncate, true)} - ${other.print(true, truncate, false)}`;
+    // }
+    // return `${this.print(true, truncate, true)} - ${other.print(true, truncate, true)}`
   }
 
   getAMP() {

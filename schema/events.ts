@@ -233,9 +233,9 @@ export class Events {
 
   static get = async (source: Member, id: string): Promise<EventData | null> => {
     return await axios
-      .get(API.GET_EVENT, {
+      .get(`/api/v1/events`, {
         params: {
-          event_uuid: id,
+          event_id: id,
           source: MemberFactory.getToken(source),
           isUser: source instanceof Profile
         },
@@ -247,7 +247,10 @@ export class Events {
         return res.data.event;
       })
       .catch(err => {
-        console.log(err);
+        console.log({
+          message: "Events API get",
+          err
+        });
         return null;
       });
   }

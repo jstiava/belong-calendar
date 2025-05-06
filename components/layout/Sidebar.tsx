@@ -1,38 +1,30 @@
 "use client"
 import { UseSession } from "@/lib/global/useSession";
-import { Event, Location, Member, MemberFactory } from "@/schema";
-import { alpha, Collapse, Drawer, Button, IconButton, Popover, TextField, ThemeProvider, ToggleButton, Typography, useMediaQuery, useTheme, ButtonBase, Avatar } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Event, Member } from "@/schema";
+import { Drawer, Button, Typography, useMediaQuery, useTheme, ButtonBase, lighten, Popover } from "@mui/material";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { UseBase } from "@/lib/global/useBase";
 import { useRouter } from "next/router";
-import { AddOutlined, CalendarMonthOutlined, DirectionsWalkOutlined, MoreHoriz, ScheduleOutlined, Search, SortByAlphaOutlined, SortOutlined } from "@mui/icons-material";
-import { TransitionGroup } from 'react-transition-group';
-import { Mode, Type } from "@/types/globals";
+import { AddOutlined, ArrowBackIosOutlined, ArrowForwardIosOutlined, CloseOutlined, HandshakeOutlined, MoreHorizOutlined, SettingsOutlined, SwitchAccountOutlined } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
-import {
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable';
-import ScheduleCalendar from "../calendar/ScheduleCalendar";
-import StyledToggleButtonGroup from "../StyledToggleButtonGroup";
-import useViewEvent from "@/lib/global/useViewEvent";
-import LeftSideBarBaseAccordionModule from "../accordions/LeftSideBarBaseAccordionModule";
-import EventSidebarCard from "../EventSidebarCard";
-import LocationSidebarCard from "../LocationSidebarCard";
 import StyledWeekPicker from "../calendar/WeekPicker";
-import axiosInstance from "@/lib/utils/axios";
-import axios from "@/lib/utils/axios";
+import Divider, { DIVIDER_NO_ALPHA_COLOR } from "../Divider";
+import dayjs from "@/lib/utils/dayjs";
+import ItemStub from "../ItemStub";
+import StyledIconButton from "../StyledIconButton";
+import { isEventCalendar, isMultiDayEvent } from "@/lib/CalendarDays";
+import ColorPaletteSelector from "../accordions/ColorPaletteSelector";
+import { Mode, Type } from "@/types/globals";
+import { IntegrationTemplates } from "@/pages/me/integrations";
+
+export const SIDEBAR_WIDTH = '20rem';
 
 export interface SidebarProps {
   Session: UseSession;
-  Base: UseBase;
-  Module: UseBase;
-  module: Member | null;
+  Base?: UseBase,
+  Module?: UseBase,
+  module?: Member;
+  setModule?: Dispatch<SetStateAction<Member | null>>,
 }
 
 export default function Sidebar({
@@ -40,138 +32,163 @@ export default function Sidebar({
   Base,
   Module,
   module,
+  setModule
 }: SidebarProps) {
 
   const router = useRouter();
   const theme = useTheme();
-
-  const [cache, setCache] = useState<string | null>(null);
-  const [recommendedActions, setRecommendedActions] = useState<any | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
-  const { EventPopover, handleOpenEventPopover } = useViewEvent(
-    Session.base,
-    Base.Events,
-    Base.Creator.startCreator,
-    theme
-  );
-
-  useEffect(() => {
-    if (Session.base && !module) {
-      if (cache && cache === Session.base.id()) {
-        return;
-      }
-      if (Session.base.integration) {
-        axiosInstance.get(`/api/v1/auth/${Session.base.integration}/actions`, {
-          params: {
-            uuid: Session.base.id()
-          }
-        })
-        .then(res => {
-          setRecommendedActions(res.data.actions);
-          setCache(Session.base!.id());
-        })
-        .catch(err => {
-          console.error(err)
-          setRecommendedActions(null);
-        })
-      }
-      else {
-        setRecommendedActions(null);
-      }
-    }
-  }, [Session.base])
-
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-  const open = Boolean(anchorEl);
-  const popover_id = open ? 'simple-popover' : undefined;
-
+  const isBaseViewOpen = Boolean(anchorEl);
 
   const isSm = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const { enqueueSnackbar } = useSnackbar();
+  const Controller = router.asPath.startsWith('/me') ? Session : Base;
 
-  const [isBasesViewOpen, setIsBasesViewOpen] = useState<boolean>(false);
-  const [accountMenuAnchor, setAccountMenuAnchor] = useState<null | HTMLElement>(null);
-  const isAccountMenuOpen = Boolean(accountMenuAnchor);
+  const pushNewView = (tab: string) => {
 
-  const [isPeak, setIsPeak] = useState(false);
+    let theView = undefined;
+    if (['month', 'week', 'day'].some(x => x === tab)) {
+      theView = tab;
+      tab = 'calendar';
+    }
 
-  const handleClick = (event?: React.MouseEvent<HTMLButtonElement>) => {
-    setIsBasesViewOpen(prev => !prev);
+    const theModule = router.query.module;
+    if (router.query.module) {
+      delete router.query.module;
+    }
+    const { base, ...rest } = router.query;
+
+    if (theModule && base) {
+      rest.base = base;
+    }
+
+    const isSession = router.asPath.startsWith('/me');
+
+    router.push({
+      pathname: `${isSession ? `/me/` : `/be/${theModule ? `${String(theModule)}/` : Session.base?.id()}/`}${tab}`,
+      query: { ...rest, view: theView }
+    })
   };
-
-  const [expanded, setExpanded] = useState<boolean>(false);
-  const [eventList, setEventList] = useState<Event[] | null>(null);
-  const [sort, setSort] = useState('all');
-  const [filter, setFilter] = useState('all');
-
-  const handleSortChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newSort: string | null,
-  ) => {
-
-    if (!eventList) {
-      return;
-    }
-
-
-    if (newSort === 'alpha') {
-      const sorted = eventList.sort((a, b) => a.name.localeCompare(b.name));
-      setSort('alpha')
-      return;
-    }
-
-    if (newSort === 'date') {
-      const sorted = eventList.sort((a, b) => {
-        if (!a.date || !b.date) {
-          if (a.date && !b.date) {
-            return -1;
-          }
-          else if (!a.date && b.date) {
-            return 1;
-          }
-          const aStatus = a.isOpenDetailed();
-          const bStatus = b.isOpenDetailed();
-          if (!aStatus || !bStatus) {
-            return 0;
-          }
-          return aStatus.isOpen && !bStatus.isOpen ? -1 : 1;
-        }
-
-        const dateDiff = a.date.diff(b.date, 'day');
-        if (dateDiff != 0) {
-          return dateDiff;
-        }
-
-        if (a.getMin() && b.getMin()) {
-          return a.getMin()!.getHMN() - b.getMin()!.getHMN()
-        }
-        else if (a.getMin()) {
-          return -1;
-        }
-        else if (b.getMin()) {
-          return 1;
-        }
-        return 0;
-      });
-      setSort('date')
-      return;
-    }
-  }
-
-
-  useEffect(() => {
-    setEventList(Base.Events.events);
-  }, [Base.Events.events]);
-
 
   return (
     <>
-      {EventPopover}
+      <Popover
+        anchorEl={anchorEl}
+        open={isBaseViewOpen}
+        // placement='left-start'
+        onClose={(e: any) => {
+          e.stopPropagation();
+          setAnchorEl(null)
+        }}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+      >
+        <div
+          className="column snug"
+          style={{
+            width: "20rem",
+            borderRadius: "0.25rem",
+            padding: '0.25rem',
+            position: 'relative'
+          }}>
+          {Session.base && (
+
+            <div style={{
+              position: 'absolute',
+              top: "0.5rem",
+              right: "0.5rem"
+            }}>
+              <StyledIconButton
+                title="Switch Projects"
+                onClick={() => {
+                  router.push('/me')
+                }}
+              >
+                <SwitchAccountOutlined sx={{
+                  fontSize: "1rem"
+                }} />
+              </StyledIconButton>
+            </div>
+          )}
+
+          {Session.base && (
+
+            <div className="column snug" style={{
+              padding: '0.5rem'
+            }}>
+              <Typography sx={{
+                fontSize: '1rem',
+                fontWeight: 700
+              }}>{Session.base.name}</Typography>
+              <Typography sx={{
+                fontSize: '0.875rem',
+                textTransform: 'capitalize'
+              }}>{Session.base instanceof Event ? Session.base.subtitle || Session.base.type : Session.base.type}</Typography>
+            </div>
+          )}
+          {(Session.base && Session.session) && Session.base.integration && (
+            <ButtonBase
+              onClick={() => {
+                const integration = IntegrationTemplates.find(x => x.slug === Session.base!.integration);
+
+                if (!integration) {
+                  enqueueSnackbar("No integration found", {
+                    variant: "error"
+                  })
+                  return;
+                }
+
+                router.push({
+                  pathname: integration.url,
+                  query: {
+                    ...integration.query,
+                    redirect_uri: 'http://localhost:3000/api/v1/auth/callback',
+                    state: JSON.stringify({
+                      integration: integration.slug,
+                      from: router.asPath,
+                      base: Session.session?.id(),
+                      type: Type.Profile
+                    })
+                  }
+                })
+              }}
+              className="flex compact"
+              sx={{
+                padding: "0.25rem 0.5rem",
+                borderRadius: "0.25rem"
+              }}
+            >
+              <HandshakeOutlined sx={{
+                fontSize: "1rem"
+              }} />
+              <Typography>Renew</Typography>
+            </ButtonBase>
+          )}
+          <ButtonBase
+
+            onClick={() => {
+              pushNewView('settings')
+            }}
+            className="flex compact"
+            sx={{
+              padding: "0.25rem 0.5rem",
+              borderRadius: "0.25rem"
+            }}
+          >
+            <SettingsOutlined sx={{
+              fontSize: "1rem"
+            }} />
+            <Typography>Settings</Typography>
+          </ButtonBase>
+        </div>
+      </Popover>
       <Drawer
         // keepMounted
         hideBackdrop
@@ -188,332 +205,272 @@ export default function Sidebar({
           '& .MuiDrawer-paper': {
             display: 'flex',
             flexDirection: 'column',
-            position: 'absolute',
-            width: isSm ? '100vw' : '20rem',
+            position: 'fixed',
+            width: isSm ? '100%' : SIDEBAR_WIDTH,
             left: 0,
             top: 0,
             height: `calc(100vh - env(safe-area-inset-top));`,
             overflow: "hidden",
             backgroundColor: theme.palette.background.paper,
             color: theme.palette.text.primary,
-            zIndex: 5
+            zIndex: 5,
+            borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
           },
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', height: "calc(100vh-4rem)", overflowY: 'hidden', alignItems: 'flex-start', overflowX: 'hidden', width: '100%' }}>
-
-          <div style={{
-            position: "absolute",
-            bottom: 0,
-            background: `linear-gradient(${alpha(theme.palette.background.paper, 0)}, ${theme.palette.background.paper})`,
-            height: "4rem",
-            width: "100%",
-            zIndex: 6
-          }}></div>
-
-          <LeftSideBarBaseAccordionModule
-            Session={Session}
-            Base={Base}
-            Module={Module}
-            module={module}
-            expanded={expanded}
-            onChange={() => setIsBasesViewOpen(prev => !prev)}
-          />
-
-          <TransitionGroup
-            className="flex top"
-            style={{
-              width: "100%",
-              height: "calc(100% - 6rem)"
-            }}
-          >
-            <Collapse sx={{ width: "100%" }}>
-
-              {!isSm ? (
-                <>
-                  {router.query.event && module ? (
-                    <ThemeProvider theme={Module.theme}>
-                      <div className="column snug" >
-                        {module instanceof Event && module.schedules && module.schedules.length > 0 ? (
-                          <ScheduleCalendar
-                            key={`${(module as Event).version}_${module.id()}`}
-                            item={module as Event}
-                            Calendar={Module.Calendar}
-                            Events={Module.Events}
-                            startCreator={Module.Creator.startCreator}
-                            onSelect={() => {
-                              return;
-                            }}
-                          />
-                        ) : (
-                          <StyledWeekPicker
-                            mode="dark"
-                            Calendar={Module ? Module.Calendar : Session.Calendar}
-                            value={Module.Calendar.frameDate}
-                          />
-                        )}
-                        <div style={{ height: "0.5rem" }}></div>
-                      </div>
-                    </ThemeProvider>
-                  ) : (
-                    <StyledWeekPicker
-                      mode="dark"
-                      Calendar={Base ? Base.Calendar : Session.Calendar}
-                      value={Module.Calendar.frameDate}
-                    />
-                  )}
-                </>
-              ) : (
-                <div style={{ height: "1rem" }}></div>
-              )}
-              <div style={{
-                padding: "0 0.5rem 0.5rem 0.5rem"
-              }}>
-                <TextField
-                  size="small"
-                  sx={{
-                    '& .MuiFilledInput-input': {
-                      padding: "8px 0 8px 8px"
-                    }
-                  }}
-                  placeholder="Search"
-                  variant="filled"
-                  fullWidth
-                  name="Search"
-                  aria-label="Search"
-                  onClick={e => {
-                    e.stopPropagation();
-                  }}
-                  // onChange={async (e) => {
-                  //   if (!e.target.value || e.target.value === "") {
-                  //     handleFilterChange(e, null);
-                  //     return;
-                  //   }
-                  //   // const filteredBySearch = await Base.Events.search({ q: e.target.value, type: Type.Event });
-                  //   setEventList(filteredBySearch);
-                  //   setFilter("search");
-                  // }}
-                  InputProps={{
-                    startAdornment: (
-                      <Search fontSize="small" />
-                    ),
-                    endAdornment: (
-                      <div className="flex snug fit" style={{
-                        position: 'absolute',
-                        right: 0,
-                        height: 'fit-content'
-                      }}>
-                        <Popover
-                          id={popover_id}
-                          open={open}
-                          anchorEl={anchorEl}
-                          onClose={handleClose}
-                          anchorOrigin={{
-                            vertical: 'center',
-                            horizontal: 'right',
-                          }}
-                          transformOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'left',
-                          }}
-                        >
-                          <div style={{ display: 'flex', flexDirection: 'column', width: "17rem", borderRadius: "1rem", overflow: "hidden" }}>
-                            <Typography variant="h6" sx={{
-                              fontSize: "0.75rem",
-                              padding: "0.25rem 0.5rem"
-                            }}>FILTER</Typography>
-                            <StyledToggleButtonGroup value={filter} size='small' isMini={false}>
-                              <ToggleButton
-                                value="all"
-                                onClick={(e) => {
-                                  handleFilterChange(e, null);
-                                  handleClose();
-                                }}
-                              >
-                                All
-                              </ToggleButton>
-                              <ToggleButton
-                                value="events"
-                                onClick={(e) => {
-                                  handleFilterChange(e, 'events')
-                                  handleClose();
-                                }}
-                              >
-                                Events
-                              </ToggleButton>
-                              <ToggleButton
-                                value="scheduled"
-                                onClick={(e) => {
-                                  handleFilterChange(e, 'scheduled');
-                                  handleClose();
-                                }}
-                              >
-                                Scheduled
-                              </ToggleButton>
-                            </StyledToggleButtonGroup>
-                            <Typography variant="h6" sx={{
-                              fontSize: "0.75rem",
-                              padding: "0.25rem 0.5rem"
-                            }}>SORT</Typography>
-                            <StyledToggleButtonGroup value={sort} size='small' isMini={false} sx={{
-                              flexDirection: 'column',
-                              '& .MuiButtonBase-root': {
-                                justifyContent: 'flex-start',
-                                width: "100%"
-                              }
-                            }}
-                            >
-                              <ToggleButton
-                                value="alpha"
-                                onClick={(e) => {
-                                  handleSortChange(e, 'alpha');
-                                  handleClose();
-                                }}
-                              >
-                                <SortByAlphaOutlined fontSize="small" />
-                                Alphabetical
-                              </ToggleButton>
-                              <ToggleButton
-                                value="date"
-                                onClick={(e) => {
-                                  handleSortChange(e, 'date');
-                                  handleClose();
-                                }}
-                              >
-                                <ScheduleOutlined fontSize="small" />
-                                Date & Time
-                              </ToggleButton>
-                            </StyledToggleButtonGroup>
-
-                          </div>
-                        </Popover>
-                        <IconButton
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setAnchorEl(e.currentTarget)
-                          }}
-                        >
-                          <SortOutlined fontSize="small" />
-                        </IconButton>
-                      </div>
-                    )
-                  }}
-                />
-              </div>
-
-
-
-              <div className="column" style={{ padding: "0 0.5rem 8rem 0.5rem", position: "relative", width: "100%", height: isSm ? "calc(100vh - 10rem)" : "calc(100vh - 25rem)", overflowY: "scroll" }}>
-                <div className="column snug" style={{ position: "relative", width: "100%" }}>
-                  {Session.base && eventList && eventList.map((s: Event) => {
-                    return (
-                      <EventSidebarCard
-                        id={s.id()}
-                        key={s.id()}
-                        event={s}
-                        startCreator={Base.Creator.startCreator}
-                        startViewer={handleOpenEventPopover}
-                        base={Session.base!}
-                      />
-                    )
-                  })}
-
-                  {Session.base && Base.Locations.locations && Base.Locations.locations.map((l: Location) => {
-                    return (
-                      <LocationSidebarCard
-                        id={l.id()}
-                        key={l.id()}
-                        location={l}
-                        startCreator={Base.Creator.startCreator}
-                        startViewer={handleOpenEventPopover}
-                        base={Session.base!}
-                      />
-                    )
-                  })}
-                </div>
-              </div>
-            </Collapse>
-
-          </TransitionGroup>
-        </div>
-        <div
-          className="column compact2"
+        <Divider sx={{
+          height: "0.05rem"
+        }} />
+        <div id="sidebar_header"
+          className="flex center between"
           style={{
-            padding: '1rem',
-            position: 'absolute',
-            width: '100%',
-            bottom: 0,
-            left: 0,
-            zIndex: 10
-          }}
-        >
+            height: "3.5rem",
+            borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+            padding: "0 0.5rem 0 1rem"
+          }}>
+          <div className="flex fit" style={{
+            width: 'calc(100% - 2.5rem)',
+          }}>
+            {router.asPath.startsWith('/me') ? (
+              <ItemStub
+                item={Session.session}
+                parent={null}
+                onClick={(e: any) => {
+                  const target = e.currentTarget || e.target;
+                  setAnchorEl(target)
+                }}
+              />
+            ) : (
+              <ItemStub
+                item={module ? module : Session.base ? Session.base : Session.session}
+                parent={module ? Session.base : null}
+                onClick={(e : any) => {
+                  const target = e.currentTarget || e.target;
+                  setAnchorEl(target)
+                }}
+              />
+            )}
+          </div>
+          <StyledIconButton
+            title="Close Sidebar"
+            onClick={() => Session.Preferences.setIsSidebarDocked(prev => !prev)}>
+            {isSm ? (
+              <CloseOutlined sx={{
+                fontSize: "1.25rem"
+              }} />
+            ) : (
+              <ArrowBackIosOutlined sx={{
+                fontSize: "0.875rem"
+              }} />
+            )}
+          </StyledIconButton>
+        </div>
+        <div style={{
+          position: "relative",
+          height: "calc(100% - 3.5rem)",
+          padding: "0.5rem 0"
+        }}>
+          <div className="flex center middle">
+            {router.asPath.startsWith('/me') ? (
+              <StyledWeekPicker
+                mode="dark"
+                Calendar={Session.Calendar}
+                value={Session.Calendar.frameDate}
+              />
+            ) : (
+              <StyledWeekPicker
+                mode="dark"
+                Calendar={module && Module ? Module.Calendar : Session.base && Base ? Base.Calendar : Session.Calendar}
+                value={module && Module ? Module.Calendar.frameDate : Session.base && Base ? Base.Calendar.frameDate : Session.Calendar.frameDate}
+              />
+            )}
+          </div>
+          <div className="column" style={{
+            padding: "1rem"
+          }}>
 
-          {(Session.base && Base.Events) && Session.base.integration && (
-            <div className="column snug">
-              {recommendedActions && recommendedActions.map((action : any) => (
-                <ButtonBase
-                  key={action.id}
+            {module && setModule && (
+              <ButtonBase
+                key={'back'}
+                className="flex left compact"
+                sx={{
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: "0.25rem",
+                }}
+                onClick={() => {
+                  const { base, module, ...rest } = router.query;
+                  setModule(null);
+                  router.push({
+                    pathname: `/be/${Session.base?.id()}`,
+                    query: rest
+                  });
+                }}
+              >
+                <ArrowBackIosOutlined sx={{
+                  fontSize: "0.75rem",
+                  color: `var(--text-color)`
+                }} />
+                <Typography variant="h6" sx={{
+                  fontSize: '0.75rem'
+                }}>Back</Typography>
+              </ButtonBase>
+            )}
+
+            <div className="column compact2">
+
+
+              <div className="flex between center">
+                <Typography variant="h6" sx={{
+                  fontSize: "0.75rem"
+                }}>Calendars</Typography>
+                <StyledIconButton
+
+                  title={"New Calendar"}
                   onClick={() => {
-                    axios.post(`/api/v1/auth/${Session.base!.integration}/actions`, {
-                      source: MemberFactory.getToken(Session.base!),
-                      actions: [action]
-                    })
-                    .then(res => {
-                      router.reload()
-                    })
-                    .catch(err => {
-                      alert("Failed")
-                    })
+                    Controller?.Creator.startCreator(Type.Event, Mode.Create, new Event({
+                      date: null,
+                      start_time: null,
+                      end_time: null,
+                      end_date: null,
+                      schedules: []
+                    }))
                   }}
-                  className="flex between"
-                  sx={{
-                    padding: "0.5rem",
-                    // backgroundColor: theme.palette.primary.light,
-                    borderRadius: "0.25rem"
-                  }}>
-                  <div className="flex compact fit">
-                    <Avatar
+                >
+                  <AddOutlined sx={{
+                    fontSize: "1rem"
+                  }} />
+                </StyledIconButton>
+              </div>
+              <div className="column snug">
+                {Controller && Controller.Events.events?.map((item) => {
+
+                  if (!isEventCalendar(item) && !(isMultiDayEvent(item) && !item.date.isSame(item.end_date))) {
+                    return null;
+                  }
+
+                  return (
+                    <ButtonBase
+                      key={item.id()}
+                      className="column snug"
                       sx={{
-                        width: '1.5rem',
-                        height: '1.5rem',
-                        backgroundColor: theme.palette.primary.contrastText,
-                        color: theme.palette.primary.main,
-                        border: `2.5px dashed ${theme.palette.primary.main}`
+                        padding: module && module.id() === item.id() ? "0.5rem" : "0.25rem 0.5rem",
+                        margin: module && module.id() === item.id() ? '0.5rem 0 !important' : '0',
+                        borderRadius: "0.25rem",
+                        backgroundColor: module && module.id() === item.id() ? item.theme_color ? lighten(item.theme_color, 0.75) : 'transparent' : 'transparent'
+                      }}
+                      onClick={() => {
+                        const pathParts = router.pathname.split('/');
+                        const currentTab = pathParts[3];
+                        const { base, module, ...rest } = router.query;
+                        router.push({
+                          pathname: `/be/${item.id()}${currentTab ? `/${currentTab}` : ``}`,
+                          query: {
+                            ...rest,
+                            base: Session.base?.id()
+                          }
+                        })
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        Base?.Viewer.handleOpenEventPopover(Type.Event, item, {
+                          e,
+                          isRightClick: true
+                        })
                       }}
                     >
-                      <CalendarMonthOutlined sx={{
-                        fontSize: "0.85rem"
-                      }} />
-                    </Avatar>
-                    <Typography>{action.name}</Typography>
-                  </div>
-                  <AddOutlined fontSize="small" />
-                </ButtonBase>
-              ))}
+                      <div className="flex between">
+                        <div className="flex compact fit top" style={{
+                          height: "fit-content",
+                          width: "calc(100% - 3rem)"
+                        }}>
+                          <div style={{
+                            width: '0.75rem',
+                            height: '0.75rem',
+                            backgroundColor: item.theme_color ? item.theme_color : theme.palette.background.paper,
+                            border: `0.05rem solid ${item.theme_color ? item.theme_color : theme.palette.text.primary}`,
+                            borderRadius: "0.25rem"
+                          }}></div>
+                          <Typography variant="h6" sx={{
+                            fontSize: "0.875rem",
+                            textTransform: 'unset',
+                            textAlign: 'left',
+                            lineHeight: '115%',
+                            width: "calc(100% - 3rem)"
+                            
+                          }}>{item.name}</Typography>
+                        </div>
+                        <StyledIconButton
+                          title={"Expand/Collapse"}
+                          onClick={undefined}
+                        >
+                          <ArrowForwardIosOutlined sx={{
+                            fontSize: "0.75rem",
+                            color: `var(--text-color)`,
+                            transform: `rotate(90deg)`
+                          }} />
+                        </StyledIconButton>
+                      </div>
 
-              <ButtonBase className="flex between" sx={{
-                padding: "0.5rem",
-                // backgroundColor: theme.palette.primary.light,
-                borderRadius: "0.25rem"
-              }}>
-                <div className="flex compact fit">
-                  <Typography>See Integrations</Typography>
-                </div>
-                <MoreHoriz fontSize="small" />
-              </ButtonBase>
+                      {module && module.id() === item.id() && (
+                        <div className="flex between bottom" style={{
+                          padding: "0.5rem"
+                        }}>
+                          <Typography variant="h6" sx={{
+                            fontSize: "0.75rem"
+                          }}>{dayjs().format("MMM DD, YYYY")}</Typography>
+                          <Button size="small" variant="contained" sx={{
+                            backgroundColor: module.theme_color,
+                            color: module.theme_color ? theme.palette.getContrastText(module.theme_color) : theme.palette.text.primary,
+                            '&:hover': {
+                              backgroundColor: module.theme_color ? lighten(module.theme_color, 0.25) : theme.palette.background.paper
+                            }
+                          }}>Today</Button>
+                        </div>
+                      )}
+
+                    </ButtonBase>
+                  )
+                })}
+              </div>
             </div>
-          )}
-          <div className="flex between">
+
+            <div className="flex between bottom">
+              <Typography variant="h6" sx={{
+                fontSize: "0.75rem"
+              }}>{dayjs().format("MMM DD, YYYY")}</Typography>
+              <Button size="small" variant="contained">Today</Button>
+            </div>
+
+          </div>
+          <div
+            className="column compact"
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              width: "100%",
+              padding: "1rem"
+            }}>
             <Button
+              onClick={() => {
+                router.push({
+                  pathname: `/be/${Session.base?.id()}/integrations`,
+                  query: { ...router.query, view: undefined }
+                })
+              }}
+              endIcon={<MoreHorizOutlined />}
+              sx={{
+                color: theme.palette.text.primary
+              }}
+              className="flex between"
+            >
+              More Integrations
+            </Button>
+            <Button
+              startIcon={<AddOutlined />}
               fullWidth
               variant="contained"
-              startIcon={<AddOutlined />}
               onClick={() => {
-                if (module) {
-                  return;
-                }
-
-                Base.Creator.startCreator(Type.Event, Mode.Create);
+                Controller?.Creator.startCreator(Type.Event, Mode.Create)
               }}
             >
               New Event

@@ -95,6 +95,7 @@ export default function useComplexFileDrop(presets: ImageStub[] | null, uploads:
 
 
     setUploads(theUploads);
+    setUploadCount(theUploads.length)
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -2,7 +2,6 @@ import { MouseEvent } from 'react';
 import { AllInclusiveOutlined, DateRangeOutlined, DeleteOutline, EditOutlined, LocationOnOutlined, RemoveCircleOutline, ScheduleOutlined, SecurityOutlined, VerifiedOutlined } from "@mui/icons-material";
 import { ButtonBase, Typography, Tooltip, IconButton, Button, Chip, useTheme, CircularProgress } from "@mui/material";
 import { Location, LocationData, Schedule, ScheduleData } from '@/schema';
-import BaseCard from './bases/BaseCard';
 import dayjs from '@/lib/utils/dayjs';
 import DaySchedulePuck from './DaySchedulePuck';
 
@@ -84,7 +83,7 @@ const ScheduleEditCard = ({ item, onClick, onEdit, onRemove }:
                 <div className="flex compact2" style={{
                     padding: "0.25rem 0"
                 }}>
-                    {item.days.map((x, i) => {
+                    {item.days.map((x : any, i : number) => {
 
                         const schedule = new Schedule(item);
 

@@ -9,8 +9,7 @@ import useEvents, { UseEvents } from './useEvents';
 import Fuse from 'fuse.js';
 import axios, { API } from '../utils/axios';
 import useCreator, { UseCreator } from './useCreate';
-import { useTheme } from '@mui/material';
-import useIntegrations, { UseIntegrations } from './useIntegrations';
+import { createTheme, lighten, Theme, useTheme, darken } from '@mui/material';
 import usePreferences, { UsePreferences } from './usePreferences';
 
 type HSV = { h: number; s: number; v: number };
@@ -21,59 +20,58 @@ function hexToHSV(hexrgb: string): HSV {
 
     // Remove '#' if present
     const hex = hexrgb.startsWith("#") ? hexrgb.slice(1) : hexrgb;
-    
+
     // Convert hex values to RGB
     const r = parseInt(hex.slice(0, 2), 16) / 255;
     const g = parseInt(hex.slice(2, 4), 16) / 255;
-  const b = parseInt(hex.slice(4, 6), 16) / 255;
+    const b = parseInt(hex.slice(4, 6), 16) / 255;
 
-  // Calculate HSV
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const delta = max - min;
-  
-  // Hue calculation
-  let h = 0;
-  if (delta !== 0) {
-    switch (max) {
-      case r:
-        h = ((g - b) / delta + (g < b ? 6 : 0)) * 60;
-        break;
-      case g:
-        h = ((b - r) / delta + 2) * 60;
-        break;
-      case b:
-        h = ((r - g) / delta + 4) * 60;
-        break;
+    // Calculate HSV
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const delta = max - min;
+
+    // Hue calculation
+    let h = 0;
+    if (delta !== 0) {
+      switch (max) {
+        case r:
+          h = ((g - b) / delta + (g < b ? 6 : 0)) * 60;
+          break;
+        case g:
+          h = ((b - r) / delta + 2) * 60;
+          break;
+        case b:
+          h = ((r - g) / delta + 4) * 60;
+          break;
+      }
+    }
+
+    // Saturation calculation
+    const s = max === 0 ? 0 : delta / max;
+
+    // Value calculation
+    const v = max;
+
+    return { h: Math.round(h), s: parseFloat(s.toFixed(2)), v: parseFloat(v.toFixed(2)) };
+  }
+  catch (err) {
+    return {
+      h: 255,
+      s: 255,
+      v: 255
     }
   }
-  
-  // Saturation calculation
-  const s = max === 0 ? 0 : delta / max;
-  
-  // Value calculation
-  const v = max;
-  
-  return { h: Math.round(h), s: parseFloat(s.toFixed(2)), v: parseFloat(v.toFixed(2)) };
-}
-catch (err) {
-  return { 
-    h: 255,
-    s: 255,
-    v: 255
-  }
-}
 }
 
 
 export interface UseSession {
+  theme: Theme;
   loading: boolean;
   // Socket: UseSocket;
   Calendar: UseCalendar;
   Events: UseEvents;
   session: Profile | null;
-  handleLeave: (group_uuid?: string) => void;
-  handleJoin: (base: Member) => Promise<void | Error>;
   base: Member | null;
   changeBase: (base: Member | null) => Promise<boolean>;
   bases: Member[] | null;
@@ -84,7 +82,6 @@ export interface UseSession {
   login: (loginCred: any) => void;
   logout: () => void;
   notifications: any[] | null;
-  Integrations: UseIntegrations;
   Preferences: UsePreferences;
   isRightSidebarOpen: boolean;
   setIsRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
@@ -93,23 +90,135 @@ export interface UseSession {
   addNewBase: (newBase: GroupData) => Promise<void>;
   setBase: Dispatch<SetStateAction<Member | null>>;
   Creator: UseCreator;
-  debug : () => any;
+  debug: () => any;
+  reload: () => any;
 }
 
 export default function useSession(): UseSession {
   const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false);
   // const Socket = useSocket();
   const [session, setSession] = useState<Profile | null>(null);
+
   const Calendar = useCalendar();
-  const Events = useEvents(session, Calendar, false, setSession);
+  const Events = useEvents(session, Calendar, false);
   const [base, setBase] = useState<Member | null>(null);
   const [bases, setBases] = useState<Member[] | null>(null);
   const [notifications, setNotifications] = useState([]);
-  const Integrations: UseIntegrations = useIntegrations(session);
   const Preferences: UsePreferences = usePreferences();
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+  const [basesSearch, setBasesSearch] = useState<Fuse<Member> | null>(null)
   const theme = useTheme();
+
+  const reload = () => {
+    setSession(null);
+    setBases(null);
+    verify();
+  }
+
+  const handleSetBases = (newBases: Member[] | null) => {
+
+    if (!newBases) {
+      setBases(newBases);
+      setBasesSearch(null);
+      return;
+    }
+
+    const options = {
+      includeScore: true, // Include score in the result
+      threshold: 0.3,     // Match accuracy (0 = exact, 1 = match everything)
+      keys: ["name", "tagline", "metadata.description", "type", "integration"]
+    };
+    const fuse = new Fuse(newBases, options);
+
+    setBasesSearch(fuse);
+    setBases(newBases);
+  }
+
+  let lightTheme: Theme = {
+    ...theme,
+    palette: {
+      ...theme.palette,
+      mode: 'light',
+      primary: {
+        main: session?.theme_color ? session?.theme_color : "#ffffff",
+        light: session?.theme_color ? lighten(session?.theme_color, 0.9) : "#ffffff",
+        dark: session?.theme_color ? darken(session?.theme_color, 0.1) : "#ffffff",
+        contrastText: session?.theme_color ? theme.palette.getContrastText(session?.theme_color) : "#000000"
+      },
+      secondary: {
+        ...theme.palette.secondary,
+        main: "#000000",
+        contrastText: "#ffffff",
+      }
+    },
+  };
+
+  lightTheme = createTheme(lightTheme, {
+    components: {
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            width: "fit-content",
+            textTransform: "capitalize",
+            padding: "0.25rem 1rem"
+          }
+        }
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            textTransform: 'capitalize',
+            variants: [
+              {
+                props: { variant: "flipped" },
+                style: {
+                  backgroundColor: lightTheme.palette.primary.contrastText,
+                  color: lightTheme.palette.primary.main
+                }
+              },
+              {
+                props: { color: "primary", variant: "contained" },
+                style: {
+                  '&:hover': {
+                    backgroundColor: session?.theme_color ? lighten(session?.theme_color, 0.4) : "#ffffff"
+                  },
+                }
+              },
+              {
+                props: { variant: 'light' },
+                style: {
+                  '&:hover': {
+                    backgroundColor: session?.theme_color ? darken(session?.theme_color, 0.2) : "#ffffff"
+                  },
+                  backgroundColor: session?.theme_color ? darken(session?.theme_color, 0.1) : "#ffffff",
+                  color: "#ffffff"
+                }
+              }
+            ]
+          }
+        },
+      }
+    },
+  });
+
+  let darkTheme: Theme = {
+    ...theme,
+    palette: {
+      ...theme.palette,
+      mode: 'dark',
+      primary: {
+        ...theme.palette.primary,
+        main: session?.theme_color ? session.theme_color : "#ffffff",
+        light: session?.theme_color ? lighten(session?.theme_color, 0.9) : "#ffffff",
+        dark: session?.theme_color ? darken(session?.theme_color, 0.1) : "#ffffff",
+      },
+      secondary: {
+        ...theme.palette.secondary,
+        main: "#000000",
+        contrastText: "#ffffff",
+      },
+    },
+  };
 
   const debug = () => {
     console.log({
@@ -139,9 +248,7 @@ export default function useSession(): UseSession {
   }
 
   const Creator = useCreator(session, {
-    theme, Calendar, Events, Locations: null, loading, add, update
-  }, {
-    theme, Calendar, Events, Locations: null, loading
+    theme, Calendar, Events, add, update
   });
 
   const swap = (newSession: Profile) => {
@@ -157,13 +264,9 @@ export default function useSession(): UseSession {
       source: base ? MemberFactory.getToken(base) : null
     })
       .then(res => {
-        setBases(prev => {
-          if (!prev) return [res.data.newBase];
+        const theNewBase = new Group(res.data.group);
 
-
-          const theNewBase = new Group(res.data.newBase);
-          return [...prev, theNewBase];
-        })
+        handleSetBases(bases ? [...bases, theNewBase] : [theNewBase])
       })
       .catch(err => {
         return;
@@ -177,7 +280,7 @@ export default function useSession(): UseSession {
       .then(() => {
         router.push('/');
         setSession(null);
-        setBases(null);
+        handleSetBases(null);
         return enqueueSnackbar("Signed out", {
           variant: "success"
         })
@@ -185,55 +288,6 @@ export default function useSession(): UseSession {
       .catch(error => {
         console.error(error);
         enqueueSnackbar('Error logging out.', {
-          variant: 'error',
-        });
-      });
-  };
-
-  const handleJoin = async (base: Member) => {
-    await axios.post(API.JOIN_BASE, {
-      group: base.uuid,
-    })
-      .then(res => {
-        const newMembership = MemberFactory.create(base.getType(), res.data.base);
-
-        setBases((prev) => {
-          if (!prev) return [newMembership];
-          return [...prev, newMembership]
-        })
-
-        enqueueSnackbar(`You have joined.`, {
-          variant: 'success',
-        });
-
-        return;
-      })
-      .catch(error => {
-        return enqueueSnackbar(error.response.data.message, {
-          variant: 'error',
-        });
-      });
-  };
-
-  const handleLeave = (group_uuid: string = base!.id()) => {
-
-    if (!bases) return;
-    axios.delete(API.LEAVE_BASE, {
-      params: {
-        group: group_uuid,
-      }
-    })
-      .then(res => {
-        const newBaseList = bases?.filter((base) => base.id() !== group_uuid);
-        setBases(newBaseList);
-        enqueueSnackbar(`You have left.`, {
-          variant: 'success',
-        });
-        return;
-      })
-      .catch(error => {
-        console.log(error);
-        return enqueueSnackbar(error.response.data.message, {
           variant: 'error',
         });
       });
@@ -279,11 +333,11 @@ export default function useSession(): UseSession {
 
         const profile = new Profile(res.data.profile);
         handleSession(profile);
-        const myBases : MemberData[] = res.data.items.map((item : MemberData) => {
+        const myBases: MemberData[] = res.data.items.map((item: MemberData) => {
           return MemberFactory.create(item.type, item);
         });
 
-        const basesSorted = myBases.sort((a, b) => {  
+        const basesSorted = myBases.sort((a, b) => {
           const hsvA = hexToHSV(a.theme_color ? a.theme_color : profile.theme_color);
           const hsvB = hexToHSV(b.theme_color ? b.theme_color : profile.theme_color);
           if (hsvA.h !== hsvB.h) return hsvA.h - hsvB.h;
@@ -291,8 +345,8 @@ export default function useSession(): UseSession {
           return hsvB.v - hsvA.v;
         });
 
-        setBases(basesSorted);
-        router.push('/dashboard');
+        handleSetBases(basesSorted);
+        router.push('/me');
 
       })
       .catch(error => {
@@ -340,7 +394,7 @@ export default function useSession(): UseSession {
 
         if (!bases || bases.length === 0) {
 
-          const myBases : MemberData[] = res.data.items.map((item: MemberData) => {
+          const myBases: MemberData[] = res.data.items.map((item: MemberData) => {
             return MemberFactory.create(item.type, item);
           });
 
@@ -357,11 +411,11 @@ export default function useSession(): UseSession {
               (item: Member) => item.id() === String(target.value),
             );
             pageBase.token = res.data.current_base_token;
-            setBases(myBases);
+            handleSetBases(myBases);
             changeBase(pageBase);
           }
           else {
-            setBases(myBases);
+            handleSetBases(myBases);
             changeBase(null);
           }
           return true;
@@ -377,28 +431,21 @@ export default function useSession(): UseSession {
   };
 
   const search = (query: string) => {
-    if (!bases || !query) {
+    if (!bases || !basesSearch) {
       return bases || [];
     }
-    const options = {
-      includeScore: true, // Include score in the result
-      threshold: 0.3,     // Match accuracy (0 = exact, 1 = match everything)
-      keys: ["name", "tagline"]
-    };
-    const fuse = new Fuse(bases, options);
-    const results = fuse.search(query);
+    const results = basesSearch.search(query);
     return results.map(x => x.item);
   }
 
   return useMemo(() => {
     return {
-      loading,
+      theme: Preferences.mode === "light" ? lightTheme : darkTheme,
+      loading: !session && Events.loading,
       // Socket,
       Calendar,
       Events,
       session,
-      handleLeave,
-      handleJoin,
       base,
       changeBase,
       bases,
@@ -406,7 +453,6 @@ export default function useSession(): UseSession {
       login,
       logout,
       notifications,
-      Integrations,
       Preferences,
       isRightSidebarOpen,
       setIsRightSidebarOpen,
@@ -415,10 +461,11 @@ export default function useSession(): UseSession {
       addNewBase,
       setBase,
       Creator,
-      debug
+      debug,
+      reload
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, session, base, Calendar, Preferences, Integrations, isRightSidebarOpen]);
+  }, [session, base, Calendar, Events, Preferences, isRightSidebarOpen, lightTheme, darkTheme]);
 }
 
 

@@ -54,6 +54,8 @@ const Now = ({ standardHeight, startCreator }: { standardHeight: number, startCr
 
     setInterval(update, 10000);
     update();
+
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -262,7 +264,7 @@ function DayView({
           continue;
         }
         if (!item.date.isSame(date, 'd') && index != 0) {
-          startOffset.push(null);
+          // startOffset.push(null);
           continue;
         }
         if (index === 0) {
@@ -278,7 +280,7 @@ function DayView({
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calendarDay, nextCalendarDay])
+  }, [calendarDay, calendarDay?.version, nextCalendarDay, nextCalendarDay?.version])
 
   if (!calendarDayRendered || !handleCreate) {
     return <></>
@@ -311,7 +313,6 @@ function DayView({
       </Popover>
       <div
         style={{
-          position: 'relative',
           userSelect: 'none',
           margin: 0,
           borderRight: `1px solid ${theme.palette.divider}`,
@@ -320,9 +321,6 @@ function DayView({
         }}
         ref={calDayRef}
       >
-
-
-        <div style={{ height: "5rem" }}></div>
 
         <div style={{ position: 'relative' }}>
           {source instanceof Event && (!source.start_time && !source.date) && (
@@ -526,21 +524,26 @@ function DayView({
                         )
                       }
 
-                      return (
-                        <CalendarEventBox
-                          key={`${event.id()}`}
-                          column={index}
-                          referenceTime={6}
-                          event={event}
-                          standardHeight={standardHeight}
-                          handleView={handleView}
-                          handleCreate={handleCreate}
-                          handleSelect={handleSelect}
-                          handleDragStart={handleDragStart}
-                          isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
-                          swap={swap}
-                        />
-                      )
+
+                      if (isSingleTimeEvent(event)) {
+                        return (
+                          <CalendarEventBox
+                            key={`${event.id()}`}
+                            column={index}
+                            referenceTime={6}
+                            event={event}
+                            standardHeight={standardHeight}
+                            handleView={handleView}
+                            handleCreate={handleCreate}
+                            handleSelect={handleSelect}
+                            handleDragStart={handleDragStart}
+                            isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                            swap={swap}
+                          />
+                        )
+                      }
+
+                      return <Fragment key={index}></Fragment>
                     }
                     else {
                       return <Fragment key={index}></Fragment>
@@ -587,7 +590,6 @@ function DayView({
 
         </div>
 
-        <div style={{ height: "10rem" }}></div>
       </div >
     </>
   );

@@ -72,6 +72,10 @@ export default function useIAM(item: Member | null, isDownstream: boolean = true
       return;
     }
 
+    if (!item.id()) {
+      return;
+    }
+
     if (cache.id === item.id() && cache.isDownstream === isDownstream) {
       return;
     }
@@ -170,7 +174,7 @@ export default function useIAM(item: Member | null, isDownstream: boolean = true
           if (!prev) {
             return [newGroup]
           }
-          const filtered = prev.filter(x => x.uuid != item_id);
+          const filtered = prev.filter((x : any) => x.uuid != item_id);
           return [...filtered, newGroup]
         })
         return;

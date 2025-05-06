@@ -1,38 +1,20 @@
-import { AccessTime, AddOutlined, AppsOutlined, CalendarMonthOutlined, CalendarTodayOutlined, CalendarViewDay, Lock, PunchClockOutlined, ScheduleOutlined, TimerOutlined, TodayOutlined, WeekendOutlined } from '@mui/icons-material';
+import { AppsOutlined, CalendarTodayOutlined, CancelOutlined, ScheduleOutlined } from '@mui/icons-material';
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Button,
   ButtonBase,
-  Checkbox,
-  Chip,
-  FormControl,
-  FormControlLabel,
-  IconButton,
-  InputLabel,
-  MenuItem,
   Popover,
-  Select,
-  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material';
-import { DateCalendar, DatePicker, PickersActionBar, TimePicker, TimePickerProps, renderTimeViewClock } from '@mui/x-date-pickers';
-import { Dayjs } from 'dayjs';
-import AccordionCreateModule, {
-  AccordionSummaryCreateModule,
-  AccordionDetailsCreateModule,
-} from '@/components/accordions/AccordionCreateModule';
 import dayjs from '@/lib/utils/dayjs';
-import { EventData, Events, Events as EventsService, Schedule } from '@/schema';
+import { EventData, Events, Schedule } from '@/schema';
 import Chronos from '@/lib/utils/chronos';
 import { CreatorPanelProps } from '@/lib/global/useCreate';
-import RangePicker from '../calendar/RangePicker';
 import StyledDatePicker from '../StyledDatePicker';
 import StyledTimePicker from '../TimePicker';
 import { useState } from 'react';
 import HoursMinimap from '../HoursMinimap';
+import StyledIconButton from '../StyledIconButton';
 
 
 
@@ -57,12 +39,48 @@ export default function DateTimeAccordionModule({
 }: DateTimeAccordionModuleProps) {
   const theme = useTheme();
 
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const isScheduleOpen = Boolean(anchorEl);
   const [schedule, setSchedule] = useState<Schedule | null>(new Schedule());
 
+  const isTimeless = item ? !item.start_time && !item.date && !item.end_date && !item.end_time : true;
+
   if (!item) {
     return <></>
+  }
+
+  if (item.schedules && item.schedules.length > 0) {
+    return (
+      <div className="flex between top">
+        <div className="column left" style={{
+          width: "25rem",
+        }}>
+          <HoursMinimap
+            mode="dark"
+            schedule={new Schedule(item.schedules[0])}
+            onChange={(newSch) => setSchedule(newSch)}
+          />
+        </div>
+        <div className="flex fit">
+          <StyledIconButton
+            title="Remove Scheduling"
+            onClick={() => {
+              handleMultiChange({
+                date: dayjs(),
+                start_time: null,
+                end_time: null,
+                end_date: null,
+                schedules: null
+              })
+            }}
+          >
+            <CancelOutlined sx={{
+              fontSize: "1.25rem"
+            }} />
+          </StyledIconButton>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -71,174 +89,200 @@ export default function DateTimeAccordionModule({
     }}>
 
       <div className="flex left top">
-        <div className="column left compact fit">
-          <div className="flex compact fit">
-            <StyledDatePicker
-              value={item.date ? dayjs(String(item.date)) : dayjs()}
-              onChange={(date) => handleChange("date", date)}
-              mode={item.theme_color ? theme.palette.getContrastText(item.theme_color) == "#fff" ? 'light' : 'dark' : 'dark'}
-              label={'Date'}
-              key="event_startDate"
-              sx={{
-                width: '11rem'
-              }}
-            />
-
-            {item.end_date ? (
-              <StyledDatePicker
-                value={item.end_date ? dayjs(String(item.end_date)) : dayjs()}
-                onChange={(date) => handleChange("end_date", date)}
-                mode={item.theme_color ? theme.palette.getContrastText(item.theme_color) == "#fff" ? 'light' : 'dark' : 'dark'}
-                label={'Date'}
-                key="event_endDate"
-                sx={{
-                  width: '11rem'
-                }}
-              />
-            ) : (
+        <div className="column left compact" style={{
+          width: "100%"
+        }}>
+          {!(isTimeless) && (
+            <div className="flex between">
               <div className="flex compact fit">
-                <StyledTimePicker
-                  // debug
-                  format='h:mm A'
-                  mode={item.theme_color ? theme.palette.getContrastText(item.theme_color) === '#fff' ? 'light' : 'dark' : 'dark'}
-                  label={'Start'}
-                  value={item.start_time ? Events.dayjs(item.date || dayjs().yyyymmdd(), new Chronos(Number(item.start_time))) : null}
-                  onChange={(date) => {
-                    const value = date?.toLocalChronos().getHMN();
-                    if (!value) {
-                      return;
-                    }
+                <StyledDatePicker
+                  value={item.date ? dayjs(String(item.date)) : null}
+                  onChange={(date) => handleChange("date", date)}
+                  mode={'dark'}
+                  label={'Date'}
+                  key="event_startDate"
+                  sx={{
+                    width: '11rem'
+                  }}
+                />
 
-                    if (!item.end_time) {
-                      handleMultiChange({
-                        start_time: value,
-                        end_time: value + 1
-                      });
-                      return;
-                    }
-                    handleChange("start_time", value)
-                  }}
-                  sx={{
-                    width: "7.5rem"
-                  }}
-                />
-                <div className="column snug fit center" style={{
-                  position: 'relative',
-                  width: "2rem"
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    width: "3rem",
-                    height: "2px",
-                    backgroundColor: 'var(--text-color)',
-                    opacity: 0.75,
-                    top: "1rem",
-                    left: "-0.5rem",
-                  }}></div>
-                  <IconButton sx={{
-                    color: `var(--text-color)`,
-                    backgroundColor: `var(--bg-color)`,
-                    '&:hover': {
-                      backgroundColor: `var(--bg-color)`
-                    }
-                  }} >
-                    <Lock
+                {item.end_date ? (
+                  <StyledDatePicker
+                    value={item.end_date ? dayjs(String(item.end_date)) : null}
+                    onChange={(date) => handleChange("end_date", date)}
+                    mode={'dark'}
+                    label={'Date'}
+                    key="event_endDate"
+                    sx={{
+                      width: '11rem'
+                    }}
+                  />
+                ) : (
+                  <div className="flex compact fit">
+                    <StyledTimePicker
+                      // debug
+                      format='h:mm A'
+                      mode={'dark'}
+                      label={'Start'}
+                      value={item.start_time ? Events.dayjs(item.date || dayjs().yyyymmdd(), new Chronos(Number(item.start_time))) : null}
+                      onChange={(date) => {
+                        const value = date?.toLocalChronos().getHMN();
+                        if (!value) {
+                          return;
+                        }
+
+                        if (!item.end_time) {
+                          handleMultiChange({
+                            start_time: value,
+                            end_time: value + 1
+                          });
+                          return;
+                        }
+                        handleChange("start_time", value)
+                      }}
                       sx={{
-                        fontSize: "0.9rem",
-                      }} />
-                  </IconButton>
-                  <Typography variant="caption" sx={{
-                    marginTop: "-0.5rem",
-                    zIndex: 1,
-                    width: "fit-content",
-                    textAlign: 'center',
-                    whiteSpace: "nowrap"
-                  }}>{item.start_time && item.end_time ?
-                    Events.dayjs(
-                      Number(item.end_time) < Number(item.start_time) ? Number(item.date || dayjs().yyyymmdd()) + 1 : item.date || dayjs().yyyymmdd(),
-                      new Chronos(Number(item.end_time))
-                    )
-                      .duration(
-                        Events.dayjs(item.date || dayjs().yyyymmdd(), new Chronos(Number(item.start_time), true))
-                      ) : ""}
-                  </Typography>
-                </div>
-                <StyledTimePicker
-                  // debug
-                  format='h:mm A'
-                  mode={item.theme_color ? theme.palette.getContrastText(item.theme_color) === '#fff' ? 'light' : 'dark' : 'dark'}
-                  label={'End'}
-                  value={item.end_time ? Events.dayjs(Number(item.end_time) < Number(item.start_time) ? Number(item.date) + 1 : item.date || dayjs().yyyymmdd(), new Chronos(Number(item.end_time))) : null}
-                  onChange={(date) => handleChange("end_time", date?.toLocalChronos().getHMN())}
-                  sx={{
-                    width: "7.5rem"
-                  }}
-                // shouldDisableTime={shouldDisableTime}
-                />
+                        width: "7.5rem"
+                      }}
+                    />
+
+                    <StyledTimePicker
+                      // debug
+                      format='h:mm A'
+                      mode={'dark'}
+                      label={'End'}
+                      value={item.end_time ? Events.dayjs(Number(item.end_time) < Number(item.start_time) ? Number(item.date) + 1 : item.date || dayjs().yyyymmdd(), new Chronos(Number(item.end_time))) : null}
+                      onChange={(date) => handleChange("end_time", date?.toLocalChronos().getHMN())}
+                      sx={{
+                        width: "7.5rem"
+                      }}
+                    // shouldDisableTime={shouldDisableTime}
+                    />
+                  </div>
+
+                )}
               </div>
-            )}
-          </div>
-          <div className="flex compact2">
-            <ButtonBase key="add_schedule" className="flex middle compact fit" sx={{
+              <div className="flex fit">
+                <StyledIconButton
+                  title="Remove Date/Time"
+                  onClick={() => {
+                    handleMultiChange({
+                      date: null,
+                      start_time: null,
+                      end_time: null,
+                      end_date: null
+                    })
+                  }}
+                >
+                  <CancelOutlined sx={{
+                    fontSize: "1.25rem"
+                  }} />
+                </StyledIconButton>
+              </div>
+            </div>
+          )}
+          {isTimeless ? (
+            <ButtonBase disableRipple key="add_date_time" className="flex middle compact fit" sx={{
               padding: "0.5rem 0.75rem",
-               borderRadius: "0.25rem"
+              borderRadius: "0.25rem"
             }}>
-              <AppsOutlined sx={{
-                color: 'var(--text-color)'
+              <ScheduleOutlined sx={{
+                fontSize: "1rem"
               }} />
               <div className="flex snug fit"
                 onClick={(e) => {
-                  const target = e.currentTarget || e.target;
-                  setAnchorEl(target)
+                  handleMultiChange({
+                    date: dayjs(),
+                    start_time: null,
+                    end_time: null
+                  })
                 }}
               >
                 <Typography sx={{
                   whiteSpace: "no-wrap",
-                  width: 'fit-content'
-                }}>Build Schedule</Typography>
+                  fontSize: "1rem",
+                  textTransform: 'capitalize',
+                  fontWeight: 600
+                }}>Add Date/Time</Typography>
               </div>
             </ButtonBase>
-            {item.end_date ? (
-              <ButtonBase key="add_time" className="flex middle compact fit" sx={{
+          ) : (
+            <div className="flex compact2">
+              <ButtonBase disableRipple key="add_schedule" className="flex middle compact fit" sx={{
                 padding: "0.5rem 0.75rem",
                 borderRadius: "0.25rem"
               }}>
-                <ScheduleOutlined />
+                <AppsOutlined sx={{
+                  color: 'var(--text-color)',
+                  fontSize: "1rem"
+                }} />
                 <div className="flex snug fit"
                   onClick={(e) => {
-                    handleMultiChange({
-                      end_date: null,
-                    })
+                    const target = e.currentTarget || e.target;
+                    setAnchorEl(target)
                   }}
                 >
                   <Typography sx={{
                     whiteSpace: "no-wrap",
-                    width: 'fit-content'
-                  }}>Add Time</Typography>
+                    width: 'fit-content',
+                    fontSize: "1rem",
+                    textTransform: 'capitalize',
+                    fontWeight: 600
+                  }}>Build Schedule</Typography>
                 </div>
               </ButtonBase>
-            ) : (
-              <ButtonBase key="all_day" className="flex middle compact fit" sx={{
-                padding: "0.5rem 0.75rem",
-                 borderRadius: "0.25rem"
-              }}>
-                <CalendarTodayOutlined />
-                <div className="flex snug fit"
-                  onClick={(e) => {
-                    handleMultiChange({
-                      end_date: item.date,
-                      start_time: null,
-                      end_time: null
-                    })
-                  }}
-                >
-                  <Typography sx={{
-                    whiteSpace: "no-wrap"
-                  }}>All Day</Typography>
-                </div>
-              </ButtonBase>
-            )}
-          </div>
+              {item.end_date ? (
+                <ButtonBase disableRipple key="add_time" className="flex middle compact fit" sx={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "0.25rem"
+                }}>
+                  <ScheduleOutlined sx={{
+                    fontSize: "1rem"
+                  }} />
+                  <div className="flex snug fit"
+                    onClick={(e) => {
+                      handleMultiChange({
+                        end_date: null,
+                      })
+                    }}
+                  >
+                    <Typography sx={{
+                      whiteSpace: "no-wrap",
+                      width: 'fit-content',
+                      fontSize: "1rem",
+                      textTransform: 'capitalize',
+                      fontWeight: 600
+                    }}>Add Time</Typography>
+                  </div>
+                </ButtonBase>
+              ) : (
+                <ButtonBase disableRipple key="all_day" className="flex middle compact fit" sx={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "0.25rem"
+                }}>
+                  <CalendarTodayOutlined sx={{
+                    fontSize: "1rem"
+                  }} />
+                  <div className="flex snug fit"
+                    onClick={(e) => {
+                      handleMultiChange({
+                        end_date: item.date,
+                        start_time: null,
+                        end_time: null
+                      })
+                    }}
+                  >
+                    <Typography sx={{
+                      whiteSpace: "no-wrap",
+                      fontSize: "1rem",
+                      textTransform: 'capitalize',
+                      fontWeight: 600
+                    }}>All Day</Typography>
+                  </div>
+                </ButtonBase>
+              )}
+
+            </div>
+          )}
         </div>
 
         <Popover
@@ -258,19 +302,30 @@ export default function DateTimeAccordionModule({
             horizontal: 'left',
           }}
         >
-          <div style={{
-            width: "29rem",
-            padding: '1rem 2rem'
-          }}>
+          <div
+            className='column compact'
+            style={{
+              width: "29rem",
+              padding: '1rem 2rem'
+            }}>
             {schedule && (
               <HoursMinimap
                 mode="dark"
                 schedule={schedule}
-                start_date={item.date ? dayjs(item.date) : null}
-                end_date={item.end_date ? dayjs(item.end_date) : null}
                 onChange={(newSch) => setSchedule(newSch)}
               />
             )}
+            <div className="flex right">
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setAnchorEl(null);
+                  handleMultiChange({
+                    schedules: [schedule]
+                  })
+                }}
+              >Save</Button>
+            </div>
           </div>
         </Popover>
       </div>

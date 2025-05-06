@@ -150,6 +150,11 @@ export const ScheduleBlock = ({
   const handleRightClick = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!handleView) {
+      return;
+    }
+    
     handleView(Type.Event, event, {
       e,
       isRightClick: true,

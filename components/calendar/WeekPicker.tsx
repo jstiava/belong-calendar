@@ -64,7 +64,12 @@ export function CustomCalendarHeader(props: CustomCalendarHeaderProps) {
               }} />
             </IconButton>
           </div>
-          <Button variant="invert" size="small" onClick={() => props.Calendar.gotoToday()} disabled={props.Calendar.isTodayPresent()}>Today</Button>
+          <Button variant="contained" size="small" onClick={() => props.Calendar.gotoToday()} disabled={props.Calendar.isTodayPresent()}
+            sx={{
+              padding: "0.2rem 0rem",
+              fontSize: "0.875rem"
+            }}
+            >Today</Button>
         </div>
       </CustomCalendarHeaderRoot>
     );

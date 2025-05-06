@@ -1,49 +1,24 @@
 
 import {
-  AccessTime,
-  Add,
-  AddLocation,
-  AddLocationOutlined,
-  ChevronRightOutlined,
-  ExpandMore as ExpandMoreIcon,
-  ForkRight,
-  Forward,
-  ForwardOutlined,
-  LocationOnOutlined,
-  OpenInNew,
   PaletteOutlined,
-  RemoveCircleOutline,
-  RemoveOutlined,
-  SearchOutlined,
-  ShareOutlined,
-  VerifiedOutlined,
-  WarningAmberOutlined,
 } from '@mui/icons-material';
-import { v4 as uuidv4 } from "uuid";
 import {
-  AccordionDetails,
   Button,
   Tooltip,
-  Typography,
   useTheme,
-  lighten,
   IconButton,
-  ButtonBase,
   Modal,
   TextField,
 } from '@mui/material';
-import { ChangeEvent, Dispatch, MouseEvent, SetStateAction, useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 
-import { Location, Reservation, EventData } from '@/schema';
-import { Type, Mode, adjustForContrast } from '@/types/globals';
-import { StartCreator } from '@/lib/global/useCreate';
-import { Dayjs } from 'dayjs';
-import { UseLocations } from '@/lib/global/useLocations';
-import { LocationSearchCard } from './LocationAccordionModule';
+import { adjustForContrast } from '@/types/globals';
 import { HexColorPicker } from 'react-colorful';
 
 interface ColorPaletteSelectorProps {
   item: any;
+  size?: string;
+  fontSize?: string;
   handleChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string, newValue : any) => any;
 }
 
@@ -55,6 +30,8 @@ const ensureSingleHashtag = (value: string): `#${string}` => {
 export default function ColorPaletteSelector({
   item,
   handleChange,
+  size = "2.25rem",
+  fontSize = "1rem",
   ...props
 }: ColorPaletteSelectorProps) {
   const theme = useTheme();
@@ -70,8 +47,8 @@ export default function ColorPaletteSelector({
     <>
       <Tooltip title="Color">
         <IconButton onClick={() => setOpen(true)} sx={{
-          width: "2.25rem",
-          height: "2.25rem",
+          width: size,
+          height: size,
           borderRadius: "100vh",
           border: `2px solid ${theme.palette.getContrastText(item.theme_color || theme.palette.divider)}`,
           color: theme.palette.getContrastText(item.theme_color || theme.palette.divider),
@@ -80,7 +57,9 @@ export default function ColorPaletteSelector({
             backgroundColor: `${adjustForContrast(item.theme_color || theme.palette.divider, 0.25)}`,
           }
         }}>
-          <PaletteOutlined fontSize="small" />
+          <PaletteOutlined sx={{
+            fontSize: fontSize
+          }} />
         </IconButton>
       </Tooltip>
       <Modal

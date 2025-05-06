@@ -1,27 +1,26 @@
-import { Expand, OpenInFull, LocationOnOutlined, VerifiedOutlined, EditOutlined, AddOutlined, BugReportOutlined, DeleteOutline, HideImageOutlined } from '@mui/icons-material';
-import { useTheme, ButtonBase, Zoom, Fab, Typography, Popover, Tabs, Tab, Button, getContrastRatio, darken, Slider, SliderValueLabelProps, Tooltip } from '@mui/material';
+import { useTheme, ButtonBase, Typography, Slider, SliderValueLabelProps, Tooltip } from '@mui/material';
 import { MouseEvent, useState, useRef, useEffect } from 'react';
-import Chronos from '@/lib/utils/chronos';
-import { Event, Events, JunctionStatus, Member } from '@/schema';
-import { Type, Mode } from '@/types/globals';
+import { Event, JunctionStatus, Member } from '@/schema';
+import { Type } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
-import { BackgroundImageGallery } from '../Image';
-import { MEDIA_BASE_URI } from '@/lib/useComplexFileDrop';
-import { backgroundPosition } from 'html2canvas/dist/types/css/property-descriptors/background-position';
 
 
 function ValueLabelComponent(props: SliderValueLabelProps) {
   const { children, value } = props;
   const theme = useTheme();
 
+  if (!value) {
+    return null;
+  }
+
   return (
     <Tooltip
       enterTouchDelay={0}
       placement="top"
       arrow
-      title={`${(value).toFixed(2)}%`}
+      title={`${Number(value).toFixed(2)}%`}
     >
       {children}
     </Tooltip>
@@ -227,7 +226,7 @@ const AllDayEventQuickCard = ({
                       backgroundColor: theme.palette.divider,
                     },
                     ...theme.applyStyles('dark', {
-                      color: event.theme_color,
+                      color: event.theme_color || theme.palette.text.primary,
                     }),
                   }}
                 />

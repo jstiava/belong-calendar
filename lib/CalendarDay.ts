@@ -19,11 +19,13 @@ export default class CalendarDay {
   }
 
   add(event: Event) {
+    this.version += 1;
     this.count += 1;
     this.events.push(event);
   }
 
   remove(uuid: string): Event | null {
+    this.version += 1;
     try {
       this.count = this.count - 1;
       const theEvent = this.find(uuid);

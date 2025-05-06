@@ -1,16 +1,20 @@
 import { MEDIA_BASE_URI } from "@/lib/useComplexFileDrop"
 import { Event, Group, Member, Profile } from "@/schema"
-import { CalendarMonthOutlined, WorkspacesOutlined, LocationOnOutlined, PersonOutline } from "@mui/icons-material";
-import { Avatar, AvatarGroup, CircularProgress, Skeleton, Typography, useTheme } from "@mui/material"
+import { CalendarMonthOutlined, WorkspacesOutlined, LocationOnOutlined, PersonOutline, Google } from "@mui/icons-material";
+import { Avatar, AvatarGroup, ButtonBase, CircularProgress, Skeleton, Typography, useTheme } from "@mui/material"
+import ResolveItemIcon from "./ResolveItemIcon";
+import { Type } from "@/types/globals";
 
 
 
 export default function ItemStub({
     item,
-    parent
+    parent,
+    onClick
 }: {
     item: Member | null,
-    parent?: Member | null
+    parent?: Member | null,
+    onClick?: any
 }) {
 
     const theme = useTheme();
@@ -32,34 +36,36 @@ export default function ItemStub({
     }
 
     return (
-        <div className="flex compact">
+        <ButtonBase className="flex compact top"
+            onClick={e => {
+                if (onClick) {
+                    onClick(e);
+                }
+            }}
+        >
             <AvatarGroup spacing="medium" sx={{
-                marginRight: !parent ? "0.5rem !important" : "-0.75rem !important"
+                marginRight: !parent ? "0.5rem !important" : "-0.25rem !important"
             }}>
                 {parent && (
                     <Avatar
-                        alt={item.name}
-                        src={`${MEDIA_BASE_URI}/${item.getIconPath()}`}
+                        alt={parent.name}
+                        src={`${MEDIA_BASE_URI}/${parent.getIconPath()}`}
                         sx={{
                             transform: "translate(-0.25rem, -0.4rem)",
                             width: "1rem",
                             height: "1rem",
-                            border: `0.15rem solid ${item.theme_color || 'transparent'} !important`,
-                            backgroundColor: theme.palette.background.paper
+                            border: `0.15rem solid ${parent.theme_color || 'transparent'} !important`,
+                            backgroundColor: parent.theme_color,
+                            color: parent.theme_color ? theme.palette.getContrastText(parent.theme_color) : theme.palette.text.primary
                         }}
                     >
-                        {item instanceof Event && <CalendarMonthOutlined fontSize="small" />}
-                        {item instanceof Group && <WorkspacesOutlined sx={{
-                            fontSize: "0.75rem",
-                            color: item.theme_color
-                        }} />}
-                        {item instanceof Location && <LocationOnOutlined sx={{
-                            fontSize: "0.875rem"
-                        }} />}
-                        {item instanceof Profile && <PersonOutline sx={{
-                            fontSize: "0.75rem",
-                            color: item.theme_color
-                        }} />}
+                        <ResolveItemIcon
+                            item={parent}
+                            sx={{
+                                fontSize: "0.75rem",
+                                color: parent.theme_color ? theme.palette.getContrastText(parent.theme_color) : theme.palette.text.primary
+                            }}
+                        />
                     </Avatar>
                 )}
                 <Avatar
@@ -72,48 +78,46 @@ export default function ItemStub({
                         backgroundColor: item.theme_color
                     }}
                 >
-                    {item instanceof Event && <CalendarMonthOutlined fontSize="small" />}
-                    {item instanceof Group && <WorkspacesOutlined sx={{
-                        fontSize: "0.75rem",
-                        color: 'var(--text-color)'
-                    }} />}
-                    {item instanceof Location && <LocationOnOutlined sx={{
-                        fontSize: "0.875rem",
-                        color: 'var(--text-color)'
-                    }} />}
-                    {item instanceof Profile && <PersonOutline sx={{
-                        fontSize: "1rem",
-                        color: 'var(--text-color)'
-                    }} />}
+                    <ResolveItemIcon
+                        item={item}
+                        sx={{
+                            fontSize: "1rem",
+                            color: item.theme_color ? theme.palette.getContrastText(item.theme_color) : theme.palette.text.primary
+                        }}
+                    />
                 </Avatar>
             </AvatarGroup>
-            <div className="column snug">
+            <div className="column snug" 
+             style={{
+                overflow: "hidden"
+            }}
+            >
                 <Typography sx={{
                     fontWeight: 700,
                     letterSpacing: 0,
                     fontSize: "0.85rem",
-                    lineHeight: "125%"
+                    lineHeight: "125%",
+                    textAlign: 'left',
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    width: "100%"
                 }}>{item.name}</Typography>
                 <div className="flex compact2">
-                    {item instanceof Event && <CalendarMonthOutlined fontSize="small" />}
-                    {item instanceof Group && <WorkspacesOutlined sx={{
-                        fontSize: "0.75rem",
-                        color: 'var(--text-color)'
-                    }} />}
-                    {item instanceof Location && <LocationOnOutlined sx={{
-                        fontSize: "0.875rem",
-                        color: 'var(--text-color)'
-                    }} />}
-                    {item instanceof Profile && <PersonOutline sx={{
-                        fontSize: "0.875rem",
-                        color: 'var(--text-color)'
-                    }} />}
+                    <ResolveItemIcon
+                        item={item}
+                        sx={{
+                            fontSize: "0.875rem",
+                            color: theme.palette.text.primary
+                        }}
+                    />
                     <Typography sx={{
                         fontSize: "0.85rem",
-                        lineHeight: "125%"
-                    }}>{item.subtitle || "Profile"}</Typography>
+                        lineHeight: "125%",
+                        textTransform: 'capitalize'
+                    }}>{item instanceof Event && item.subtitle ? item.subtitle : item instanceof Group ? item.integration ? `Integration (${item.integration})` : item.type : item.type}</Typography>
                 </div>
             </div>
-        </div>
+        </ButtonBase>
     )
 }

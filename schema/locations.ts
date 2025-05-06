@@ -197,6 +197,10 @@ export class Location implements Member {
     return null
   }
 
+  copy = () => {
+    return this.eject();
+  }
+
   eject = (): LocationData => {
     let serial: any = {};
     const { created_on, last_updated_on, ...data } = this as Partial<Record<string, any>>;

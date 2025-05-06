@@ -30,7 +30,6 @@ import { StartCreator } from '@/lib/global/useCreate';
 import { Dayjs } from 'dayjs';
 import { UseEvents } from '@/lib/global/useEvents';
 import useDraggableEventBlock, { DraggedEventBlockProps, DragMode } from './DraggableEventBlock';
-import DayViewHeader from './DayViewHeader';
 import { UsePreferences } from '@/lib/global/usePreferences';
 import { useSwipeable } from 'react-swipeable';
 import WeekLegendColumn from './WeekLegendColumn';
@@ -180,7 +179,7 @@ const MobileMonthView = ({
         });
     }
 
-    const { block, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(null, standardHeight, null, handleUpOnMove, handleUpOnCreate);
+    const { block, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(standardHeight, null, handleUpOnMove, handleUpOnCreate);
 
 
     const handleDayTimeClick = (e: MouseEvent) => {

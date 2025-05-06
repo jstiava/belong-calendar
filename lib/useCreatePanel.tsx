@@ -16,10 +16,11 @@ import {
   Avatar,
   alpha,
   AvatarGroup,
+  ToggleButton,
 } from "@mui/material";
 import React, { useState, useEffect, useRef, useCallback, memo, ChangeEvent, Dispatch, SetStateAction } from "react";
 import { Event, EventData, Group, ImageDisplayType, Member, MemberData, MemberFactory, Schedule } from "@/schema";
-import { ArrowBack, CalendarMonthOutlined, Google, GroupWorkOutlined, LinkOutlined, PhotoLibraryOutlined, SaveOutlined, Star, StarOutline, TextFieldsOutlined } from "@mui/icons-material";
+import { ArrowBack, CalendarMonthOutlined, Google, GroupWorkOutlined, LinkOutlined, PeopleOutline, PhotoLibraryOutlined, SaveOutlined, Star, StarOutline, TextFieldsOutlined, VpnKeyOutlined, WorkspacesOutlined } from "@mui/icons-material";
 import { enqueueSnackbar } from "notistack";
 import { CreatePanelProps, CreatorModules, CreatorPanelMobileStyles, CreatorPanelProps, CreatorPanelStyles, SharedCreatorPanelStyles, StartCreator, UseCreateForm } from "./global/useCreate";
 import { TransitionGroup } from 'react-transition-group';
@@ -33,9 +34,9 @@ import useIAM from "./global/useIAM";
 import useComplexFileDrop, { MEDIA_BASE_URI, UploadType } from "./useComplexFileDrop";
 import ColorPaletteSelector from "@/components/accordions/ColorPaletteSelector";
 import DateTimeAccordionModule from "@/components/accordions/DateTimeAccordionModule";
-import IAMAccordionModule from "@/components/accordions/IAMAccordionModule";
 import LargeTextField from "@/components/LargeTextField";
 import SmallTextField from "@/components/SmallTextField";
+import StyledToggleButtonGroup from "@/components/StyledToggleButtonGroup";
 
 
 const ensureHttpsPrefix = (value: string): `https://${string}` => {
@@ -55,15 +56,17 @@ export default function useCreatePanel(
   item: MemberData & CreatorPanelProps,
   source: Member,
   Base: UseBaseCore,
-  Session: UseSession,
   startCreator: StartCreator,
   removePanel: (id: string) => void,
-  setIsShareView: Dispatch<SetStateAction<boolean>>,
+  setIsShareView: (value : boolean) => any,
   setColor: any,
+  Session?: UseSession,
   Parent?: UseBaseCore,
   parent?: Member,
 
 ): UseCreateForm {
+
+  console.log("Create panel")
 
   const { theme, Events, Locations, ...OtherBase } = Base;
   const Modules = CreatorModules[item.type as Type]
@@ -75,9 +78,8 @@ export default function useCreatePanel(
   const isDialogOpen = Boolean(anchorEl);
   const [isSchedule, setIsSchedule] = useState(false);
 
-  const theBuiltItem = new Event(item, true)
-  const IAM = useIAM(theBuiltItem, true, source, parent);
 
+  // const IAM = null;
   const [uploads, setUploads] = useState<UploadType[]>([]);
   const { FileUpload, FilePreview, handleUpload, openDialog, isUploadPresent, isFileUploadOpen, uploadCount } = useComplexFileDrop(MemberFactory.collect_media(item), uploads, setUploads);
 
@@ -211,20 +213,6 @@ export default function useCreatePanel(
       const wordmark = files.find(x => x.display_type === ImageDisplayType.Wordmark);
       copyOfEvent.wordmark_img = wordmark || null;
 
-      // if (isSchedule) {
-      //   copyOfEvent.date = null;
-      //   copyOfEvent.start_time = null;
-      //   copyOfEvent.end_time = null;
-      //   copyOfEvent.end_date = null;
-      // }
-      // else {
-      //   copyOfEvent.schedules = [];
-      // }
-
-      copyOfEvent.location_name = null;
-      copyOfEvent.location_place_id = null;
-      copyOfEvent.location_address = null;
-
       await item.callback(copyOfEvent);
     }
     catch (err) {
@@ -248,16 +236,27 @@ export default function useCreatePanel(
     <div
       className="column snug"
       style={{
-        '--bg-color': newItem.theme_color || theme.palette.background.paper,
-        '--text-color': theme.palette.getContrastText(newItem.theme_color || theme.palette.background.paper),
+        '--text-color': theme.palette.text.primary,
+        '--bg-color': theme.palette.background.paper,
         backgroundColor: "var(--bg-color)",
         color: "var(--text-color)",
         borderRadius: '0.5rem'
       }}
     >
 
-      <div className="column relaxed" style={{
-        padding: "1.5rem",
+
+      {uploadCount > 0 && (
+        <div className="column" style={{
+          padding: "1rem"
+        }}>
+          {FilePreview}
+        </div>
+      )}
+
+      {FileUpload}
+
+      <div className="column" style={{
+        padding: "1rem",
       }}>
 
         <Typography id="modal-title" variant="h2" className="visually-hidden">Create New Event</Typography>
@@ -267,13 +266,11 @@ export default function useCreatePanel(
 
           <div className="flex compact fit">
 
-
-
-            {Modules.header && Modules.header.map(x => {
+            {Modules.header && Modules.header.map((x : any) => {
 
               if (x === 'media') {
                 return (
-                  <IconButton key="media" onClick={() => openDialog()} style={{ position: "relative", height: "fit-content" }}>
+                  <IconButton key={x} onClick={() => openDialog()} style={{ position: "relative", height: "fit-content" }}>
                     <PhotoLibraryOutlined sx={{
                       color: "var(--text-color)"
                     }} />
@@ -284,7 +281,7 @@ export default function useCreatePanel(
               if (x === 'theme_color') {
                 return (
                   <ColorPaletteSelector
-                    key={"theme_color"}
+                    key={x}
                     item={newItem}
                     handleChange={(e, newValue) => {
                       handleChange(e, newValue);
@@ -299,71 +296,82 @@ export default function useCreatePanel(
           </div>
 
           <div className="flex compact fit">
-            {Modules.header && Modules.header.map((x : any) => {
+            {Modules.header && Modules.header.map((x: any) => {
 
-              if (x === 'share' && IAM) {
+              // if (x === 'share' && IAM) {
 
-                if (!IAM.members) {
-                  return null;
-                }
+              //   if (!IAM.members) {
+              //     return null;
+              //   }
+              //   return (
+
+              //     <AvatarGroup
+
+              //       total={Math.min(IAM.members.length, 3) + 1}
+              //       max={Math.min(IAM.members.length, 3)}
+              //       sx={{
+              //         cursor: 'pointer',
+              //         '& .MuiAvatar-root': { width: "2rem", height: "2rem", fontSize: 15 },
+              //       }}
+              //       slotProps={{
+              //         additionalAvatar: {
+              //           sx: {
+              //             backgroundColor: alpha(theme.palette.background.paper, 0.25),
+              //             color: `var(--text-color)`
+              //           }
+              //         }
+              //       }}
+              //       onClick={() => {
+              //         setIsShareView(true);
+              //       }}
+              //     >
+              //       {IAM.members && IAM.members.map(x => (
+              //         <Avatar
+              //           sx={{
+              //             width: "2rem",
+              //             height: "2rem",
+              //             backgroundColor: x.theme_color || theme.palette.primary.main,
+              //             color: x.theme_color ? theme.palette.getContrastText(x.theme_color) : theme.palette.primary.contrastText,
+              //             border: `2px solid ${x.theme_color || theme.palette.primary.main}`,
+              //           }}
+
+              //           alt={x.name || ''}
+              //           src={x instanceof Group && x.integration ? getIntegrationIcon(x.integration) || '' : `${MEDIA_BASE_URI}/${x.getIconPath()}`}
+              //         >{x.integration === 'google' ? (
+              //           <Google fontSize="small" />
+              //         ) : (
+              //           x instanceof Event ? <CalendarMonthOutlined fontSize="small" /> : <GroupWorkOutlined fontSize="small" />
+              //         )}</Avatar>
+              //       ))}
+              //     </AvatarGroup>
+              //   )
+              // }
+
+              if (x === 'share') {
                 return (
-
-                  <AvatarGroup
-
-                    total={Math.min(IAM.members.length, 3) + 1}
-                    max={Math.min(IAM.members.length, 3)}
-                    sx={{
-                      cursor: 'pointer',
-                      '& .MuiAvatar-root': { width: "2rem", height: "2rem", fontSize: 15 },
-                    }}
-                    slotProps={{
-                      additionalAvatar: {
-                        sx: {
-                          backgroundColor: alpha(theme.palette.background.paper, 0.25),
-                          color: `var(--text-color)`
-                        }
-                      }
-                    }}
+                  <Button
+                    key={x}
                     onClick={() => {
                       setIsShareView(true);
                     }}
-                  >
-                    {IAM.members && IAM.members.map(x => (
-                      <Avatar
-                        sx={{
-                          width: "2rem",
-                          height: "2rem",
-                          backgroundColor: x.theme_color || theme.palette.primary.main,
-                          color: x.theme_color ? theme.palette.getContrastText(x.theme_color) : theme.palette.primary.contrastText,
-                          border: `2px solid ${x.theme_color || theme.palette.primary.main}`,
-                        }}
-
-                        alt={x.name || ''}
-                        src={x instanceof Group && x.integration ? getIntegrationIcon(x.integration) || '' : `${MEDIA_BASE_URI}/${x.getIconPath()}`}
-                      >{x.integration === 'google' ? (
-                        <Google fontSize="small" />
-                      ) : (
-                        x instanceof Event ? <CalendarMonthOutlined fontSize="small" /> : <GroupWorkOutlined fontSize="small" />
-                      )}</Avatar>
-                    ))}
-                  </AvatarGroup>
+                  >Share</Button>
                 )
               }
 
-              if (x === 'is_starred_by_profile' && ((IAM && IAM.members) && Session.session)) {
+              // if (x === 'is_starred_by_profile' && ((IAM && IAM.members) && Session.session)) {
 
-                const isFound = IAM.members.some(x => x.id() === Session.session!.id());
+              //   const isFound = IAM.members.some(x => x.id() === Session.session!.id());
 
-                return (
-                  <IconButton>
-                    {isFound ? <Star sx={{
-                      color: "var(--text-color)"
-                    }} /> : <StarOutline sx={{
-                      color: "var(--text-color)"
-                    }} />}
-                  </IconButton>
-                )
-              }
+              //   return (
+              //     <IconButton>
+              //       {isFound ? <Star sx={{
+              //         color: "var(--text-color)"
+              //       }} /> : <StarOutline sx={{
+              //         color: "var(--text-color)"
+              //       }} />}
+              //     </IconButton>
+              //   )
+              // }
             })}
           </div>
         </div>
@@ -377,7 +385,7 @@ export default function useCreatePanel(
                   label={`New ${item.type} Name`}
                   variant="standard"
                   inputRef={inputRef}
-                  key="item_name"
+                  key={x}
                   name="name"
                   hiddenLabel
                   multiline
@@ -393,6 +401,7 @@ export default function useCreatePanel(
             if (x === 'dateTime') {
               return (
                 <DateTimeAccordionModule
+                  key={x}
                   item={newItem}
                   handleChange={handleChange}
                   expanded={expanded === 'dateTime'}
@@ -406,12 +415,12 @@ export default function useCreatePanel(
 
                       const newSchedule = Schedule.createOffDrag(dayjs(String(item.date)), item.end_date ? dayjs(String(item.end_date)) : null, item.start_time ? new Chronos(Number(item.start_time)) : new Chronos(9), item.end_time ? new Chronos(Number(item.end_time)) : new Chronos(16));
 
-                      startCreator(Type.Schedule, Mode.Create, newSchedule, {
-                        // callback: (item: any) => handleSelection(item),
-                        connected: true
-                      })
+                      // startCreator(Type.Schedule, Mode.Create, newSchedule, {
+                      //   // callback: (item: any) => handleSelection(item),
+                      //   connected: true
+                      // })
 
-                      setNewItem((prev) => {
+                      setNewItem((prev : any) => {
                         if (!prev) {
                           return null;
                         }
@@ -431,6 +440,7 @@ export default function useCreatePanel(
               return (
 
                 <SmallTextField
+                  key={x}
                   name="username"
                   variant="standard"
                   label="Username"
@@ -441,11 +451,31 @@ export default function useCreatePanel(
               )
             }
 
+            if (x === 'apiKey') {
+
+              return (
+
+                <div className="column compact" key={x}>
+
+                  <Typography variant="h5">Connect to Jotform</Typography>
+                  <SmallTextField
+                    name="apiKey"
+                    variant="standard"
+                    label="API Key"
+                    value={newItem.apiKey || ""}
+                    onChange={(e) => handleChange("apiKey", e.target.value)}
+                    onFocus={() => setExpanded("apiKey")}
+                  />
+                </div>
+              )
+            }
+
             if (x === 'tagline') {
 
               return (
 
                 <SmallTextField
+                  key={x}
                   name="tagline"
                   variant="standard"
                   label="Tagline"
@@ -460,8 +490,43 @@ export default function useCreatePanel(
         </div>
         <div className="column compact">
 
-            {newItem.link && (
-          <div className="column">
+          {item.integration === '#jotform.form' && (
+            <div className="column left relaxed" key={'#jotform.form'}>
+              <div className="column compact left">
+                <Typography variant='h6'>Purpose</Typography>
+                <StyledToggleButtonGroup value="attendees">
+                  <ToggleButton value="attendees">
+                    <PeopleOutline sx={{
+                      fontSize: "1rem"
+                    }} />
+                    Attendees
+                  </ToggleButton>
+                  <ToggleButton value="iam">
+                    <VpnKeyOutlined sx={{
+                      fontSize: "1rem"
+                    }} />
+                    Access
+                  </ToggleButton>
+                  <ToggleButton value="iam">
+                    <CalendarMonthOutlined sx={{
+                      fontSize: "1rem"
+                    }} />
+                    Events
+                  </ToggleButton>
+                  <ToggleButton value="groups">
+                    <WorkspacesOutlined sx={{
+                      fontSize: "1rem"
+                    }} />
+                    Groups
+                  </ToggleButton>
+                </StyledToggleButtonGroup>
+              </div>
+
+            </div>
+          )}
+
+          {newItem.link && (
+            <div className="column" key={'link'}>
               <TextField
                 name="link"
                 variant="standard"
@@ -470,8 +535,8 @@ export default function useCreatePanel(
                 onChange={(e) => handleChange("link", ensureHttpsPrefix(e.target.value))}
                 onFocus={() => setExpanded("link")}
               />
-          </div>
-            )}
+            </div>
+          )}
           <div className="flex between" style={{
             padding: "0.25rem 0.5rem"
           }}>
@@ -497,7 +562,7 @@ export default function useCreatePanel(
               <div className="flex snug fit">
                 <Button
                   startIcon={<SaveOutlined />}
-                  variant="flipped"
+                  variant="contained"
                   onClick={async () => {
                     try {
                       await save();
@@ -576,20 +641,19 @@ export default function useCreatePanel(
         <TransitionGroup>
           <Collapse>
             <div className="column snug">
-              {item && (
+              {/* {item && item.type != Type.Custom && (
                 <IAMAccordionModule
                   item={item}
                   Session={Session}
                   handleChange={handleChange}
                   expanded={true}
-                  IAM={IAM}
                   Base={Base}
                   Parent={Parent}
                   source={source}
                   parent={parent}
                   onChange={(value) => handleChange("junctions", value)}
                 />
-              )}
+              )} */}
             </div>
           </Collapse>
         </TransitionGroup>
@@ -665,7 +729,7 @@ export const CreatePanel = memo((createProps: CreatePanelProps) => {
     }
   })
 
-  const editor: UseCreateForm = useCreatePanel(item, source, Base, Session, startCreator, removePanel, handleShareViewChange, setColor, Parent, parent);
+  const editor: UseCreateForm = useCreatePanel(item, source, Base, startCreator, removePanel, handleShareViewChange, setColor, Session, Parent, parent);
 
   return (
     <ThemeProvider theme={tempTheme}>

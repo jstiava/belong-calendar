@@ -15,6 +15,7 @@ import { UsePreferences } from '@/lib/global/usePreferences';
 import { StartViewer } from '@/lib/global/useView';
 import MonthView from './MonthView';
 import { CalendarDays } from '@/lib/CalendarDays';
+import CalendarDay from '@/lib/CalendarDay';
 
 interface CalendarViewProps {
   containerRef: React.RefObject<HTMLElement>;
@@ -24,7 +25,7 @@ interface CalendarViewProps {
   handleSelect: (e: MouseEvent | KeyboardEvent, event: Event | boolean) => void;
   source: Member | null,
   Calendar: UseCalendar,
-  days: CalendarDays;
+  days: CalendarDays<CalendarDay>;
   handleCreate: StartCreator;
   handleView: StartViewer;
   Events: UseEvents;
@@ -138,7 +139,6 @@ const CalendarView = ({
       {Calendar.days.length === 1 && (
         <WeekView
           key={`day_view_${days.version}`}
-          containerRef={containerRef}
           selected={selected}
           setSelected={setSelected}
           handleSelect={handleSelect}
@@ -155,7 +155,6 @@ const CalendarView = ({
       {Calendar.days.length === 7 && (
         <WeekView
         key={`week_view_${days.version}`}
-          containerRef={containerRef}
           selected={selected}
           setSelected={setSelected}
           handleSelect={handleSelect}

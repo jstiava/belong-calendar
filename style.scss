@@ -774,3 +774,18 @@ body, .custom-scroll {
     }
   }
 }
+
+
+
+// Mention in EditorJS
+.codex-editor__redactor {
+  padding-bottom: 0 !important;
+}
+.mention_tool_dollar {
+	color: #000 !important;
+	text-decoration: none !important;
+	background-color: lightGrey;
+	border-radius: 0.25rem;
+	padding: 0.25rem 0.5rem;
+	font-weight: 700;
+}

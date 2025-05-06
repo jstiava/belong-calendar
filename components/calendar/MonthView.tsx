@@ -1,42 +1,27 @@
 'use client';
-import { ArrowRight, ChevronLeft, ChevronRight, CloseOutlined, Delete, EventNoteTwoTone, Remove } from '@mui/icons-material';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import {
-  alpha,
   Button,
-  ButtonBase,
-  Chip,
   darken,
-  Drawer,
-  IconButton,
-  Link,
-  Tab,
-  Tabs,
-  Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { useRouter } from 'next/router';
-import { useState, useEffect, useRef, SetStateAction, MouseEvent, useMemo, memo, Dispatch } from 'react';
-import TimeLegendColumn from './TimeLegendColumn';
-import DayView from '@/components/calendar/DayView';
+import { useState, useEffect, useRef, MouseEvent, Dispatch } from 'react';
 import CalendarDay from '@/lib/CalendarDay';
-import useCalendar, { UseCalendar } from '@/lib/useCalendar';
-import Chronos from '@/lib/utils/chronos';
+import { UseCalendar } from '@/lib/useCalendar';
 import dayjs from '@/lib/utils/dayjs';
-import { Event, EventData, Member, Profile, Schedule } from "@/schema";
+import { Event, EventData, Member, Schedule } from "@/schema";
 import { Mode, Type } from '@/types/globals';
 import { StartCreator } from '@/lib/global/useCreate';
 import { Dayjs } from 'dayjs';
 import { UseEvents } from '@/lib/global/useEvents';
-import useDraggableEventBlock, { DraggedEventBlockProps, DragMode } from './DraggableEventBlock';
-import DayViewHeader from './DayViewHeader';
+import useDraggableEventBlock, { DraggedEventBlockProps } from './DraggableEventBlock';
 import { UsePreferences } from '@/lib/global/usePreferences';
 import { useSwipeable } from 'react-swipeable';
-import WeekLegendColumn from './WeekLegendColumn';
 import DayInMonthView from './DayInMonthView';
 import useViewEvent from '@/lib/global/useViewEvent';
-import { UseSession } from '@/lib/global/useSession';
+import Divider, { DIVIDER_NO_ALPHA_COLOR } from '../Divider';
 
 interface MonthViewProps {
   selected: Event[] | null;
@@ -122,19 +107,19 @@ const MonthView = ({
       return;
     }
 
-    await theEvent.getMetadata()
-      .then(object => {
-        Events.swap(object);
-      })
-      .catch(err => {
-        console.log(err)
-      });
+    // await theEvent.getMetadata()
+    //   .then(object => {
+    //     Events.swap(object);
+    //   })
+    //   .catch(err => {
+    //     console.log(err)
+    //   });
 
-    theEvent.start_time = item.currStart.getDayjs(5).toLocalChronos();
-    theEvent.end_time = item.currEnd.getDayjs(5).toLocalChronos();
-    theEvent.date = item.currStart.getHMN() <= 6 ? item.dragDay.add(1, 'day') : item.dragDay
-    theEvent.oldDate = theEvent.date;
-    theEvent.is_local = true;
+    // theEvent.start_time = item.currStart.getDayjs(5).toLocalChronos();
+    // theEvent.end_time = item.currEnd.getDayjs(5).toLocalChronos();
+    // theEvent.date = item.currStart.getHMN() <= 6 ? item.dragDay.add(1, 'day') : item.dragDay
+    // theEvent.oldDate = theEvent.date;
+    // theEvent.is_local = true;
 
     handleCreate(Type.Event, Mode.Modify, theEvent);
   }
@@ -182,7 +167,7 @@ const MonthView = ({
     });
   }
 
-  const { block, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(null, standardHeight, null, handleUpOnMove, handleUpOnCreate);
+  const { block, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(standardHeight, null, handleUpOnMove, handleUpOnCreate);
 
 
   const handleDayTimeClick = (e: MouseEvent) => {
@@ -195,126 +180,48 @@ const MonthView = ({
 
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', "Fri", "Sat"];
 
-  const RightSidebar = (
-    <div className='column snug'
-      style={{ overflowY: "scroll", backgroundColor: theme.palette.background.paper }}
-      onMouseUp={handleMouseUp}
-    >
-      <div className="column"
-        style={{
-          position: 'fixed',
-          top: 0,
-          padding: "1rem",
-          zIndex: 4,
-          backgroundColor: theme.palette.background.default,
-          width: "25rem"
-        }}
-      >
-        {peekDate && weekOfPeekDate && (
-          <div style={{
-            width: "100%",
-            height: "4.5rem",
-            zIndex: 3
-          }}>
-            <Tabs value={peekDate.yyyymmdd()} onChange={handleTabChange} variant="fullWidth" sx={{ height: "100%" }}>
-              {weekOfPeekDate.map((theDate: Dayjs, index) => (
-                <Tab icon={<Typography sx={{ fontSize: "0.75rem" }}>{theDate.format("ddd")}</Typography>} sx={{ minWidth: "unset" }} key={theDate.yyyymmdd()} label={theDate.format("DD")} value={theDate.yyyymmdd()} {...a11yProps(index)} />
-              ))}
-            </Tabs>
-          </div>
-        )}
-      </div>
-      {block ? (
-        <div
-          onMouseMove={(e) => handleMouseMove(e, { hoverOverPreview: true })}
-          key="moving-event-block"
-          className="event-block"
-          style={{
-            display: block.display,
-            position: 'absolute',
-            zIndex: 3,
-            backgroundColor: alpha(theme.palette.primary.main, 0.5),
-            top: block ? `${block.top}px` : 0,
-            width: "20rem",
-            height: block ? block.height : 0,
-            left: "5rem",
-            borderRadius: '0.5rem',
-            padding: '0.5rem',
-            color: theme.palette.primary.contrastText,
-          }}
-        >
-          <span style={{ fontSize: '0.75rem', margin: 0, height: "fit-content" }}>
-            {block.name && <><span style={{ fontWeight: 700 }}>{block.name && block.name}</span> <br /></>}
-            {block.currStart.print(false, 5)} - {block.currEnd.print(false, 5)}
-          </span>
-        </div>
-      ) : (
-        <></>
-      )}
-      <div className="flex compact2" style={{ width: "100%", padding: "0 1rem 1rem 1rem" }}
-        ref={container}
-      >
-        {peekDate && sequence && Events.days && (
-          <>
-            <TimeLegendColumn
-              key="timeLegendColumn"
-              width={TIME_LEGEND_COLUMN_WIDTH}
-              Calendar={Calendar}
-              sequence={sequence}
-              standardHeight={standardHeight}
-              isSM={false}
-            />
-            {EventPopover}
-            <DayView
-              index={peekDate.day()}
-              key={`${peekDate.format("YYYYMMDD")}`}
-              style={{
-                width: "100%"
-              }}
-              date={peekDate}
-              sequence={sequence}
-              // handleCreate={handleCreate}
-              calendarDay={Events.days.getOrCreate(peekDate.yyyymmdd())}
-
-              nextCalendarDay={Events.days.getOrCreate(peekDate.add(1, 'day').yyyymmdd())}
-              standardHeight={standardHeight}
-              handleDragStart={handleDragStart}
-              handleMouseMove={handleMouseMove}
-              handleView={handleOpenEventPopover}
-              source={source}
-              swap={Events.swap}
-              replace={Events.update}
-
-            // selected={selected}
-            // handleSelect={handleSelect}
-            // handleDayTimeClick={handleDayTimeClick}
-            />
-          </>
-        )}
-      </div>
-    </div>
-  )
-
 
   return (
     <>
-      <div style={{ width: "100%", height: "fit-content" }}>
-        <div
-          className="column"
-          style={{ padding: "0 0", position: "relative" }}
-          ref={calendarRef}
-          onMouseUp={handleMouseUp}
-        >
+      <div
+        className="column snug"
+        style={{ padding: "0 0" }}
+        ref={calendarRef}
+        onMouseUp={handleMouseUp}
+      >
+        <div className="flex snug left" style={{
+          position: 'sticky',
+          top: 0,
+          backgroundColor: theme.palette.background.paper,
+          zIndex: 5,
+          borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`
+        }}>
+
+          <div className="flex center middle" style={{
+            width: "5rem",
+            padding: "0.25rem",
+            borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+          }}>
+            <Typography variant='h6' sx={{
+               fontSize: "0.75rem",
+            }}>Legend</Typography>
+          </div>
+
           <div
             className='flex snug'
             style={{
-              position: 'absolute',
-              top: "3.55rem",
-              backgroundColor: theme.palette.background.paper
+              position: 'relative',
+              width: 'calc(100% - 5rem)'
             }}
           >
-            <Button sx={{ position: "absolute", left: 0, color: theme.palette.text.primary }} startIcon={<ChevronLeft />} onClick={() => Calendar.goToStartOfMonth(Calendar.days[0].add(-1, 'day'))}></Button>
-            <Button sx={{ position: "absolute", right: 0, color: theme.palette.text.primary }} startIcon={<ChevronRight />} onClick={() => Calendar.goToStartOfMonth(Calendar.days[6].add(1, 'month'))}></Button>
+            <Button
+              sx={{ position: "absolute", left: 0, color: theme.palette.text.primary }}
+              startIcon={<ChevronLeft />}
+              onClick={() => Calendar.goToStartOfMonth(Calendar.days[0].add(-1, 'day'))}></Button>
+            <Button
+              sx={{ position: "absolute", right: 0, color: theme.palette.text.primary }}
+              endIcon={<ChevronRight />}
+              onClick={() => Calendar.goToStartOfMonth(Calendar.days[6].add(1, 'month'))}></Button>
             {daysOfWeek.map(day => {
               return (
                 <div key={day} className='flex center middle' style={{ width: "calc(100% / 7)", height: "2rem" }}>
@@ -323,82 +230,111 @@ const MonthView = ({
                     textTransform: 'uppercase',
                     textAlign: "center",
                     color: darken(theme.palette.text.primary, 0.2),
-                    letterSpacing: "15%",
+                    letterSpacing: "0.1rem",
                     fontWeight: 800
                   }}>{day}</Typography>
                 </div>
               )
             })}
           </div>
+        </div>
+
+        <div className="flex left snug"
+          style={{
+            width: "100%"
+          }}
+        >
+
+          <div className="column snug" style={{
+            width: "5rem",
+            borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+            height:"calc(100vh - 3rem)",
+          }}>
+            {[1, 2, 3, 4, 5].map(week => (
+              <div
+                key={week}
+                style={{
+                  height: "calc(100% / 5)",
+                  width: "100%",
+                  borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+                }}
+              ></div>
+            ))}
+          </div>
+
           <div {...handlers} style={{
             display: "flex",
             alignItems: 'flex-start',
-            width: '100%',
-            margin: "5.55rem 0 0 0", // reduced top margin
+            width: `calc(100% - 5rem)`,
             flexWrap: 'wrap'
           }}>
             <>
-              <div style={{ display: 'flex', width: `100%`, flexWrap: "wrap", border: `0.05px solid ${theme.palette.divider}`, height: "calc(100vh - 5.55rem)" }}>
+              <div style={{
+                display: 'flex',
+                width: `100%`,
+                flexWrap: "wrap",
+                // border: `0.05px solid ${theme.palette.divider}`, 
+                height: "calc(100vh - 3rem)"
+              }}>
                 {Calendar.days.map((date, index: number) => {
+
+                  const calendarDay = days.getOrCreate(
+                    Number(date.format('YYYYMMDD')),
+                    () => new CalendarDay(date.yyyymmdd()),
+                  );
+
+                  const nextCalendarDay = days.getOrCreate(
+                    Number(date.add(1, 'day').format('YYYYMMDD')),
+                    () => new CalendarDay(date.add(1, 'day').yyyymmdd()));
                   return (
-                    <DayInMonthView
-                      index={date.day()}
-                      key={`${source ? source.id() : 'no_source_week_view'}-${date.format('YYYYMMDD')}-monthView`}
+                    <div
+                      className="flex snug"
+                      key={String(`${date.yyyymmdd()}-${calendarDay.version}-${nextCalendarDay.version}`)}
                       style={{
+                        height: "calc(100% / 5)",
                         width: "calc(100% / 7)",
-                        height: "calc(100% / 5)"
                       }}
-                      date={date}
-                      handleCreate={handleCreate}
-                      calendarDay={days.getOrCreate(
-                        Number(date.format('YYYYMMDD')),
-                        () => new CalendarDay(date.yyyymmdd()),
-                      )}
-                      nextCalendarDay={days.getOrCreate(
-                        Number(date.add(1, 'day').format('YYYYMMDD')),
-                        () => new CalendarDay(date.add(1, 'day').yyyymmdd())
-                      )}
-                      standardHeight={standardHeight}
-                      handleDragStart={handleDragStart}
-                      handleMouseMove={handleMouseMove}
-                      handleView={handleView}
-                      selected={selected}
-                      handleSelect={handleSelect}
-                      handleDayTimeClick={handleDayTimeClick}
-                      Calendar={Calendar}
-                      source={source}
-                      onClick={() => {
-                        console.log("DayInMonthView")
-                        setPeekDate(date);
-                        setWeekOfPeekDate(date.startOf('week').getFrame(7));
-                        setIsRightSidebarOpen(true);
-                      }}
-                      swap={Events.swap}
-                    />
+                    >
+                      <DayInMonthView
+                        index={date.day()}
+                        style={{
+                          width: "calc(100% - 0.1rem)",
+                          height: "100%",
+                          borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+                        }}
+                        date={date}
+                        handleCreate={handleCreate}
+                        calendarDay={calendarDay}
+                        nextCalendarDay={nextCalendarDay}
+                        standardHeight={standardHeight}
+                        handleDragStart={handleDragStart}
+                        handleMouseMove={handleMouseMove}
+                        handleView={handleOpenEventPopover}
+                        selected={selected}
+                        handleSelect={handleSelect}
+                        handleDayTimeClick={handleDayTimeClick}
+                        Calendar={Calendar}
+                        source={source}
+                        onClick={() => {
+                          setPeekDate(date);
+                          setWeekOfPeekDate(date.startOf('week').getFrame(7));
+                          setIsRightSidebarOpen(true);
+                        }}
+                        swap={Events.swap}
+                      />
+                      <Divider vertical />
+                    </div>
                   );
                 })}
 
               </div>
             </>
           </div>
+
         </div>
-      </div >
-      <Drawer
-        anchor="right"
-        open={isRightSidebarOpen}
-        onClose={() => setIsRightSidebarOpen(false)}
-        keepMounted
-        sx={{
-          zIndex: "2000",
-          '& .MuiDrawer-paper': {
-            position: 'absolute',
-            width: '25rem',
-            // padding: "0.5rem 0.5rem"
-          },
-        }}
-      >
-        {RightSidebar}
-      </Drawer>
+      </div>
+
+      {EventPopover}
     </>
   );
 };

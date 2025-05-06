@@ -7,6 +7,9 @@ import { Type, Mode, adjustForContrast } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
 import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
+
+
+
 export const CalendarEventBox = ({
   isStacked,
   column,
@@ -24,7 +27,12 @@ export const CalendarEventBox = ({
 }: {
   isStacked?: boolean;
   column: number;
-  event: Event;
+  event: Event & {
+    date: Dayjs,
+    start_time: Chronos,
+    end_date: null,
+    end_time: Chronos
+  };
   referenceTime: number;
   standardHeight: number;
   handleView?: StartViewer;
@@ -94,6 +102,10 @@ export const CalendarEventBox = ({
     e.preventDefault();
     e.stopPropagation();
 
+    if (!handleView) {
+      return;
+    }
+
     handleView(Type.Event, event, {
       e,
       isRightClick: true
@@ -150,89 +162,6 @@ export const CalendarEventBox = ({
 
   if (!start) {
     return <></>;
-  }
-
-  try {
-
-
-    if (isStacked) {
-      return (
-        <>
-          <ButtonBase
-            className="eventButton flex center between"
-            data-type="eventButton"
-            ref={eventRef}
-            onMouseDown={onMouseDown}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClick(e);
-            }}
-            onMouseEnter={handleHover}
-            onMouseLeave={handleHover}
-            onContextMenu={handleRightClick}
-            disableRipple
-            sx={{
-              display: 'flex',
-              zIndex: 1,
-              fontFamily: 'inherit',
-              overflow: 'hidden',
-              borderRadius: '0.25rem',
-              color: isMember ? event.theme_color || theme.palette.primary.main : alpha(theme.palette.text.primary, 0.5),
-              // color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.getContrastText(theme.palette.primary.main) : event.theme_color || theme.palette.primary.main,
-              border: '0px solid transparent',
-              // borderColor: isSelected ? "#3d3d3d" : event.theme_color || theme.palette.primary.main,
-              // borderBottom: isSelected ? '3px solid' : `3px solid ${event.theme_color ? darken(event.theme_color, 0.25) : theme.palette.primary.dark} !important`,
-              padding: '0 0.25rem',
-              // height: end ? standardHeight * Chronos.absDiff(end, start) * 2 : 0,
-              height: "1.5rem",
-              alignItems: 'flex-start',
-              // boxShadow: isHovered
-              //   ? 'rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;'
-              //   : 'rgba(0, 0, 0, 0.05) 0px 3px 6px, rgba(0, 0, 0, 0.1) 0px 3px 6px;',
-              transition: '0.2s ease-in-out',
-              // opacity: isPast ? 0.75 : 1,
-              width: `${style.width || '100%'} !important`,
-              marginLeft: style.marginLeft || 0
-            }}
-          >
-            <div
-              style={{
-                width: '100%',
-                borderRadius: '0.25rem',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-              }}
-            >
-              <span
-                className='flex between'
-                style={{
-                  fontSize: '0.75rem',
-                  whiteSpace: "nowrap",
-                  textOverflow: "ellipsis",
-                  overflow: "hidden",
-                }}>
-                <span style={{ marginRight: "0.5rem" }}>{event.start_time.print(true)}</span> <strong>{event.name}</strong>
-                {event.location_name && (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                      <LocationOnOutlined sx={{ fontSize: '12px', mr: '0.1rem', ml: '-0.2rem', p: 0, mt: "0.15rem" }} />
-                      <span style={{ fontSize: '0.75rem' }}>{event.location_name}</span>
-                    </div>
-                  </>
-                )}
-              </span>
-            </div>
-          </ButtonBase>
-        </>
-      )
-
-    }
-  }
-  catch (err) {
-    console.log(err);
-    return null;
   }
 
   return (
@@ -319,11 +248,11 @@ export const CalendarEventBox = ({
             overflow: 'hidden',
             borderRadius: '0.25rem',
             backgroundColor: isMember ? event.theme_color || theme.palette.primary.main : `${theme.palette.background.paper}ee`,
-            color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : adjustForContrast(event.theme_color, 0.9) : event.theme_color || theme.palette.primary.main,
+            color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.main : event.theme_color || theme.palette.primary.main,
             border: '3px solid',
             borderColor: isSelected ? "#3d3d3d" : event.theme_color || theme.palette.primary.main,
             // borderBottom: isSelected ? '3px solid' : `3px solid ${event.theme_color ? darken(event.theme_color, 0.25) : theme.palette.primary.dark} !important`,
-            padding: '0.35rem 0.5rem',
+            padding: '0.15rem 0.25rem',
             height,
             alignItems: 'flex-start',
             boxShadow: isHovered
@@ -334,19 +263,16 @@ export const CalendarEventBox = ({
           }}
         >
           <div
+          className="column snug top left"
             style={{
               width: '100%',
               borderRadius: '0.25rem',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-start',
-              justifyContent: 'flex-start',
             }}
           >
-            <span style={{ fontSize: '0.75rem' }}>
+            <span style={{ fontSize: '0.75rem', lineHeight: '115%' }}>
               {event.start_time.to(event.end_time)}
             </span>
-            <span style={{ fontSize: '0.75rem' }}>
+            <span style={{ fontSize: '0.75rem', lineHeight: '115%' }}>
               <strong>{event.name}</strong>
             </span>
             {event.location_name && (

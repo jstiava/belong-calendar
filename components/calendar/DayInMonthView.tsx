@@ -27,60 +27,11 @@ import { MultiDayEventBlock } from '../events/MultiDayEventBlock';
 import { ScheduleBlock } from '../events/ScheduleBlock';
 import { UseSession } from '@/lib/global/useSession';
 import CalendarDayRendered from '@/lib/CalendarDayRendered';
-import { isMoment, isSingleTimeEvent } from '@/lib/CalendarDays';
+import { isMoment, isMultiDayEvent, isSingleTimeEvent } from '@/lib/CalendarDays';
 import CalendarDay from '@/lib/CalendarDay';
+import { StackedEventBlock } from '../events/StackedEventBlock';
+import { StackedMomentBlock } from '../events/StackedMomentBlock';
 
-
-
-const CalendarDayTimeSlot = ({
-  time,
-  handleMouseDown,
-  handleMouseMove,
-  handleDayTimeClick,
-  standardHeight,
-  onContextMenu,
-  isPast = false,
-}: {
-  time: number;
-  handleMouseDown?: (e: MouseEvent<HTMLDivElement>) => void;
-  handleMouseMove?: (e: MouseEvent<HTMLDivElement>) => void;
-  handleDayTimeClick?: (e: MouseEvent<HTMLDivElement>) => void;
-  standardHeight: number;
-  onContextMenu?: any;
-  isPast?: boolean;
-}) => {
-
-
-  const theme = useTheme();
-
-  const color = time % 1 == 0 ? theme.palette.text.secondary : theme.palette.action.disabled;
-  return (
-    <>
-      <div
-        data-type="emptyEvent"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onContextMenu={onContextMenu}
-        style={{
-          display: 'flex',
-          position: 'relative',
-          color: 'grey',
-          fontSize: '0.875rem',
-          height: standardHeight,
-          borderBottom: '1px solid',
-          borderColor: color,
-          alignItems: 'start',
-          // marginRight: '0.5rem',
-          width: "100%",
-          opacity: isPast ? 0.5 : 1,
-          // backgroundColor: "grey"
-        }}
-      >
-        {/* <span style={{ position: "relative", color: "lightGrey", fontSize: "0.7rem", height: 0, padding: 0, margin: 0 }}>{new Chronos(time - 0.5).getHMN()}</span> */}
-      </div>
-    </>
-  );
-};
 
 function DayInMonthView({
   index,
@@ -148,7 +99,8 @@ function DayInMonthView({
     observer.observe(calDayRef.current);
 
     return () => observer.disconnect();
-  }, [calDayRef.current]);
+
+  }, []);
 
 
 
@@ -181,7 +133,7 @@ function DayInMonthView({
       for (const event of theCalendarDayRendered.aside) {
         theEvents.push(event);
       }
-      
+
       setEvents(theEvents);
 
 
@@ -194,7 +146,7 @@ function DayInMonthView({
           continue;
         }
         if (!item.date.isSame(date, 'd') && index != 0) {
-          startOffset.push(null);
+          // startOffset.push(null);
           continue;
         }
         if (index === 0) {
@@ -277,7 +229,7 @@ function DayInMonthView({
           userSelect: 'none',
           margin: 0,
           height: "100%",
-          border: `0.05px solid ${theme.palette.divider}`,
+          // border: `0.05px solid ${theme.palette.divider}`,
           backgroundColor: (source instanceof Event && (source.date && source.end_date)) ? (date.isAfter(source.date.add(-1, 'day'), 'd') && date.isBefore(source.end_date.add(1, 'day'), 'date')) ? 'transparent' : theme.palette.divider : 'transparent',
           // opacity: isPast ? 0.5 : 1,
           ...style,
@@ -302,50 +254,22 @@ function DayInMonthView({
         }}
         ref={calDayRef}
       >
-        {isHovering && (
-          <div
-            className='flex center middle compact'
-            style={{
-              position: "absolute",
-              right: 0,
-              bottom: 0,
-              padding: "0.5rem",
-              width: "fit-content",
-              zIndex: 5
-            }}>
-            <IconButton size='small' onClick={
-              (e) => {
-                e.stopPropagation();
-                if (!handleCreate) {
-                  console.log("No creator on add button.")
-                  return;
-                }
-                handleCreate(Type.Event, Mode.Create, new Event({
-                  date: date.yyyymmdd(),
-                  start_time: String(9),
-                  end_time: String(10)
-                }, true))
-              }}>
-              <AddOutlined fontSize='small' />
-            </IconButton>
-          </div>
-        )}
-        <Chip
+
+        <ButtonBase
           sx={{
             display: 'flex',
             position: 'absolute',
             top: `calc(0.1rem + calc(${calendarDayRendered.topOffset} * 1.525rem))`,
             left: "0",
             fontWeight: 700,
-            width: '1.55rem',
+            width: '1.75rem',
             textAlign: "center",
             margin: "0 0.15rem",
-            fontSize: "0.85rem",
-            height: "1.55rem",
-            border: '1px solid',
+            height: "1.75rem",
+            // border: '1px solid',
             borderRadius: "0.15rem",
             borderColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
-            backgroundColor: date.isToday() ? theme.palette.primary.main : 'transparent',
+            backgroundColor: date.isToday() ? theme.palette.primary.main : '#efefef',
             color: date.isToday() ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary,
             overflow: 'visible',
             '& span': {
@@ -355,8 +279,10 @@ function DayInMonthView({
           onClick={(e) => {
             Calendar.gotoStartOfWeek(date);
           }}
-          label={`${date.format('D')}`}
-        />
+        ><Typography sx={{
+          fontSize: "0.85rem",
+          fontWeight: 800
+        }}>{date.format('D')}</Typography></ButtonBase>
         <div
           style={{
             position: 'relative',
@@ -370,6 +296,7 @@ function DayInMonthView({
             style={{
               position: 'relative',
               width: "100%",
+              height: '100%',
               paddingLeft: "0rem",
               paddingRight: "0rem",
               paddingTop: `calc(0.05rem + (${calendarDayRendered.stack.length} * 1.5rem))`,
@@ -419,6 +346,7 @@ function DayInMonthView({
                 return <></>;
               }
 
+             if (isMultiDayEvent(event)) {
               return (
                 <MultiDayEventBlock
                   key={`MultiDay_${event.id()}`}
@@ -437,102 +365,145 @@ function DayInMonthView({
                   style={{
                     position: "absolute",
                     top: `calc(${i} * 1.525rem)`,
-                    marginLeft: isLeftOffset ? "2.25rem" : "0.15rem",
+                    marginLeft: isLeftOffset ? "2rem" : "0.15rem",
                     gutter: "-0.15rem",
                   }}
                 />
               )
+             }
+
+             return null;
 
             })}
 
             <div className="column snug" style={{
-              overflow: "hidden"
+              overflow: "hidden",
+              height: "100%",
+              padding: "1.75rem 0.25rem 0.25rem 0.25rem",
+              width: '100%'
             }}>
-              {events.map((event, i) => {
+              <div className="column snug">
+                {events.map((event, i) => {
 
-                const isLeftOffset = i === calendarDayRendered.topOffset - calendarDayRendered.stack.length;
+                  const isLeftOffset = i === calendarDayRendered.topOffset - calendarDayRendered.stack.length;
 
-                const isOverflow = (reducedAllDayStack.length + i) > 7;
-                if (isOverflow) {
-                  return null;
-                }
-
-                try {
-
-                  if (isMoment(event)) {
-                    return (
-                      <MomentBlock
-                        key={`${event.id()}`}
-                        isStacked={true}
-                        column={index}
-                        referenceTime={6}
-                        event={event}
-                        standardHeight={standardHeight}
-                        handleView={handleView}
-                        handleCreate={handleCreate}
-                        handleSelect={handleSelect}
-                        handleDragStart={handleDragStart}
-                        isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
-                        swap={swap}
-                      />
-                    )
+                  const isOverflow = (reducedAllDayStack.length + i) > 7;
+                  if (isOverflow) {
+                    return null;
                   }
 
-                  if (isSingleTimeEvent(event)) {
+                  try {
+
+                    if (isMoment(event)) {
+                      return (
+                        <StackedMomentBlock
+                          key={`${event.id()}`}
+                          column={index}
+                          referenceTime={6}
+                          event={event}
+                          standardHeight={standardHeight}
+                          handleView={handleView}
+                          handleCreate={handleCreate}
+                          handleSelect={handleSelect}
+                          handleDragStart={handleDragStart}
+                          isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                          swap={swap}
+                        />
+                      )
+                    }
+
+                    if (isSingleTimeEvent(event)) {
+                      return (
+                        <StackedEventBlock
+                          key={`${event.id()}`}
+                          column={index}
+                          referenceTime={6}
+                          event={event}
+                          standardHeight={standardHeight}
+                          handleView={handleView}
+                          handleCreate={handleCreate}
+                          handleSelect={handleSelect}
+                          handleDragStart={handleDragStart}
+                          isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                          source={source}
+                          swap={swap}
+                          style={{
+                            width: "100%"
+                          }}
+                        />
+                      )
+                    }
+
                     return (
-                      <CalendarEventBox
-                        key={`${event.id()}`}
+                      <ScheduleBlock
                         isStacked={true}
-                        column={index}
+                        column={i}
+                        key={`${event.id()}`}
                         referenceTime={6}
+                        date={date}
                         event={event}
                         standardHeight={standardHeight}
                         handleView={handleView}
                         handleCreate={handleCreate}
-                        handleSelect={handleSelect}
+                        handleSelect={(e, event) => {
+                          return;
+                        }}
                         handleDragStart={handleDragStart}
-                        isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
                         source={source}
                         swap={swap}
                         style={{
-                          marginLeft: isLeftOffset ? "2.25rem" : "0rem",
-                          width: isLeftOffset ? "calc(100% - 2.25rem)" : "100%"
+                          marginLeft: isLeftOffset ? "2.1rem" : "0rem",
+                          width: isLeftOffset ? "calc(100% - 2.1rem)" : "100%"
                         }}
                       />
                     )
+
+
                   }
+                  catch (err) {
+                    console.log(err);
+                    return null;
+                  }
+                })}
 
-                  return (
-                    <ScheduleBlock
-                      isStacked={true}
-                      column={i}
-                      key={`${event.id()}`}
-                      referenceTime={6}
-                      date={date}
-                      event={event}
-                      standardHeight={standardHeight}
-                      handleView={handleView}
-                      handleCreate={handleCreate}
-                      handleSelect={(e, event) => {
-                        return;
-                      }}
-                      handleDragStart={handleDragStart}
-                      source={source}
-                      swap={swap}
-                      style={{
-                        marginLeft: isLeftOffset ? "2.1rem" : "0rem",
-                        width: isLeftOffset ? "calc(100% - 2.1rem)" : "100%"
-                      }}
-                    />
-                  )
-
-
-                }
-                catch (err) {
-                  console.log(err);
-                  return null;
-                }
-              })}
+                <>
+                  {isHovering && (
+                    <div style={{
+                      width: "100%",
+                      padding: "0.25rem"
+                    }}>
+                      <ButtonBase
+                        disableRipple
+                        className='flex compact2 middle center'
+                        onClick={
+                          (e) => {
+                            e.stopPropagation();
+                            if (!handleCreate) {
+                              console.log("No creator on add button.")
+                              return;
+                            }
+                            handleCreate(Type.Event, Mode.Create, new Event({
+                              date: date.yyyymmdd(),
+                              start_time: String(9),
+                              end_time: String(10)
+                            }, true))
+                          }}
+                        sx={{
+                          width: "100%",
+                          backgroundColor: `${theme.palette.primary.main}50`,
+                          color: theme.palette.primary.contrastText,
+                          borderRadius: "0.25rem",
+                          height: "1rem",
+                        }}
+                      >
+                        <AddOutlined sx={{
+                          fontSize: "0.75rem"
+                        }} />
+                      </ButtonBase>
+                    </div>
+                  )}
+                </>
+              </div>
             </div>
 
           </div>

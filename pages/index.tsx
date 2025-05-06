@@ -1,80 +1,91 @@
-"use client"
+'use client';
+import React, { ChangeEvent, useState } from 'react';
+import { Button, TextField, Typography, useTheme } from '@mui/material';
+import { LoginProfileGuess } from '@/types/globals';
+import { useSnackbar } from 'notistack';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
-import Image from 'next/image';
-import { Typography, useTheme, Link, useMediaQuery } from '@mui/material';
-import { Sora } from 'next/font/google';
-import { UseSession } from '@/lib/global/useSession';
 
+export default function LoginPage(props: any) {
 
-const sora = Sora({ subsets: ['latin'] });
-
-export default function Home(props: { Session: UseSession, activeTab: string }) {
   const router = useRouter();
   const theme = useTheme();
-  const isMD = useMediaQuery(theme.breakpoints.down('md'));
-  const isSM = useMediaQuery(theme.breakpoints.down('sm'));
-  const [activeTab, setActiveTab] = useState<string>("personal");
-  const [isThingsToDoHovered, setIsThingsToDoHovered] = useState(false);
+  const [loginCred, setLoginCred] = useState<LoginProfileGuess>({
+    username: '',
+    password: '',
+  });
+
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+  const handleLoginCredPasswordChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const target = event.target as HTMLInputElement | HTMLTextAreaElement;
+    const passwordString = target.value;
+
+    setLoginCred(prev => ({
+      ...prev,
+      password: passwordString,
+    }));
+  };
+
+  const handleLoginCredUsernameChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const target = event.target as HTMLInputElement | HTMLTextAreaElement;
+    const usernameString = target.value;
+    setLoginCred(prev => ({
+      ...prev,
+      username: usernameString,
+    }));
+  };
+
+  const handleSubmit = () => {
+    console.log('Log in button pressed.');
+    const allValuesFilled = Object.values(loginCred).every(value => value !== '');
+    if (!allValuesFilled) {
+      return enqueueSnackbar('Not all fields are filled in.', {
+        variant: 'error',
+      });
+    }
+    props.Session.login(loginCred);
+  };
 
   return (
-    <>
-      <div id="content" style={{ position: 'relative', padding: isSM ? "1rem 1.5rem" : "1rem 2rem", marginTop: "5rem", color: theme.palette.text.primary }}>
-        <div className="column relaxed" style={{ alignItems: "center" }}>
-
-          <div className="column compact center" style={{ padding: "7rem 0 1rem 0" }}>
-
-            
-            <Typography variant="h3" sx={{
-              display: 'inline',
-              // position: "absolute",
-              zIndex: 1,
-              maxWidth: "45rem",
-              width: "95%"
-            }}><Link variant="h3"
-              onMouseEnter={() => {
-                setIsThingsToDoHovered(true);
-              }}
-              onMouseLeave={() => {
-                setIsThingsToDoHovered(false);
-              }}
-              className="hover-underline"
-              sx={{
-                display: 'inline',
-                backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${theme.palette.text.primary}, ${theme.palette.text.primary})`,
-                textDecoration: `none`,
-                backgroundSize: `100% 0.15rem, 0 0.15rem`,
-                backgroundPosition: `100% 90%, 0 90%`,
-                backgroundRepeat: `no-repeat`,
-                transition: `background-size .3s`,
-                color: theme.palette.text.primary,
-                cursor: "pointer",
-                whiteSpace: "pre-line",
-                fontWeight: 800
-              }}>Things to do.</Link> <Link variant="h3"
-                className="hover-underline"
-                sx={{
-                  display: 'inline',
-                  backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${theme.palette.text.primary}, ${theme.palette.text.primary})`,
-                  textDecoration: `none`,
-                  backgroundSize: `100% 0.15rem, 0 0.15rem`,
-                  backgroundPosition: `100% 90%, 0 90%`,
-                  backgroundRepeat: `no-repeat`,
-                  transition: `background-size .3s`,
-                  color: theme.palette.text.primary,
-                  cursor: "pointer",
-                  whiteSpace: "pre-line",
-                  fontWeight: 800
-                }}>Places to <span style={{ color: theme.palette.primary.main }}>be.</span></Link> <br />Where people <span style={{ color: theme.palette.primary.main }}>belong.</span></Typography>
-          </div>
-          <div style={{ height: "3rem" }}></div>
-
-
-          <div style={{ height: "1rem" }}></div>
-
+    <div id="content" className='flex center middle' style={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary, width: "100vw", height: "100vh" }} >
+      <div className="column relaxed" style={{ width: "20rem" }}>
+        <div className="flex center middle">
+          <Typography variant="h4">belong.</Typography>
         </div>
-
+        <div className="column">
+        <Typography variant="h6">Login</Typography>
+        <div className='column compact'>
+          <TextField
+            key="username"
+            type="username"
+            label="Username"
+            variant="outlined"
+            value={loginCred.username}
+            onChange={handleLoginCredUsernameChange}
+            sx={{ width: '100%' }}
+          />
+          <TextField
+            key="password"
+            type="password"
+            label="Password"
+            variant="outlined"
+            value={loginCred.password}
+            onChange={handleLoginCredPasswordChange}
+            sx={{ width: '100%' }}
+          />
+          <Button variant="contained" onClick={handleSubmit} style={{ width: '100%' }}>
+            Login
+          </Button>
+          <Button variant="outlined" onClick={() => router.push('/register')} style={{ width: '100%' }}>
+            Register
+          </Button>
+        </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

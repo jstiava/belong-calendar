@@ -10,7 +10,6 @@ import { Sora } from 'next/font/google';
 import StyledToggleButtonGroup from '@/components/StyledToggleButtonGroup';
 import { AccessibilityNewOutlined, AttributionOutlined, CalendarMonthOutlined, CloseOutlined, CodeOutlined, DarkModeOutlined, GridView, HomeOutlined, LocationOnOutlined, MenuOutlined, PeopleOutlined, Person2Outlined, PersonOutline, StoreOutlined } from '@mui/icons-material';
 import { UseSession } from '@/lib/global/useSession';
-import GmailTreeView, { CustomTreeItem } from '@/components/layout/TreeMenu';
 
 
 const sora = Sora({ subsets: ['latin'] });

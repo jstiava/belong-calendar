@@ -23,7 +23,7 @@ export interface Member {
     uuid: string;
     name: string;
     theme_color: string | null;
-    type: Type | `${Type}`;
+    type: Type;
     metadata: any;
     junctions: Map<string, Junction>;
     id: () => string;
@@ -74,7 +74,7 @@ export class MemberFactory {
     static async getMetadata(that: Event): Promise<Event>;
     static async getMetadata(that: Group): Promise<Group>;
     static async getMetadata(that: Profile): Promise<Profile>;
-    static async getMetadata(that: Location): Promise<Location>;
+    // static async getMetadata(that: Location): Promise<Location>;
     static async getMetadata(that: Member): Promise<Member> {
         if (that.metadata.isFetched) return that;
         await this.fetchMetadata(that);
@@ -191,8 +191,8 @@ export class MemberFactory {
                 return new Event(...args)
             case Type.Group:
                 return new Group(...args);
-            case Type.Location:
-                return new Location(...args);
+            // case Type.Location:
+            //     return new Location(...args);
             case Type.Profile:
                 return new Profile(...args);
             default:

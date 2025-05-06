@@ -6,6 +6,7 @@ import { Box, Button, ButtonBase, IconButton, TextField, ThemeProvider, Tooltip,
 import dayjs, { Dayjs } from "dayjs";
 import { AnyARecord } from "dns";
 import { useState } from "react";
+import StyledDatePicker from "./StyledDatePicker";
 
 
 
@@ -123,15 +124,11 @@ const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function HoursMinimap({
     mode,
     schedule,
-    start_date,
-    end_date,
     compact = false,
     onChange
 }: {
     mode: 'dark' | 'light'
     schedule: Schedule,
-    start_date: Dayjs | null,
-    end_date: Dayjs | null,
     compact?: boolean,
     onChange?: (newSchedule: Schedule) => any
 }) {
@@ -160,28 +157,28 @@ export default function HoursMinimap({
     }
 
     const doesDayOfWeekExistInFrame = (day: number) => {
-        if (!end_date) {
+        if (!schedule.end_date) {
             // console.log({ day, start_date, end_date, result: "No end" });
             return true;
         }
 
-        if (end_date.diff(start_date, 'day') >= 7) {
+        if (schedule.end_date.diff(schedule.start_date, 'day') >= 7) {
             return true;
         }
 
-        if (!start_date) {
+        if (!schedule.start_date) {
             return false;
         }
 
-        if (end_date.get('day') >= start_date.get('day')) {
-            return day <= end_date.get('day') && day >= start_date.get('day');
+        if (schedule.end_date.get('day') >= schedule.start_date.get('day')) {
+            return day <= schedule.end_date.get('day') && day >= schedule.start_date.get('day');
         }
 
-        return !(day < start_date.get('day') && day > end_date.get('day'));
+        return !(day < schedule.start_date.get('day') && day > schedule.end_date.get('day'));
     }
 
     return (
-        <div className="column" style={{ height: "fit-content", width: "100%" }}>
+        <div className="column snug" style={{ height: "fit-content", width: "100%" }}>
             <div className="div flex" style={{ height: compact ? "1rem" : "3rem" }}>
                 {!compact && (
                     <div className="column snug" style={{ height: "100%", width: "5rem" }}>
@@ -290,22 +287,54 @@ export default function HoursMinimap({
                     })}
                 </div>
             </div>
-            <div className="flex top">
-                <Button onClick={() => {
-                    if (onChange) {
-                        onChange(new Schedule())
-                    }
-                }}>Clear</Button>
-
-                <TextField
-                    onChange={(e) => handleHoursStringChange(e.target.value)}
-                    fullWidth
-                    multiline
-                    maxRows={7}
-                    value={schedule.as_text}
-                    variant="standard"
-                    size="small"
+            <div className="column" style={{
+                padding: '1rem 0'
+            }}>
+                <div className="flex compact">
+                    <StyledDatePicker
+                        value={schedule.start_date}
+                        onChange={(date) => {
+                            if (onChange) {
+                                const copy = schedule.eject();
+                                copy.start_date = date;
+                                onChange(new Schedule(copy))
+                            }
+                        }}
+                        mode={'dark'}
+                        label={'Date'}
+                        key="event_startDate"
+                    />
+                    <StyledDatePicker
+                        value={schedule.end_date}
+                        onChange={(date) => {
+                            if (onChange) {
+                                const copy = schedule.eject();
+                                copy.end_date = date;
+                                onChange(new Schedule(copy))
+                            }
+                        }}
+                        mode={'dark'}
+                        label={'End Date'}
+                        key="event_endDate"
+                    />
+                </div>
+                <div className="flex top compact">
+                    <TextField
+                        onChange={(e) => handleHoursStringChange(e.target.value)}
+                        fullWidth
+                        multiline
+                        maxRows={7}
+                        value={schedule.as_text}
+                        variant="standard"
+                        size="small"
                 />
+                    <Button onClick={() => {
+                        if (onChange) {
+                            onChange(new Schedule())
+                        }
+                    }}>Clear</Button>
+                </div>
+
             </div>
         </div >
     )
@@ -329,12 +358,23 @@ const RenderHours = ({
     }
 
     if (hours.breaks.length === 0) {
-        return (
-            <HoursBox compact={true} start={hours.min.getHMN()} end={hours.max.getHMN()} onDelete={(e: any) => {
-                e.stopPropagation();
-                handleDelete(hours.min.getHMN(), hours.max.getHMN())
-            }} />
-        )
+
+        try {
+
+            return (
+                <HoursBox compact={true} start={hours.min.getHMN()} end={hours.max.getHMN()} onDelete={(e: any) => {
+                    e.stopPropagation();
+                    handleDelete(hours.min.getHMN(), hours.max.getHMN())
+                }} />
+            )
+        }
+        catch (err) {
+            console.error({
+                message: "Error rendering hours box",
+                hours
+            })
+            return null;
+        }
     }
 
     return (

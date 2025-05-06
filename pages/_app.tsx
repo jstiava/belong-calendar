@@ -2,6 +2,7 @@
 import React, { } from 'react';
 import { AppProps } from 'next/app';
 import '@/style.scss';
+import "editorjs-mention-tool/src/styles.css"
 import '@/lib/MapExtension';
 import { SnackbarProvider } from 'notistack';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -10,7 +11,7 @@ import AuthProvider from '@/components/AuthProvider';
 import { Source_Sans_3 } from 'next/font/google';
 import { createTheme, lighten, ThemeProvider } from '@mui/material';
 
-const sora = Source_Sans_3({ subsets: ['latin'] });
+export const ss3 = Source_Sans_3({ subsets: ['latin'] });
 
 export default function MyApp({ Component, pageProps }: AppProps) {
 
@@ -139,7 +140,7 @@ const lightTheme = createTheme({
       letterSpacing: "0.015rem"
     },
     fontFamily: [
-      sora.style.fontFamily,
+      ss3.style.fontFamily,
       'sans-serif',
     ].join(','),
   },

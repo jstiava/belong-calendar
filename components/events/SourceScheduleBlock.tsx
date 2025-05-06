@@ -7,7 +7,7 @@ import { Type } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
 import { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
-import { Hours } from '@/lib/utils/medici';
+import { Hours, Segment } from '@/lib/utils/medici';
 import { MEDIA_BASE_URI } from '@/lib/useComplexFileDrop';
 
 export const SourceScheduleBlock = ({
@@ -66,6 +66,10 @@ export const SourceScheduleBlock = ({
 
   const formatLeftShift = () => {
 
+    if (!source) {
+      return;
+    }
+
     if (event.collisions === 0) {
       return event.id() === source.id() ? "0rem" : source instanceof Event ? "0.75rem" : "0rem";
     }
@@ -74,7 +78,7 @@ export const SourceScheduleBlock = ({
   };
 
   const [isMember, setIsMember] = useState(false);
-  const [segments, setSegments] = useState(null);
+  const [segments, setSegments] = useState<Segment[] | null>(null);
 
 
 
@@ -82,6 +86,11 @@ export const SourceScheduleBlock = ({
   const handleRightClick = async (e: any) => {
 
     e.preventDefault();
+
+    if (!handleView) {
+      return;
+    }
+
     handleView(Type.Event, event, { e, date, isRightClick: true });
     // try {
     //   e.preventDefault();
@@ -178,31 +187,6 @@ export const SourceScheduleBlock = ({
 
   const [hovered, setHovered] = useState(false);
   const hoverTimeoutRef = useRef(null);
-
-  const handleMouseEnter = (e: MouseEvent) => {
-    console.log('Mouse entered'); // Debug log
-    const currentTarget = e.currentTarget;
-    console.log(currentTarget);
-    hoverTimeoutRef.current = setTimeout(() => {
-      handleView(Type.Event, event, { e: { currentTarget }, date });
-      console.log('Hovered for 3 seconds!');
-      setHovered(true); // Update the state or trigger your action
-    }, 250); // 3 seconds
-  };
-
-  const handleMouseLeave = () => {
-    console.log('Mouse left'); // Debug log
-    clearTimeout(hoverTimeoutRef.current); // Clear the timeout if mouse leaves early
-    hoverTimeoutRef.current = null;
-    setHovered(false); // Reset the state if needed
-  };
-
-  useEffect(() => {
-    // Cleanup when the component unmounts
-    return () => {
-      clearTimeout(hoverTimeoutRef.current);
-    };
-  }, []);
 
   const transitionDuration = {
     enter: theme.transitions.duration.enteringScreen,

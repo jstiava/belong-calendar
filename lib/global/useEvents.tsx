@@ -8,6 +8,7 @@ import { UseBase } from './useBase';
 import { UseCalendar } from '../useCalendar';
 import { CalendarDays } from '../CalendarDays';
 import CalendarDay from '../CalendarDay';
+import Fuse from 'fuse.js';
 
 
 export interface UseEvents {
@@ -23,7 +24,7 @@ export interface UseEvents {
   get(target: string[], date?: number, localOnly?: boolean): Promise<Event[] | null>;
   remove(target: Event): Promise<void>;
   remove(target: Event[]): Promise<void>;
-  // search: (query: AdvancedEventSearchQuery) => Promise<any[]>;
+  search(query: string): Event[];
   isPresent: (item: string) => boolean;
   reload: () => Promise<void>;
   update: (target: EventData) => Promise<void>;
@@ -42,26 +43,31 @@ export default function useEvents(
   source: Member | null,
   Calendar: UseCalendar,
   expanded: boolean = false,
-  setSource: Dispatch<SetStateAction<Member | null>>,
-  Parent?: UseBase,
 ): UseEvents {
   const { enqueueSnackbar } = useSnackbar();
 
   const [days, setDays] = useState<CalendarDays<CalendarDay> | null>(null);
   const [events, setEvents] = useState<Event[] | null>(null);
   const [cache, setCache] = useState<{ id: string, start: Dayjs | null, end: Dayjs | null }>({ id: '', start: null, end: null });
-  const [loading, setLoading] = useState<boolean>(true);
+  const [eventsSearch, setEventsSearch] = useState<Fuse<Event> | null>(null)
 
   const debug = () => {
     return JSON.stringify({
       props: {
         source,
-      expanded,
+        expanded,
       },
       events,
-      loading,
       cache
     })
+  }
+
+  const search = (query: string) => {
+    if (!events || !eventsSearch) {
+      return events || [];
+    }
+    const results = eventsSearch.search(query);
+    return results.map(x => x.item) || [];
   }
 
   useEffect(() => {
@@ -73,27 +79,21 @@ export default function useEvents(
     const start = source instanceof Event && (source.date && source.end_date) ? source.date : Calendar.days[0].add(-1, 'week');
     let end = source instanceof Event && (source.date && source.end_date) ? source.end_date : Calendar.days[Calendar.days.length - 1].add(1, 'week');
 
-    if (days === null || !cache || source.id() !== cache.id || !cache.start || !cache.end) {
+    if (!cache || source.id() !== cache.id || !cache.start || !cache.end) {
+      setCache({
+        id: source.id(),
+        start: start,
+        end: end
+      });
       getEvents(start, end)
         .then(res => {
           console.log("Setting loading to false");
-          setLoading(false);
         });
-      setCache({
-        id: source.id(),
-        start: start.add(1, 'week'),
-        end: end.add(-1, 'week')
-      });
       return;
     }
 
     const needToFetch = start.isBefore(cache.start, 'D') || end.isAfter(cache.end, 'D');
     if (needToFetch) {
-      getEvents(start, end)
-        .then(res => {
-          console.log("Setting loading to false");
-          setLoading(false)
-        })
       setCache(prev => {
         return {
           ...prev,
@@ -101,6 +101,10 @@ export default function useEvents(
           end
         }
       });
+      getEvents(start, end)
+        .then(res => {
+          console.log("Setting loading to false");
+        })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, Calendar.days]);
@@ -233,7 +237,7 @@ export default function useEvents(
         newList.push(localObject);
         return newList;
       })
-      
+
     }
 
     newDays.version += 1;
@@ -329,25 +333,30 @@ export default function useEvents(
       if (!found) {
         continue;
       }
-    isFound = true;
+
+      if (!isArray) {
+        return found;
+      }
+
+      isFound = true;
       theEvents.push(found)
     }
 
     if (!isArray && !isFound) {
       return await Events.get(source, target[0])
-      .then(theEventData => {
-        if (!theEventData) {
-          console.log("No event data")
+        .then(theEventData => {
+          if (!theEventData) {
+            console.log("No event data")
+            return null;
+          }
+          return new Event(theEventData).localize();
+        })
+        .catch(err => {
+          console.log(err);
+          console.log('Error fetching events.')
           return null;
-        }
-        return new Event(theEventData).localize();
-      })
-      .catch(err => {
-        console.log(err);
-        console.log('Error fetching events.')
-        return null;
-      });
-      
+        });
+
     }
 
     return isArray ? theEvents : theEvents.length === 0 ? null : theEvents[0];
@@ -387,11 +396,14 @@ export default function useEvents(
           }
         };
 
-        console.log({
-          eventsArray,
-          theCalDays
-        });
+        const options = {
+          includeScore: true, // Include score in the result
+          threshold: 0.3,     // Match accuracy (0 = exact, 1 = match everything)
+          keys: ["name", "subtitle"]
+        };
+        const fuse = new Fuse(eventsArray, options);
 
+        setEventsSearch(fuse);
         setEvents(eventsArray);
         setDays(theCalDays);
 
@@ -411,7 +423,7 @@ export default function useEvents(
 
   return useMemo(() => {
     return {
-      loading,
+      loading: !events || !days || !source,
       days,
       get,
       add,
@@ -421,8 +433,9 @@ export default function useEvents(
       isPresent,
       reload,
       update,
-      debug
+      debug,
+      search
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, cache, events, days, source]);
+  }, [cache, events, days, source]);
 }

@@ -1,7 +1,7 @@
 "use client"
 import useBase, { UseBase } from '@/lib/global/useBase';
 import useSession, { UseSession } from '@/lib/global/useSession';
-import { CircularProgress, ThemeProvider, Typography, createTheme, lighten, useMediaQuery, useTheme } from '@mui/material';
+import { CircularProgress, LinearProgress, ThemeProvider, Typography, createTheme, lighten, useMediaQuery, useTheme } from '@mui/material';
 import { NextComponentType, NextPageContext } from 'next';
 import { Source_Sans_3 } from 'next/font/google';
 import { useRouter } from 'next/router';
@@ -26,13 +26,13 @@ import { useSnackbar } from 'notistack';
 import UnAuthProvider from './UnAuthProvider';
 import { Mode, Type } from '@/types/globals';
 import dayjs from 'dayjs';
-import SessionSidebar from './layout/SessionSidebar';
+import AppLayout from './AppLayout';
 
 const sora = Source_Sans_3({ subsets: ['latin'] });
 const protectedPaths = ['/be/', '/at/', 'be/at/'];
-const unprotected = ['/login', '/register', '/', '/theme'];
+const unprotected = ['/login', '/register', '/', '/theme', 'test'];
 
-const session_protected = ['/dashboard', '/me', '/test'];
+const session_protected = ['/dashboard', '/me'];
 
 const prefixToType = (path: string) => {
   if (path.startsWith('/be/')) {
@@ -183,26 +183,37 @@ export default function AuthProvider({
       return;
     }
 
-    let base_path = router.query.base ? String(router.query.base) : router.query.event ? String(router.query.event) : undefined;
+    let base_path = router.query.base ? String(router.query.base) : router.query.module ? String(router.query.module) : undefined;
 
 
+
+    // Session protected only
     if (base_path || router.pathname === "/" || session_protected.some(path => router.pathname.startsWith(path))) {
       Session.verify(base_path ? {
         value: base_path,
       } : null)
         .then((res: boolean) => {
+          if (!res) {
+            router.push('/me')
+          }
           console.log("Case 0")
           return;
         })
+        .catch(err => {
+          router.push('/me')
+        })
       return;
     }
+
+    // Session & Base protected
     else if (!unprotected.some(path => router.pathname === path) || router.pathname.startsWith('/about')) {
       if (!Session.session) {
         Session.verify(base_path ? {
           value: base_path,
-        } : null).then((res: boolean) => {
+        } : null)
+        .then((res: boolean) => {
           if (!res) {
-            router.push('/')
+            router.push('/me')
           }
           console.log({
             message: "Case 2",
@@ -210,6 +221,10 @@ export default function AuthProvider({
           })
           return;
         })
+        .catch(err => {
+          router.push('/me')
+        })
+
       } else {
         if (router.pathname.startsWith('/dashboard')) return;
         console.log("Case 3");
@@ -248,33 +263,43 @@ export default function AuthProvider({
 
   if (!Session || Session.loading || !Session.session) {
     return (
-      <div className='column compact center middle' style={{ height: "100vh", width: "100vw", color: theme.palette.text.primary, backgroundColor: theme.palette.background.paper }}>
-        <CircularProgress sx={{ color: "white" }} />
-        <Typography variant='caption'>No session. Session is loading.</Typography>
+      <div className='column center middle' style={{ height: "100vh", width: "100vw", color: theme.palette.text.primary, backgroundColor: theme.palette.background.paper }}>
+        <CircularProgress sx={{ color: theme.palette.text.primary }} />
+        <Typography variant="caption">Belong Platforms LLC. 2025</Typography>
       </div>
     )
   }
 
+
   if (session_protected.some(path => router.pathname.startsWith(path))) {
+
+    if (!Session.session) {
+      return (
+        <div className='column center middle' style={{ height: "100vh", width: "100vw", color: theme.palette.text.primary, backgroundColor: theme.palette.background.paper }}>
+          <CircularProgress sx={{ color: theme.palette.text.primary }} />
+          <Typography variant="caption">Belong Platforms LLC. 2025</Typography>
+        </div>
+      )
+    }
 
     return (
       <>
-        <NextNProgress color={theme.palette.primary.main} />
         <style jsx global>{`
             html {
               font-family: ${sora.style.fontFamily};
             }
-          `}</style>
+            `}</style>
         <ThemeProvider
-          theme={Session.Preferences.mode === 'light' ? theme : theme}
+          theme={Session.theme}
         >
-          <div className="column snug bottom" style={{
-            width: "100%",
-            minHeight: "100vh",
-            backgroundColor: Session.Preferences.mode === 'light' ? theme.palette.background.paper : theme.palette.background.paper
-          }}>
+          <NextNProgress color={Session.theme.palette.primary.main}
+            height={2}
+          />
+          <AppLayout
+            Session={Session as any}
+          >
             <UnAuthProvider Component={Component} {...pageProps} Session={Session} />
-          </div>
+          </AppLayout>
         </ThemeProvider>
 
       </>
@@ -283,71 +308,49 @@ export default function AuthProvider({
 
 
 
-  if (!Base || !Base.Events || !Base.Events.days) {
+  if (!Base || Base.loading || !Session.base) {
     return (
-      <div className='column compact center middle' style={{ height: "100vh", width: "100vw", color: theme.palette.text.primary }}>
-        <CircularProgress sx={{
-          color: theme.palette.text.primary
-        }} />
-        <div className="column center snug">
-          <Typography variant="caption">No base. No base events. No base days</Typography>
-          <Typography variant="caption">{router.pathname}</Typography>
-        </div>
-
+      <div className='column center middle' style={{ height: "100vh", width: "100vw", color: theme.palette.text.primary, backgroundColor: theme.palette.background.paper }}>
+        <CircularProgress sx={{ color: theme.palette.text.primary }} />
+        <Typography variant="caption">Belong Platforms LLC. 2025</Typography>
       </div>
     )
   }
 
   return (
     <>
-      <ThemeProvider theme={Base.theme}>
-        <NextNProgress color={Base.theme.palette.primary.main} />
-        <style jsx global>{`
+      <style jsx global>{`
           html {
             font-family: ${sora.style.fontFamily};
           }
         `}</style>
-        <div style={{
-          display: 'flex',
-          width: "100%",
-          minHeight: "100vh",
-          justifyContent: 'flex-end',
-          backgroundColor: Session.Preferences.mode === 'light' ? theme.palette.background.paper : theme.palette.background.paper
-        }}>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-            autoScroll={false}
+      <ThemeProvider theme={Base.theme}>
+        <NextNProgress color={Base.theme.palette.primary.main}
+          height={2}
+        />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+          autoScroll={false}
+        >
+          <AppLayout
+            Session={Session as any}
+            Base={Base}
+            Module={Module}
+            module={module as any}
+            setModule={setModule}
           >
-            <Sidebar Session={Session} Module={Module} module={module} Base={Base} />
-            <div
-              ref={containerRef}
-              id="container"
-              style={{
-                width: isSm ? "100%" : Session.Preferences.isSidebarDocked ? "calc(100% - 20rem)" : "100%",
-                overflowY: "scroll",
-                height: "100vh",
-                backgroundColor: Session.Preferences.mode === 'light' ? theme.palette.background.paper : theme.palette.background.paper
-              }}>
-              <Component
-                containerRef={containerRef}
-                {...pageProps}
-                setModule={setModule}
-                module={module}
-                Session={Session}
-                Base={Base}
-                Module={Module}
-              />
-              <>
-                {Base.Creator.CreateForm}
-              </>
-              <>
-                {Module.Creator.CreateForm}
-              </>
-            </div>
-          </DndContext>
-        </div>
+            <Component
+              {...pageProps}
+              setModule={setModule}
+              module={module}
+              Session={Session}
+              Base={Base}
+              Module={Module}
+            />
+          </AppLayout>
+        </DndContext>
       </ThemeProvider>
     </>
   );

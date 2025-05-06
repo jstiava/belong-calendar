@@ -6,6 +6,9 @@ import { Event } from "@/schema";
 import dayjs from '@/lib/utils/dayjs';
 
 
+export function isEventCalendar(event: Event): event is Event & { end_date: null } {
+    return (!event.date || !event.end_date) && !event.start_time;
+}
 
 export function isMultiDayEvent(event: Event): event is Event & { date: Dayjs; end_date: Dayjs } {
     return dayjs.isDayjs(event.date) && dayjs.isDayjs(event.end_date);
@@ -15,7 +18,7 @@ export function isAllSingleDay(event: Event): event is Event & { date: Dayjs; en
     return isMultiDayEvent(event) && (event.date.isSame(event.end_date));
 }
 
-export function isMoment(event: Event): event is Event & { date: Dayjs; start_time: Chronos; end_time: null } {
+export function isMoment(event: Event): event is Event & { date: Dayjs; start_time: Chronos; end_time: null, end_date: null } {
     return dayjs.isDayjs(event.date) && (event.start_time instanceof Chronos && !event.end_time)
 }
 
@@ -94,8 +97,16 @@ export class CalendarDays<T extends CalendarDay> {
             return;
         }
 
-        // might be scheduled
         if (!isNotScheduled(event)) {
+
+            console.log({
+                event,
+                isMoment: isMoment(event),
+                isMultiDayEvent: isMultiDayEvent(event),
+                isSingleTimeEvent: isSingleTimeEvent(event),
+                isNotScheduled: isNotScheduled(event)
+            });
+            
             for (let currDate = this.start; !currDate.isSame(this.end.add(1, 'day'), 'date'); currDate = currDate.add(1, 'day')) {
 
                 const schedulesForDay = event.getSchedulesInFrame(currDate);

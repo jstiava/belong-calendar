@@ -225,88 +225,6 @@ export default function IAMView(props: {
         },
     ];
 
-    const connectToGitHub = () => {
-
-        if (!props.item) {
-            return;
-        }
-
-        const GH_BASIC_CLIENT_ID = "Iv23liT56uQvuP29AUtr"
-
-
-        try {
-            router.push({
-                pathname: 'https://github.com/login/oauth/authorize',
-                query: {
-                    client_id: GH_BASIC_CLIENT_ID,
-                    redirect_uri: 'http://localhost:3000/api/v1/auth/callback',
-                    scope: 'repo, notifications',
-                    state: JSON.stringify({
-                        integration: 'github',
-                        from: router.asPath,
-                        base: props.item.id(),
-                        type: props.item.type
-                    })
-                },
-            });
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-    const connectToJotform = () => {
-
-        if (!props.item) {
-            return;
-        }
-
-        try {
-            router.push({
-                pathname: 'https://api.jotform.com/user/',
-                query: {
-                    apiKey: '60aeed6c99a57e4ee8b55bb638deb000',
-                    redirect_uri: 'http://localhost:3000/api/v1/auth/callback',
-                    state: JSON.stringify({
-                        integration: 'jotform',
-                        from: router.asPath,
-                        base: props.item.id(),
-                        type: props.item.type
-                    })
-                },
-            });
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-    const connectToStrava = () => {
-
-        if (!props.item) {
-            return;
-        }
-
-        const STRAVA_CLIENT_ID = "141535"
-        try {
-            router.push({
-                pathname: 'https://www.strava.com/oauth/authorize',
-                query: {
-                    client_id: STRAVA_CLIENT_ID,
-                    redirect_uri: 'http://localhost:3000/api/v1/auth/strava/callback',
-                    response_type: 'code',
-                    approval_prompt: 'force',
-                    scope: 'read,activity:read_all',
-                    state: JSON.stringify({
-                        integration: 'strava',
-                        from: router.asPath,
-                        base: props.item.id(),
-                        type: props.item.type
-                    })
-                },
-            });
-        } catch (error) {
-            console.log(error);
-        }
-    }
 
     const testStravaImport = async () => {
 
@@ -325,37 +243,6 @@ export default function IAMView(props: {
 
         } catch (error) {
             console.log(error);
-        }
-    }
-
-    const connectToGoogle = () => {
-        if (!props.item) {
-            return;
-        }
-
-        const GOOGLE_BASIC_CLIENT_ID = '178207176567-epjahnmagdcfpnb0j27eskhu4rvl6e6c.apps.googleusercontent.com';
-
-        try {
-            router.push({
-                pathname: 'https://accounts.google.com/o/oauth2/v2/auth',
-                query: {
-                    client_id: GOOGLE_BASIC_CLIENT_ID,
-                    redirect_uri: 'http://localhost:3000/api/v1/auth/callback',
-                    response_type: 'code',
-                    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.calendarlist https://www.googleapis.com/auth/calendar.events openid profile email',
-                    access_type: 'offline',
-                    prompt: 'consent',
-                    state: JSON.stringify({
-                        integration: 'google',
-                        from: router.asPath,
-                        base: props.item.id(),
-                        type: props.item.type
-                    })
-                },
-            });
-        }
-        catch (err) {
-            console.log(err);
         }
     }
 
@@ -383,7 +270,7 @@ export default function IAMView(props: {
                                 return;
                             }}
                         >Invite</Button>
-                        <Button
+                        {/* <Button
                             startIcon={<BadgeOutlined />}
                             onClick={() => {
                                 props.Base.Creator.startCreator(Type.Certificate, Mode.Create, null, {
@@ -394,7 +281,7 @@ export default function IAMView(props: {
                             }}
                         >
                             New Certificate
-                        </Button>
+                        </Button> */}
                     </div>
                     <DataGrid
                         apiRef={apiRef}
@@ -431,27 +318,6 @@ export default function IAMView(props: {
                         // rowSelectionModel={rowSelectionModel}
                         hideFooter
                     />
-                    <div className="column" style={{
-                        width: '100%',
-                        padding: "0 1rem",
-                        maxWidth: "30rem"
-                    }}>
-                        <Button sx={{
-                            width: "fit-content"
-                        }} onClick={connectToGitHub}>Connect to Github</Button>
-                        <Button sx={{
-                            width: "fit-content"
-                        }} onClick={connectToGoogle}>Connect to Google</Button>
-                        <Button sx={{
-                            width: "fit-content"
-                        }} onClick={connectToStrava}>Connect to Strava</Button>
-                        <Button sx={{
-                            width: "fit-content"
-                        }} onClick={connectToJotform}>Connect to Jotform</Button>
-                        <Button sx={{
-                            width: "fit-content"
-                        }} onClick={testStravaImport}>Import Data from Strava</Button>
-                    </div>
                 </div>
 
             </div>

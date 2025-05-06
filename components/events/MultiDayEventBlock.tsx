@@ -1,5 +1,5 @@
-import { LocationOnOutlined, EditOutlined, AddOutlined, BugReportOutlined, DeleteOutline } from '@mui/icons-material';
-import { useTheme, ButtonBase, Popover, Button, alpha } from '@mui/material';
+import { LocationOnOutlined, EditOutlined, AddOutlined, BugReportOutlined, DeleteOutline, CalendarMonthOutlined } from '@mui/icons-material';
+import { useTheme, ButtonBase, Popover, Button, alpha, Typography } from '@mui/material';
 import { MouseEvent, useState, useRef, useEffect, MutableRefObject } from 'react';
 import { Event, JunctionStatus, Member } from '@/schema';
 import { Type, Mode } from '@/types/globals';
@@ -30,7 +30,10 @@ export const MultiDayEventBlock = ({
 }: {
   i?: number;
   column: number;
-  event: Event;
+  event: Event & {
+    date: Dayjs,
+    end_date: Dayjs
+  };
   referenceTime: number;
   standardHeight: number;
   handleView?: StartViewer;
@@ -117,6 +120,11 @@ export const MultiDayEventBlock = ({
   const handleRightClick = (e: any) => {
     e.stopPropagation();
     e.preventDefault();
+
+    if (!handleView) {
+      return;
+    }
+    
     handleView(Type.Event, event, {
       e,
       date,
@@ -159,7 +167,7 @@ export const MultiDayEventBlock = ({
           color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.text.primary : theme.palette.text.primary,
           border: '3px solid transparent',
           padding: '0 0.25rem',
-          height: "1.4rem",
+          height: "1.75rem",
           boxShadow: isHovered
             ? 'rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;'
             : 'rgba(0, 0, 0, 0.05) 0px 3px 6px, rgba(0, 0, 0, 0.1) 0px 3px 6px;',
@@ -177,14 +185,16 @@ export const MultiDayEventBlock = ({
             justifyContent: 'flex-start',
           }}
         >
-          <span style={{
-            fontSize: '0.75rem',
-            whiteSpace: "nowrap",
-            textOverflow: "ellipsis",
-            overflow: "hidden",
-          }}>
-            {event.date.to(event.end_date)} <strong>{event.name}</strong>
-          </span>
+          <div className="flex compact2">
+            <CalendarMonthOutlined sx={{
+              fontSize: '0.875rem'
+            }}/>
+            
+            <Typography sx={{
+              fontSize: '0.75rem',
+              lineHeight: '115%'
+            }}>{event.name}</Typography>
+          </div>
           {event.location_name && (
             <>
               <div style={{ display: 'flex', alignItems: 'flex-start' }}>

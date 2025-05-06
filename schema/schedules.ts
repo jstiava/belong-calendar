@@ -585,7 +585,7 @@ export class Schedule implements Member {
     }
 
 
-    add = (other: { start_time: Chronos, end_time: Chronos, date: Dayjs, end_date?: Dayjs }, subtract = false): Schedule => {
+    add = (other: { start_time: Chronos, end_time: Chronos, date: Dayjs, end_date?: Dayjs | null }, subtract = false): Schedule => {
         const copy = new Schedule({
             ...this.eject(),
             uuid: String(uuidv4()),
@@ -627,7 +627,7 @@ export class Schedule implements Member {
         return copy;
     }
 
-    subtract = (other: { start_time: Chronos, end_time: Chronos, date: Dayjs, end_date?: Dayjs }): Schedule => {
+    subtract = (other: { start_time: Chronos, end_time: Chronos, date: Dayjs, end_date?: Dayjs | null }): Schedule => {
         return this.add(other, true);
     };
 

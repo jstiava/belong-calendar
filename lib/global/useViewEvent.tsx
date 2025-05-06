@@ -31,7 +31,8 @@ import {
   VisibilityOutlined,
   Delete,
   CalendarMonthOutlined,
-  OpenInNew
+  OpenInNew,
+  RestaurantRounded
 } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { Event, JunctionStatus, Member, MemberFactory, Schedule, ScheduleData, ScheduleType } from '@/schema';
@@ -46,6 +47,7 @@ import Chronos from '../utils/chronos';
 import { v4 as uuidv4 } from 'uuid';
 import { MEDIA_BASE_URI } from '../useComplexFileDrop';
 import { BackgroundImageGallery, PortraitImage } from '@/components/Image';
+import { isSingleTimeEvent } from '../CalendarDays';
 
 
 export default function useViewEvent(
@@ -70,12 +72,12 @@ export default function useViewEvent(
     schedules: Schedule[],
     date: Dayjs,
     uuid: string,
-    closeEarly: Dayjs
+    closeEarly: Dayjs | null
   }>(null);
 
   const isSM = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const getCloseEarlySuggestedValue = (selected) => {
+  const getCloseEarlySuggestedValue = (selected : any) => {
     try {
       const hours = selected.active.getHours(selected.date.day(), new Chronos(12));
       if (typeof hours === 'boolean') {
@@ -88,7 +90,7 @@ export default function useViewEvent(
     }
   }
 
-  const setDayToRegularHours = async (e, s: {
+  const setDayToRegularHours = async (e : any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
@@ -96,7 +98,7 @@ export default function useViewEvent(
   }) => {
     const theEvent = event;
 
-    if (!theEvent || theEvent instanceof Array) {
+    if (!source || !theEvent || theEvent instanceof Array) {
       return;
     };
 
@@ -114,11 +116,15 @@ export default function useViewEvent(
     const schedules = theEvent.getSchedulesInFrame(s.date);
     if ((s.active && schedules.length > 1) && (schedules[1].uuid === regular.uuid)) {
 
+      if (!s.active.start_date || !s.active.end_date || !theEvent.schedules || !s.active) {
+        return;
+      }
+
       if (s.active.start_date.isSame(s.date, 'd') && s.active.end_date.isSame(s.date, 'd')) {
         try {
-          const filtered = theEvent.schedules.filter(x => s.active.uuid != x.uuid);
+          const filtered = theEvent.schedules.filter(x => s.active!.uuid != x.uuid);
           theEvent.schedules = filtered;
-          await Events.replace(theEvent.eject());
+          await Events.swap(theEvent);
         }
         catch (err) {
           console.log("Error");
@@ -142,7 +148,7 @@ export default function useViewEvent(
     return;
   }
 
-  const addSchedule = async (e, s: {
+  const addSchedule = async (e : any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
@@ -177,7 +183,7 @@ export default function useViewEvent(
     })
   }
 
-  const editSchedule = async (e, s: {
+  const editSchedule = async (e : any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
@@ -186,7 +192,7 @@ export default function useViewEvent(
 
     const theEvent = event;
 
-    if (!theEvent || theEvent instanceof Array) {
+    if (!source || !s.active || !theEvent || theEvent instanceof Array) {
       return;
     };
 
@@ -201,23 +207,28 @@ export default function useViewEvent(
           newObject
         })
         theEvent.pushSchedule(newObject);
-        Events.replace(theEvent.eject());
+        Events.swap(theEvent);
       }
     })
 
     return;
   }
 
-  const commitCloseEarly = async (e, s: {
+  const commitCloseEarly = async (e : any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
     uuid: string,
-    closeEarly: Dayjs
+    closeEarly: Dayjs | null
   }) => {
+
+    if (!s.closeEarly) {
+      return;
+    }
+
     const theEvent = event;
 
-    if (!theEvent || theEvent instanceof Array) {
+    if (!source || !theEvent || theEvent instanceof Array) {
       console.log({
         message: "No event found",
         s
@@ -266,7 +277,7 @@ export default function useViewEvent(
     return;
   }
 
-  const commitCloseAllDay = async (e, s: {
+  const commitCloseAllDay = async (e : any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
@@ -275,7 +286,7 @@ export default function useViewEvent(
 
     const theEvent = event;
 
-    if (!theEvent || theEvent instanceof Array) {
+    if (!source || !theEvent || theEvent instanceof Array) {
       return;
     }
 
@@ -302,12 +313,12 @@ export default function useViewEvent(
     const isOpen = theEvent.isOpenDetailed(props.date);
     setIsOpenDetailed(isOpen);
 
-    if (!theEvent || theEvent instanceof Array) {
+    if (!theEvent || theEvent instanceof Array || !isOpen) {
       return;
     }
     const theValue = {
       uuid: theEvent.uuid,
-      schedules: theEvent.schedules,
+      schedules: theEvent.schedules ? theEvent.schedules : [],
       active: isOpen.schedule,
       date: props.date,
       closeEarly: null
@@ -421,7 +432,7 @@ export default function useViewEvent(
           onClick={(e) => {
             e.preventDefault();
             handleCloseEvent();
-            router.push(`/event/${event.id()}?base=${router.query.base}`);
+            event && router.push(`/event/${event.id()}?base=${router.query.base}`);
           }}>
 
           {event && event.cover_img && (
@@ -450,65 +461,78 @@ export default function useViewEvent(
               )}
               <BackgroundImageGallery
                 base={`${MEDIA_BASE_URI}`}
-                keys={event.cover_img ? [event.getCoverImageLink()] : event.metadata.files || []}
+                keys={event.cover_img ? [event.getCoverImageLink() || ''] : event.metadata.files || []}
                 width="100%"
                 height="10rem"
               />
             </div>
           )}
           <div className="column" style={{
-            padding: "1.5rem 2rem"
+            padding: "1.5rem"
           }}>
 
-            {event && (
-              <Typography variant="caption">{event.uuid}</Typography>
-            )}
+            <div className="column snug">
 
-            <div className="flex between">
 
-              <div style={{ display: 'inline' }}>
-                <Link variant="h5" component="h2"
-                  className="hover-underline"
-                  sx={{
-                    display: 'inline',
-                    backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${tempTheme.palette.primary.contrastText}, ${tempTheme.palette.primary.contrastText})`,
-                    textDecoration: `none`,
-                    backgroundSize: `100% 0.15rem, 0 0.15rem`,
-                    backgroundPosition: `100% 100%,0 100%`,
-                    backgroundRepeat: `no-repeat`,
-                    transition: `background-size .3s`,
-                    color: 'inherit',
-                    cursor: "pointer",
-                    whiteSpace: "pre-line",
-                    fontWeight: 800,
-                    textAlign: 'left'
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCloseEvent();
-                    const currentQuery = router.query;
-                    router.push(`/event/${event.id()}?base=${currentQuery.base}`)
-                  }}>
-                  {event && event.name}
-                </Link>
+              <div className="flex between">
+
+                <div style={{ display: 'inline' }}>
+                  <Link variant="h5" component="h2"
+                    className="hover-underline"
+                    sx={{
+                      display: 'inline',
+                      backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${tempTheme.palette.primary.contrastText}, ${tempTheme.palette.primary.contrastText})`,
+                      textDecoration: `none`,
+                      backgroundSize: `100% 0.15rem, 0 0.15rem`,
+                      backgroundPosition: `100% 100%,0 100%`,
+                      backgroundRepeat: `no-repeat`,
+                      transition: `background-size .3s`,
+                      color: 'inherit',
+                      cursor: "pointer",
+                      whiteSpace: "pre-wrap",
+                      fontWeight: 700,
+                      textAlign: 'left',
+                      lineHeight: '115%',
+                      fontSize: "1.25rem"
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCloseEvent();
+                      const currentQuery = router.query;
+
+                      const pathParts = router.pathname.split('/');
+                      const currentTab = pathParts[3];
+                      const { base, module, ...rest } = router.query;
+                      if (event) {
+                        router.push({
+                          pathname: `${router.asPath.startsWith('/me') ? '/me/' : '/be/'}${event.id()}${currentTab ? `/${currentTab}` : ``}`,
+                          query: {
+                            ...rest,
+                            base: source?.id()
+                          }
+                        })
+                      }
+                    }}>
+                    {event && event.name}
+                  </Link>
+                </div>
+                {event && (event.icon_img && !event.cover_img) ? (
+                  <PortraitImage
+                    path={`${MEDIA_BASE_URI}/${event.icon_img.path}`}
+                    diameter="4rem"
+                    style={{
+                      backgroundColor: event.theme_color || "black",
+                      zIndex: 5
+                    }}
+                  />
+                ) : (
+                  <></>
+                )}
               </div>
-              {event && (event.icon_img && !event.cover_img) ? (
-                <PortraitImage
-                  path={`${MEDIA_BASE_URI}/${event.icon_img.path}`}
-                  diameter="4rem"
-                  style={{
-                    backgroundColor: event.theme_color || "black",
-                    zIndex: 5
-                  }}
-                />
-              ) : (
-                <></>
-              )}
+              {event && event.subtitle && <Typography variant="caption">{event.subtitle}</Typography>}
             </div>
             {event && (
               <div className="column">
-                {event && event.subtitle && <Typography>{event.subtitle}</Typography>}
-
                 {event.date && event.end_date && (
                   <div className="column compact">
                     <div className="flex compact">
@@ -541,7 +565,7 @@ export default function useViewEvent(
                   </>
                 )}
 
-                {event && event.start_time && (
+                {event && isSingleTimeEvent(event) && (
                   <div className="column compact">
                     <div className="flex">
                       <div className="flex compact fit">
@@ -590,9 +614,10 @@ export default function useViewEvent(
               (() => {
                 const theLink = event.children.find(e => e.link != null);
 
-                if (!theLink) {
+                if (!theLink || !theLink.link) {
                   return null;
                 }
+
                 return (
                   <Button
                     variant={'flipped'}
@@ -604,7 +629,7 @@ export default function useViewEvent(
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.open(theLink.link, '_blank')
+                      window.open(String(theLink.link), '_blank')
                     }}
                   >
                     {theLink.name}
@@ -612,15 +637,6 @@ export default function useViewEvent(
                 )
               })()
             )}
-
-            {event && event.junctions && (
-              <Typography sx={{
-                whiteSpace: 'pre-wrap',
-                width: "100%",
-                fontSize: "0.75rem"
-              }}>{JSON.stringify(Array.from(event.junctions.entries()), null, 2)}</Typography>
-            )}
-
             <div
               className="flex between"
               style={{
@@ -653,7 +669,7 @@ export default function useViewEvent(
                   </Button>
                 </>
               )}
-              {event && event.junctions.has(source.id()) && event.junctions.get(source.id()).status != JunctionStatus.Accepted && (
+              {(event && source) && event.junctions.has(source.id()) && event.junctions.get(source.id())?.status != JunctionStatus.Accepted && (
                 <div className="column compact" style={{ margin: "0.5rem 0" }}>
                   <Button size="small" variant="flipped" onClick={async (e) => {
                     e.stopPropagation();
@@ -690,7 +706,7 @@ export default function useViewEvent(
 
         {event && (event.end_date || !event.date) && (
           <>
-            {member && member.is_shown && (
+            {/* {member && member.is_shown && (
 
               <Button
                 onClick={async () => {
@@ -708,10 +724,10 @@ export default function useViewEvent(
                   handleCloseEvent();
                 }}
                 sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }} variant="text" startIcon={<HideSource />}>Hide on Calendar</Button>
-            )}
+            )} */}
 
 
-            {member && !member.is_shown && (
+            {member && source && !member.is_shown && (
 
               <Button
                 onClick={async () => {
@@ -742,7 +758,7 @@ export default function useViewEvent(
             sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }} variant="text" startIcon={<UpdateOutlined />}>Set to Regular Hours</Button>
         )}
 
-        {event && !event.date && (
+        {event && quickScheduleTools && !event.date && (
 
           <Button
             onClick={async (e) => {
@@ -771,7 +787,10 @@ export default function useViewEvent(
             <TimePicker
               format='h:mm A'
               value={quickScheduleTools.closeEarly}
-              onChange={(date) => setQuickScheduleTools((prev) => {
+              onChange={(date) => setQuickScheduleTools((prev: any) => {
+                if (!prev) {
+                  return null;
+                }
                 return {
                   ...prev,
                   closeEarly: date
@@ -798,7 +817,7 @@ export default function useViewEvent(
           </div>
         )}
 
-        {event && !event.date && (
+        {event && quickScheduleTools && !event.date && (
 
           <Button
             variant="contained"

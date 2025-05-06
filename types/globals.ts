@@ -20,9 +20,6 @@ import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 
 
-
-
-
 export const adjustForContrast = (color: string, percentage: number, reverse: boolean = false) => {
   try {
     const theme = useTheme();
@@ -33,8 +30,6 @@ export const adjustForContrast = (color: string, percentage: number, reverse: bo
     return "#ffffff";
   }
 }
-
-
 
 export function getIntegrationIcon(key: string) {
 
@@ -57,19 +52,17 @@ export enum Mode {
   Create = "Create",
   Modify = "Modify",
   Delete = "Delete",
-  Copy = "Copy"
+  Copy = "Copy",
 }
 
 
 
 export enum Type {
   Event = "Event",
-  Merchant = "Merchant",
   Location = "Location",
   Profile = "Profile",
   Group = "Group",
-  Reservation = "Reservation",
-  Certificate = "Certificate",
+  Custom = "Custom",
   Schedule = "Schedule"
 }
 
@@ -85,13 +78,16 @@ export interface ImageFile {
 
 
 export interface AppPageProps {
-  module: Member;
-  Session: UseSession;
+  Session: UseSession & {
+    session: Member,
+    base: Member
+  };
   Base: UseBase;
   Module: UseBase;
+  module: Member | null;
   setModule: Dispatch<SetStateAction<Member>>;
-  Socket: UseSocket;
-  containerRef: React.RefObject<HTMLElement>;
+  // Socket: UseSocket;
+  // containerRef: React.RefObject<HTMLElement>;
 }
 
 export interface UnAuthPageProps {
@@ -141,7 +137,7 @@ export class BaseService {
   }
 
 
-  static resolveParentIdentifier = (item: HostData | Membership): string => {
+  static resolveParentIdentifier = (item: HostData | Membership): string | null => {
 
     if (item.group_id) {
       return item.group_id;
@@ -224,8 +220,8 @@ export class Base {
         return "from_event_to";
       case Type.Profile:
         return "from_profile_to";
-      case Type.Certificate:
-        return "from_cert_to";
+      // case Type.Certificate:
+      //   return "from_cert_to";
       default:
         throw Error("Can't get base token type.")
     }

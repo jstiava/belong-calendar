@@ -1,42 +1,236 @@
 'use client';
+import { AppPageProps, BaseService, Mode, Type } from '@/types/globals';
 import { useRouter } from 'next/router';
-import { SessionProtectedAppPageProps } from '@/types/globals';
-import { Typography, useTheme } from '@mui/material';
+import { Avatar, Button, lighten, Typography, useTheme } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useState } from 'react';
-import useIAM from '@/lib/global/useIAM';
+import { ChangeEvent, useState } from 'react';
+import { Group } from '@/schema';
+import axiosInstance from '@/lib/utils/axios';
+import ResolveItemIcon from '@/components/ResolveItemIcon';
 
-const IntegrationsPage = (props: SessionProtectedAppPageProps) => {
+
+const Actions = {
+}
+
+
+export const IntegrationTemplates = [
+    {
+        name: "Connect to Jotform",
+        slug: 'jotform',
+        url: "https://api.jotform.com/user/",
+        type: "Key",
+        theme_color: '#0097ff',
+        subtitle: "Import a form, extend its functionality, track respondents, manage your notifications, and close automatically.",
+        query: {
+            // apiKey: "60aeed6c99a57e4ee8b55bb638deb000"
+        },
+    },
+    {
+        name: "Connect to Strava",
+        slug: 'strava',
+        url: 'https://www.strava.com/oauth/authorize',
+        type: "OAuth2",
+        subtitle: "Import my activities, track workouts, and visualize progress.",
+        theme_color: '#f44a02',
+        query: {
+            client_id: "141535",
+            response_type: 'code',
+            approval_prompt: 'force',
+            scope: 'read,activity:read_all',
+        },
+    },
+    {
+        name: "Connect to Google",
+        slug: 'google',
+        url: " https://accounts.google.com/o/oauth2/v2/auth",
+        type: "OAuth2",
+        subtitle: "Use all google tools and services.",
+        theme_color: '#517ec0',
+        query: {
+            client_id: "178207176567-epjahnmagdcfpnb0j27eskhu4rvl6e6c.apps.googleusercontent.com",
+            response_type: "code",
+            scope: "openid email profile https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/forms.body https://www.googleapis.com/auth/forms.responses.readonly",
+            access_type: "offline",
+            prompt: "consent"
+        },
+    },
+    {
+        name: "Github",
+        slug: 'github',
+        url: "https://github.com/login/oauth/authorize",
+        type: "OAuth2",
+        subtitle: "Enter a name, date and time, schedule, and creative additions.",
+        theme_color: '#002155',
+        query: {
+            client_id: "Iv23liT56uQvuP29AUtr",
+            scope: 'repo, notifications',
+        },
+    },
+]
+
+const MainBasePage = (props: AppPageProps) => {
     const router = useRouter();
     const theme = useTheme();
     const { enqueueSnackbar } = useSnackbar();
 
     const Session = props.Session;
-    const prefix = '/me/';
-    const IAM = useIAM(props.Session.session, false);
+    const Base = props.Base;
+    const item = props.Session.session;
+    const columns = 3;
+    const delayStep = 100;
 
-    if (!Session.session || !IAM) {
-        return <><Typography>Loading session page.</Typography></>
+    const [newItem, setNewItem] = useState(item);
+    const prefix = '/me/';
+
+    const handleChange = (eventOrName: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string, value: any) => {
+        if (typeof eventOrName === "string") {
+            setNewItem((prev: any) => ({
+                ...prev,
+                [eventOrName]: value
+            }));
+            return;
+        }
+        if (!eventOrName.target.name) {
+            return;
+        }
+        setNewItem((prev: any) => ({
+            ...prev,
+            [eventOrName.target.name]: value
+        }));
+    }
+
+    const handleIntegrate = (integration: any) => {
+
+        router.push({
+            pathname: integration.url,
+            query: {
+                ...integration.query,
+                redirect_uri: 'http://localhost:3000/api/v1/auth/callback',
+                state: JSON.stringify({
+                    integration: integration.slug,
+                    from: router.asPath,
+                    base: props.Session.session.id(),
+                    type: Type.Profile
+                })
+            }
+        })
     }
 
     return (
-        <div id="content">
-             <div className="column">
-                <Typography>Parents</Typography>
-                {IAM.parents?.map(x => {
+        <div id="main"
+            className="column relaxed"
+            style={{
+                padding: "2rem"
+            }}>
+            <div className="column compact">
+                <Typography variant="h4">Integrations</Typography>
+                <Typography>Import. Watch. Analyze. Grow. Do more.</Typography>
+            </div>
+
+            <div className="flex wrap top" style={{
+                flexWrap: 'wrap'
+            }}>
+
+                {IntegrationTemplates.map(x => {
                     return (
-                        <Typography key={x.uuid}>{JSON.stringify(x.eject(), null, 2)}</Typography>
+                        <div
+                            key={x.name}
+                            className="column snug"
+                            style={{
+                                margin: "0 1rem 1rem 0",
+                                width: "20rem",
+                                backgroundColor: lighten(x.theme_color, 0.9),
+                                borderRadius: '0.25rem'
+                            }} >
+
+                            <div
+                                className="column compact right"
+                                style={{
+                                    padding: "1.25rem 1.5rem",
+                                }}
+                            >
+
+                                <div className="flex top">
+                                    <Avatar
+                                        alt={x.slug}
+                                        sx={{
+                                            width: "2.5rem",
+                                            height: "2.5rem",
+                                            // border: `0.15rem solid ${parent.theme_color || 'transparent'} !important`,
+                                            backgroundColor: x.theme_color,
+                                            color: theme.palette.getContrastText(x.theme_color)
+                                        }}
+                                    >
+                                        <ResolveItemIcon
+                                            item={{
+                                                type: Type.Group,
+                                                integration: x.slug
+                                            }}
+                                            sx={{
+                                                color: theme.palette.getContrastText(x.theme_color)
+                                            }}
+                                        />
+                                    </Avatar>
+                                    <div className="column snug left">
+                                        <Typography variant="h6" sx={{
+                                            textTransform: 'capitalize !important'
+                                        }}>{x.name}</Typography>
+                                        <Typography variant="caption" sx={{
+                                            height: "4rem"
+                                        }}>{x.subtitle}</Typography>
+                                    </div>
+                                </div>
+
+                                <Button sx={{
+                                    color: x.theme_color,
+                                }}
+                                    onClick={() => {
+
+                                        if (x.type === 'OAuth2') {
+                                            handleIntegrate(x);
+                                            return;
+                                        }
+                                        props.Session.Creator.startCreator(Type.Custom, Mode.Create, null, {
+                                            callback: async (item: any) => {
+                                                axiosInstance.get(`/api/v1/auth/identify`, {
+                                                    params: {
+                                                        apiKey: item.apiKey,
+                                                        integration: 'jotform'
+                                                    }
+                                                })
+                                                    .then(res => {
+                                                        console.log(res)
+
+                                                        const newBase = new Group(res.data.identity);
+                                                        props.Session.addNewBase(newBase.eject())
+                                                            .then(res => {
+                                                                router.push('/me')
+                                                            })
+                                                            .catch(err => {
+                                                                console.error(err);
+                                                            })
+
+                                                    })
+                                                    .catch(err => [
+                                                        console.error(err)
+                                                    ])
+
+                                                return;
+                                            }
+                                        });
+
+                                        return;
+                                    }}
+                                >Configure</Button>
+
+                            </div>
+                        </div>
                     )
                 })}
-                  <Typography>Members</Typography>
-                {IAM.members?.map(x => {
-                    return (
-                        <Typography key={x.uuid}>{JSON.stringify(x, null, 2)}</Typography>
-                    )
-                })}
-             </div>
+
+            </div>
         </div>
     );
 }
 
-export default IntegrationsPage;
+export default MainBasePage;

@@ -29,7 +29,12 @@ export const SingleDayEventBlock = ({
   DayInMonthRef
 }: {
   column: number;
-  event: Event;
+  event: Event & {
+    start_time: Chronos,
+    date: Dayjs,
+    end_time: Chronos,
+    end_date: null
+  };
   referenceTime: number;
   standardHeight: number;
   handleView?: StartViewer;
@@ -67,6 +72,8 @@ export const SingleDayEventBlock = ({
     }
 
     return () => observer.disconnect();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleClose = () => {

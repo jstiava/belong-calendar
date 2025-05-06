@@ -13,8 +13,9 @@ import { TransitionGroup } from 'react-transition-group';
 import { useSnackbar } from 'notistack';
 import { UseSession } from './useSession';
 import { CreatePanel } from '../useCreatePanel';
+import { redirect } from 'next/dist/server/api-utils';
 
-export const CreatorModules : Record<Type, any> = {
+export const CreatorModules: Record<Type, any> = {
   [Type.Event]: {
     title: "Create Event",
     description: "Enter a name, date and time, schedule, and creative additions.",
@@ -47,19 +48,22 @@ export const CreatorModules : Record<Type, any> = {
     ],
     footer: []
   },
-  [Type.Merchant]: {},
   [Type.Location]: {},
   [Type.Profile]: undefined,
-  [Type.Reservation]: undefined,
-  [Type.Certificate]: undefined,
-  [Type.Schedule]: undefined
+  [Type.Custom]: {
+    title: "Create Integration",
+    body: [
+      "apiKey",
+    ],
+  },
+  [Type.Schedule]: undefined,
 }
 
 export interface CreatePanelProps {
   item: any;
   source: Member;
   Base: UseBaseCore;
-  Session: UseSession,
+  Session?: UseSession,
   Parent?: UseBaseCore;
   removePanel: (uuid: string) => void;
   [key: string]: any;
@@ -95,7 +99,7 @@ export interface UseCreator {
   startCreator: StartCreator;
 }
 
-export default function useCreator(source: Member | null, Base: UseBaseCore, Session: UseSession, Parent?: UseBaseCore, parent?: Member | null): UseCreator {
+export default function useCreator(source: Member | null, Base: UseBaseCore, Session?: UseSession, Parent?: UseBaseCore, parent?: Member | null): UseCreator {
 
   const theme = Base.theme;
   const [isOpen, setIsOpen] = useState(false);
@@ -136,7 +140,7 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
 
 
   const startCreator = useCallback(async (type: Type, mode: Mode, item: Member | null = null, props: any = {}) => {
-    
+
     let key = null;
     if (!source) {
       console.log("No source");
@@ -144,9 +148,29 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
     }
 
     if (!item) {
+
+      if (type === Type.Custom) {
+        const panel = {
+          ...props,
+          key,
+          type: type,
+          mode: mode,
+          // metadata: item.metadata || {},
+          callback: props.callback || null,
+        }
+    
+        toggleDrawer(true);
+        addPanel(panel);
+
+        return;
+      };
+
       item = MemberFactory.create(type, {
         theme_color: source ? source.theme_color : parent ? parent.theme_color : theme.palette.primary.main
       })
+    }
+    else {
+      item.theme_color = item.theme_color ? item.theme_color : source ? source.theme_color : parent ? parent.theme_color : theme.palette.primary.main;
     }
 
     switch (mode) {
@@ -174,7 +198,7 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
         key = true;
         if (source) item.junctions.set(source.id(), MemberFactory.connect(source, item));
         if (parent) item.junctions.set(parent.id(), MemberFactory.connect(parent, item));
-        if ((!source && !parent) && Session.session) {
+        if (Session && ((!source && !parent) && Session.session)) {
           item.junctions.set(Session.session.id(), MemberFactory.connect(Session.session, item))
         }
 
@@ -231,25 +255,24 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
       console.log("No source");
       return null;
     }
-    
+
     return panels.map((item, index: number) => {
       const key = `${item.type}-${item.mode}-${item.uuid}`;
       console.log(key);
       return (
-        <Collapse key={key}>
-          <CreatePanel
-            item={item}
-            source={source}
-            Base={Base}
-            Parent={Parent}
-            Session={Session}
-            removePanel={removePanel}
-            doesPanelExist={doesPanelExist}
-            index={index}
-            startCreator={startCreator}
-            parent={parent}
-          />
-        </Collapse>
+        <CreatePanel
+          key={key}
+          item={item}
+          source={source}
+          Base={Base}
+          Parent={Parent}
+          Session={Session}
+          removePanel={removePanel}
+          doesPanelExist={doesPanelExist}
+          index={index}
+          startCreator={startCreator}
+          parent={parent}
+        />
       );
     }).filter(Boolean);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -333,12 +356,13 @@ export const SharedCreatorPanelStyles: CSSProperties = {
 }
 
 export const CreatorPanelStyles: CSSProperties = {
-  top: '50vh',
-  left: "50vw",
-  width: '40rem',
+  bottom: "1rem",
+  right: "1rem",
+  width: '35rem',
   maxWidth: "100vw",
   maxHeight: '100vh',
   borderRadius: '0.5rem',
+  position: 'absolute'
 }
 
 export const CreatorPanelMobileStyles: CSSProperties = {
@@ -349,3 +373,17 @@ export const CreatorPanelMobileStyles: CSSProperties = {
   minHeight: '100vh',
   borderRadius: 0,
 }
+
+
+
+
+
+/**
+ *  state: JSON.stringify({
+                        integration: 'strava',
+                        from: router.asPath,
+                        base: props.item.id(),
+                        type: props.item.type
+                    })
+ */
+

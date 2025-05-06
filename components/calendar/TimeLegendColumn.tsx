@@ -26,21 +26,8 @@ export default function TimeLegendColumn({
         width,
         left: 0,
         top: 0,
-        padding: "0 0.5rem 0 0"
+        padding: "0"
       }}>
-        <div
-          className="flex compact"
-          style={{
-            width: '100%',
-            height: '5rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'sticky',
-            top: '0rem',
-          }}
-        >
-        </div>
         {sequence && sequence.map((time: number) => {
 
           const theTime = new Chronos(time);

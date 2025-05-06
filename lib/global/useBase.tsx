@@ -5,21 +5,23 @@ import { Sora } from 'next/font/google';
 import { enqueueSnackbar } from 'notistack';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { UseSession } from '@/lib/global/useSession';
-import { Member, MemberData } from '@/schema';
+import { Member, MemberData, MemberFactory, Profile } from '@/schema';
 import useCalendar, { UseCalendar } from '../useCalendar';
 import useEvents, { UseEvents } from './useEvents';
 import useCreator, { UseCreator } from './useCreate';
 import { Type } from '@/types/globals';
 import useLocations, { UseLocations } from './useLocations';
 import { NullFilterOption } from 'aws-sdk/clients/quicksight';
+import useViewEvent from './useViewEvent';
+import useIAM, { UseIAM } from './useIAM';
+import axiosInstance from '@/lib/utils/axios';
 
 
 export interface UseBaseCore {
   theme: any,
   Calendar: UseCalendar,
   Events: UseEvents,
-  Locations: UseLocations,
-  loading: boolean,
+  Locations?: UseLocations,
   add: (type: Type, item: MemberData) => any,
   update: (type: Type, item: MemberData) => any,
 }
@@ -33,8 +35,9 @@ export interface UseBase {
   Creator: UseCreator,
   add: (type: Type, item: MemberData) => any,
   update: (type: Type, item: MemberData) => any,
-  debug: () => any
-  // Viewer: UseView
+  debug: () => any,
+  Viewer: ReturnType<typeof useViewEvent>,
+  IAM: UseIAM
 }
 
 
@@ -43,8 +46,10 @@ export default function useBase(source: Member | null, Session: UseSession, setS
   const theme = useTheme();
   const [loading, setLoading] = useState<boolean>(false);
   const Calendar = useCalendar();
-  const Events = useEvents(source, Calendar, expanded, setSource, Base);
+  const Events = useEvents(source, Calendar, expanded);
   const Locations = useLocations(source);
+  const IAM = useIAM(source);
+
 
   const debug = () => {
     return JSON.stringify({
@@ -69,17 +74,44 @@ export default function useBase(source: Member | null, Session: UseSession, setS
     }
   }
 
-  const update = (type: Type, item: MemberData) => {
+  const update = async (type: Type, item: MemberData) => {
+
+    console.log({
+      message: "Update",
+      type,
+      item
+    })
+
+    if (source && item.uuid === source.id()) {
+      
+      return await axiosInstance.patch(`/api/v1/groups`, {
+        isUser: source instanceof Profile,
+        source: MemberFactory.getToken(source),
+        uuid: item.uuid,
+        data: item,
+      })
+      .then(res => {
+        return res;
+      })
+      .catch(err => {
+        console.log(err);
+        throw Error("Something went wrong that prevented an event update.")
+      })
+
+    }
+
     switch (type) {
       case Type.Event:
-        return Events.update(item);
+        return await Events.update(item);
       case Type.Location:
-        return Locations.update(item);
+        return await Locations.update(item);
     }
+
+    
   }
 
 
-  let lightTheme : Theme = {
+  let lightTheme: Theme = {
     ...theme,
     palette: {
       ...theme.palette,
@@ -146,7 +178,7 @@ export default function useBase(source: Member | null, Session: UseSession, setS
     },
   });
 
-  let darkTheme : Theme = {
+  let darkTheme: Theme = {
     ...theme,
     palette: {
       ...theme.palette,
@@ -214,8 +246,16 @@ export default function useBase(source: Member | null, Session: UseSession, setS
   })
 
   const Creator = useCreator(source, {
-    theme: Session.Preferences.mode === "light" ? lightTheme : darkTheme, Calendar, Events, Locations, loading, add, update
+    theme: Session.Preferences.mode === "light" ? lightTheme : darkTheme, Calendar, Events, Locations, add, update
   }, Session, Base, parent);
+
+  const Viewer = useViewEvent(
+    source,
+    Events,
+    Creator.startCreator,
+    theme
+  );
+
   // const Viewer = useView(source, { theme: Session.Preferences.mode === "light" ? lightTheme : darkTheme, Calendar, Events, Locations, loading }, Creator.startCreator);
 
   useEffect(() => {
@@ -232,14 +272,16 @@ export default function useBase(source: Member | null, Session: UseSession, setS
       Calendar,
       Events,
       Locations,
-      loading: source ? true : false,
+      loading: !source || Events.loading,
       Creator,
       add,
       update,
-      debug
+      debug,
+      Viewer,
+      IAM
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, Calendar, Events, Locations, Session.Preferences.mode, lightTheme, darkTheme, Creator]);
+  }, [source, Calendar, Events, Locations, Session.Preferences.mode, lightTheme, darkTheme, Creator, Viewer, IAM]);
 }
 

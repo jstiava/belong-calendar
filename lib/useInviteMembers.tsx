@@ -17,7 +17,6 @@ import Chronos from '@/lib/utils/chronos';
 import { v4 as uuidv4 } from 'uuid';
 import { Profile, ProfileData } from '@/schema';
 import { ChromePicker } from 'react-color';
-import useSearchDialog, { UseSearchDialog } from './useSearchDialog';
 import { UseSession } from './global/useSession';
 import { UseBase } from './global/useBase';
 import { UseIAM } from './global/useIAM';

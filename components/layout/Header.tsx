@@ -1,377 +1,128 @@
 "use client"
-import React, { useEffect, useState, useRef, JSX } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   CalendarMonthOutlined as CalendarMonthOutlined,
-  LogoutOutlined,
-  AccountCircleOutlined,
   MenuOutlined,
-  HubOutlined,
-  SearchOutlined,
+  CalendarViewDayOutlined,
+  CalendarViewWeekOutlined,
+  ElectricalServicesOutlined,
+  GridView,
+  LocationOnOutlined,
+  PeopleOutline,
+  PersonOutline,
+  Search,
+  StarOutline,
+  CloseOutlined,
+  LogoutOutlined,
+  SettingsOutlined,
   DarkModeOutlined,
-  LightModeOutlined,
-  AddOutlined
+  KeyOutlined,
+  VpnKeyOutlined,
+  Star
 } from '@mui/icons-material';
 import {
   Avatar,
   IconButton,
-  Tooltip,
-  Tabs,
-  Tab,
   MenuItem,
   useTheme,
   Typography,
   useMediaQuery,
+  FormControl,
+  InputLabel,
+  ListItemIcon,
+  Select,
+  Skeleton,
+  TextField,
+  ToggleButton,
+  ButtonBase,
+  Divider,
   Drawer,
-  Alert,
 } from '@mui/material';
-import { useRouter } from 'next/router';
 // import useSearchDialog, { UseSearchDialog } from '@/lib/useSearchDialog';
-import { Event, EventData, Group, MemberFactory } from '@/schema';
 import { UseSession } from '@/lib/global/useSession';
+import { DIVIDER_NO_ALPHA_COLOR } from '../Divider';
+import DeployedCodeIcon from '../icons/DeployedCodeIcon';
+import StyledIconButton from '../StyledIconButton';
+import StyledToggleButtonGroup from '../StyledToggleButtonGroup';
+import router, { useRouter } from 'next/router';
+import ItemStub from '../ItemStub';
+import { Member } from '@/schema';
 import { UseBase } from '@/lib/global/useBase';
-import { Mode, Type } from '@/types/globals';
-import useDraggableEventBlock, { DraggedEventBlockProps } from '../calendar/DraggableEventBlock';
-import dayjs from '@/lib/utils/dayjs';
-import { Dayjs } from 'dayjs';
-import useViewEvent from '@/lib/global/useViewEvent';
-import LargeBaseCard from '../bases/LargeBaseCard';
 const MEDIA_BASE_URI = "https://mozi-belong-media-public-demo.s3.us-east-2.amazonaws.com";
 
 
 export default function Header({
   Session,
+  module,
   Base,
-  children,
-  desktopChildren,
-  noBack = false,
-  pageNavigation,
-  rightSide = <></>
+  Module,
 }: {
   Session: UseSession,
+  module?: Member | null,
   Base?: UseBase,
-  children: any,
-  desktopChildren?: JSX.Element,
-  noBack?: boolean
-  pageNavigation?: JSX.Element,
-  rightSide?: JSX.Element
+  Module?: UseBase,
+  // children: any,
+  // desktopChildren?: JSX.Element,
+  // noBack?: boolean
+  // pageNavigation?: JSX.Element,
+  // rightSide?: JSX.Element
 }) {
+
   const router = useRouter();
   const theme = useTheme();
-  const [standardHeight, setStandardHeight] = useState(40);
-  const [prevScrollPos, setPrevScrollPos] = useState<number | null>(null);
-  const [visible, setVisible] = useState(true);
-  const [isOpenDropDown, setIsOpenDropDown] = useState<boolean>(false);
-  const isSM = useMediaQuery(theme.breakpoints.down("sm"));
-  const isXS = useMediaQuery(theme.breakpoints.down("xs"));
-  const TIME_LEGEND_COLUMN_WIDTH = '4rem';
+  const isSm = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // const handleAction = (selected: Event) => {
-  //   Base.Viewer.startViewer(Type.Event, selected);
-  //   return;
-  // }
-  // const { SearchForm, SearchButton, toggleSearch }: UseSearchDialog =
-  //   useSearchDialog(searchConfig, handleStart, handleAction, EventCard);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+  const [view, setView] = useState<string | null>(null);
 
-  const { EventPopover, handleOpenEventPopover } = useViewEvent(
-    Session.base,
-    Session.Events,
-    Base ? Base.Creator.startCreator : Session.Creator.startCreator,
-    Base ? Base.theme : theme
-  );
+  const pushNewView = (tab: string) => {
 
-  const container = useRef(null);
-
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
-  const [weekOfDate, setWeekOfDate] = useState<Dayjs[] | null>(dayjs().startOf('week').getFrame(7));
-
-  useEffect(() => {
-    if (Session.Calendar.days.length != 1) {
-      // Session.Calendar.gotoDate(dayjs());
-      return;
+    let theView = undefined;
+    if (['month', 'week', 'day'].some(x => x === tab)) {
+      theView = tab;
+      tab = 'calendar';
     }
 
-    const theDate = Session.Calendar.days[0];
-    setDate(theDate);
-
-    const startOfWeek = theDate.startOf('week');
-    setWeekOfDate(startOfWeek.getFrame(7))
-
-  }, [Session.Calendar.days]);
-
-  const [expanded, setExpanded] = useState(false);
-
-
-  const handleUpOnMove = async (item: DraggedEventBlockProps) => {
-    if (!item.uuid) {
-      return;
+    const theModule = router.query.module;
+    if (router.query.module) {
+      delete router.query.module;
     }
-    const theEvent = await Session.Events.get(item.uuid);
-    if (!theEvent || theEvent instanceof Array) {
-      return;
+    const { base, ...rest } = router.query;
+
+    if (theModule && base) {
+      rest.base = base;
     }
 
-    await MemberFactory.getMetadata(theEvent)
-      .then(object => {
-        Session.Events.swap(object);
-      })
-      .catch(err => {
-        console.log(err)
-      });
+    const isSession = router.asPath.startsWith('/me');
 
-    const token = await theEvent.getToken();
-
-    theEvent.start_time = item.currStart.getDayjs(5).toLocalChronos();
-    theEvent.end_time = item.currEnd.getDayjs(5).toLocalChronos();
-    theEvent.date = item.currStart.getHMN() <= 6 ? item.dragDay.add(1, 'day') : item.dragDay
-    theEvent.is_local = true;
-
-    Base.Creator.startCreator(Type.Event, Mode.Modify, theEvent);
-  }
-
-  const handleUpOnCreate = async (item: DraggedEventBlockProps) => {
-
-    if (!item.dragDay.isSame(item.dragEndDay)) {
-
-      // const newSchedule = Schedule.createOffDrag(
-      //   item.dragDay,
-      //   item.dragEndDay,
-      //   item.currStart.getDayjs(5).toLocalChronos(),
-      //   item.currEnd.getDayjs(5).toLocalChronos()
-      // ).eject();
-
-      // const presets: Partial<MerchantData> = {
-      //   schedules: [newSchedule]
-      // }
-
-      // handleCreate(Type.Merchant, Mode.Create, {
-      //   ...new Merchant(presets, true).eject(),
-      //   callback: Events.addEvent
-      // });
-
-      const presets = {
-        date: item.dragDay.yyyymmdd(),
-        end_date: item.dragEndDay.yyyymmdd()
-      }
-
-
-      Base.Creator.startCreator(Type.Event, Mode.Create, new Event(presets))
-
-      return;
-    }
-
-    const presets: Partial<EventData> = {
-      date: Number(item.dragDay.yyyymmdd()),
-      start_time: String(item.currStart.getDayjs(5).toLocalChronos().getHMN()),
-      end_time: String(item.currEnd.getDayjs(5).toLocalChronos().getHMN()),
-      is_local: true
-    }
-
-    Base.Creator.startCreator(Type.Event, Mode.Create, new Event(presets), {
-      callback: Session.Events.add
-    });
-  }
-
-
-  const handleScroll = () => {
-    console.log('Handle scroll');
-
-    if (!prevScrollPos) {
-      setPrevScrollPos(window.scrollY);
-      console.log('No prev scroll pos');
-      return;
-    }
-    const currentScrollPos = window.scrollY;
-    if (!currentScrollPos) return;
-    const isVisible = prevScrollPos > currentScrollPos;
-
-    setVisible(isVisible);
-    setPrevScrollPos(currentScrollPos);
+    router.push({
+      pathname: `${isSession ? `/me/` : `/be/${theModule ? `${String(theModule)}/` : Session.base?.id()}/`}${tab}`,
+      query: { ...rest, view: theView }
+    })
   };
 
   useEffect(() => {
-    if (!isSM) {
-      setIsOpenDropDown(false)
+
+    if (!router || !router.asPath) {
+      return;
     }
-  }, [isSM])
-
-
-  useEffect(() => {
     try {
-      if (!window) return;
-      setPrevScrollPos(window.scrollY);
-    } catch (err) {
-      return;
+      const pathParts = router.pathname.split('/');
+      if (router.pathname.startsWith('/me')) {
+        const currentTab = pathParts[2];
+        setView(currentTab ? currentTab : 'dashboard');
+      }
+      else {
+        const currentTab = pathParts[3];
+        setView(currentTab ? currentTab : 'dashboard');
+      }
     }
-  }, []);
+    catch (err) {
+      setView('dashboard')
+    }
 
-  useEffect(() => {
-    if (!window) return;
-    window.addEventListener("scroll", handleScroll);
+  }, [router])
 
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prevScrollPos]);
-
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const open = Boolean(anchorEl);
-  const id = open ? 'simple-popover' : undefined;
-
-
-  const [sequence, setSequence] = useState<number[] | null>(null);
-
-  const { block, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(container, standardHeight, container, handleUpOnMove, handleUpOnCreate);
-
-  useEffect(() => {
-    const start = 6;
-    const increment = 0.5;
-    const end = 30;
-    const length = Math.floor((end - start) / increment) + 1;
-    setSequence(Array.from({ length }, (_, index) => start + index * increment));
-  }, []);
-
-  const columns = 2; // Number of columns in the grid
-  const delayStep = 100; // Delay in ms between each animation
-
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
-    Session.Calendar.gotoDate(dayjs(String(newValue)))
-  };
-
-  const RightSidebar = (
-    <div className='column snug'
-      style={{ backgroundColor: theme.palette.background.paper }}
-      onMouseUp={handleMouseUp}
-    >
-
-      <div className='flex compact' style={{
-        position: "relative",
-        flexWrap: 'wrap',
-        marginBottom: '5rem',
-        padding: "2rem"
-      }}>
-        {Session && Session.bases && Session.isRightSidebarOpen && Session.bases.map((m, index) => {
-
-          const row = Math.floor(index / columns);
-          const col = index % columns;
-
-          // Compute animation delay
-          const delay = (row + col) * delayStep;
-
-          return m instanceof Group ? (
-            <LargeBaseCard
-              key={m.uuid}
-              style={{
-                width: `calc(${Number(100 / columns).toFixed(0)}% - (1rem / ${columns}))`,
-                height: "10rem",
-                marginBottom: "0.5rem",
-                animation: `popIn 0.5s ease forwards`,
-                animationDelay: `${delay}ms`,
-                transform: "scale(0)",
-                opacity: 0,
-              }}
-              groupMember={m}
-              onClick={async () => {
-                await Session.changeBase(m)
-                router.push(`/be/${m.id()}`);
-              }}
-            />
-          ) : null
-        })}
-        {Session && Session.bases && Session.bases.length === 0 && (
-          <Alert>No bases for the session.</Alert>
-        )}
-      </div>
-
-      <MenuItem
-        onClick={() => {
-          if (!Base) {
-            return;
-          }
-          Base.Creator.startCreator(Type.Group, Mode.Create, new Group({
-            theme_color: theme.palette.primary.main
-          }), {
-            callback: (newGroup) => Session.addNewBase(newGroup)
-          })
-          Session.setIsRightSidebarOpen(false);
-        }
-        }
-        className='flex compact'
-      >
-        <AddOutlined fontSize='small' />
-        <Typography >New Group</Typography>
-      </MenuItem>
-
-      <div className="column snug">
-        <MenuItem
-          onClick={() => {
-            // Session.logout();
-            router.push(`/me/?base=${Session.base?.id()}`)
-            Session.setIsRightSidebarOpen(false);
-          }}
-          className='flex compact'
-        >
-          <AccountCircleOutlined fontSize='small' />
-          <Typography >Profile</Typography>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            // Session.logout();
-            router.push(`/me/calendar`)
-            Session.setIsRightSidebarOpen(false);
-          }}
-          className='flex compact'
-        >
-          <CalendarMonthOutlined fontSize='small' />
-          <Typography >Calendar</Typography>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            // Session.logout();
-            router.push(`/me/integrations`)
-            Session.setIsRightSidebarOpen(false);
-          }}
-          className='flex compact'
-        >
-          <HubOutlined fontSize='small' />
-          <Typography >Integrations</Typography>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            Session.Preferences.toggleMode();
-          }}
-          className='flex compact'
-        >
-          {Session.Preferences.mode === 'dark' ? <DarkModeOutlined fontSize='small' /> : <LightModeOutlined fontSize='small' />}
-          <Typography >{Session.Preferences.mode === 'dark' ? "Go to Light Mode" : "Go to Dark Mode"}</Typography>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            Session.logout();
-            Session.setIsRightSidebarOpen(false);
-          }}
-          className='flex compact'
-        >
-          <LogoutOutlined color="error" fontSize='small' />
-          <Typography color="error">Logout</Typography>
-        </MenuItem>
-
-      {Session.session && (
-        <Typography>{Session.session.id()}</Typography>
-      )}
-      </div>
-
-
-    </div>
-  )
-
-  function a11yProps(index: number) {
-    return {
-      id: `simple-tab-${index}`,
-      'aria-controls': `simple-tabpanel-${index}`,
-    };
-  }
 
   if (!Session.session) {
     return <></>;
@@ -379,103 +130,317 @@ export default function Header({
 
   return (
     <>
-
-      {isSM && (
-        <div className="column snug" style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          borderTop: `1px solid ${theme.palette.divider}`,
-          width: "100vw",
-          zIndex: 4
-        }}>
-          {pageNavigation}
-          <div className="div flex between"
-            style={{
-              height: "5rem",
-              width: "100%",
-              backgroundColor: theme.palette.background.paper,
-              padding: "1rem 1.5rem",
-            }}>
-            <Tabs
-              className="flex"
-              sx={{
-                width: "100%",
-                '& .MuiTabs-flexContainer': {
-                  justifyContent: "space-between"
-                }
-              }}
-              onChange={(e) => {
-                console.log(e);
-              }} aria-label="basic tabs example">
-              <Tab onClick={(e) => {
-                Session.Preferences.setIsSidebarDocked(prev => !prev);
-              }}
-                label="Menu"
-                icon={<MenuOutlined />}
-                {...a11yProps(0)} />
-              <Tab label="Search" icon={<SearchOutlined />} {...a11yProps(1)} />
-              <Tab label="Create" icon={<AddOutlined />} {...a11yProps(2)} />
-            </Tabs>
-          </div>
-        </div>
-      )}
       <header
         id="header"
-        className='flex between center snug'
+        className="flex center between"
         style={{
-          position: "fixed",
-          top: 0,
-          background: theme.palette.background.default,
-          borderBottom: "1px solid",
-          borderColor: theme.palette.divider,
-          color: theme.palette.primary.contrastText,
-          zIndex: 4,
-          width: Session.Preferences.isSidebarDocked ? "calc(100% - 20rem)" : "100%",
-          height: "3.55rem",
+          height: "3.5rem",
+          borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+          borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+          padding: isSm ? "0 0.5rem" : "0 1rem",
+          backgroundColor: '#ffffff',
+
+        }}>
+        <div className="flex fit">
+          {!Session.Preferences.isSidebarDocked && (
+            <StyledIconButton
+              title="Open Sidebar"
+              onClick={() => Session.Preferences.setIsSidebarDocked(prev => !prev)}>
+              <MenuOutlined />
+            </StyledIconButton>
+          )}
+          <Typography variant="h6" sx={{ color: theme.palette.text.primary }}>{Session.Calendar.days[6]?.format("MMMM YYYY") || "All Events"}</Typography>
+          {view === 'calendar' && (
+            <div className="flex fit">
+              <FormControl sx={{
+                width: 120
+              }}>
+                <InputLabel id="demo-simple-select-label">View</InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={router.query.view}
+                  label="View"
+                  size="small"
+                  sx={{
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    '& .MuiSelect-select': {
+                      display: 'flex',
+                      alignItems: 'center',
+
+                    },
+                    '& .MuiListItemIcon-root': {
+                      minWidth: "unset",
+                      marginRight: "0.25rem"
+                    },
+                  }}
+                // onChange={handleChange}
+                >
+                  <MenuItem
+                    value="month"
+                    onClick={() => {
+                      pushNewView('month')
+                    }}
+                  >
+                    <ListItemIcon>
+                      <CalendarMonthOutlined fontSize="small" />
+                    </ListItemIcon>
+                    Month
+                  </MenuItem>
+                  <MenuItem
+                    value="week"
+                    onClick={() => {
+                      pushNewView('week')
+                    }}
+                  >
+                    <ListItemIcon>
+                      <CalendarViewWeekOutlined fontSize="small" />
+                    </ListItemIcon>
+                    Week
+                  </MenuItem>
+                  <MenuItem
+                    value="day"
+                    onClick={() => {
+                      pushNewView('day')
+                    }}
+                  >
+                    <ListItemIcon>
+                      <CalendarViewDayOutlined fontSize="small" />
+                    </ListItemIcon>
+                    Day
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+          )}
+
+          <StyledToggleButtonGroup value={view} size='small' isMini={false}>
+            <ToggleButton
+              value="dashboard"
+              onClick={() => pushNewView('')}
+            >
+              <GridView fontSize="small" />
+              Dashboard
+            </ToggleButton>
+            <ToggleButton
+              value={'calendar'}
+              onClick={() => pushNewView('month')}
+            >
+              <CalendarMonthOutlined fontSize="small" />
+              Calendar
+            </ToggleButton>
+
+            {view === 'integrations' && (
+              <ToggleButton
+                value="integrations"
+              //  onClick={() => pushNewView('integrations')}
+              >
+                <ElectricalServicesOutlined fontSize="small" />
+                Integrations
+              </ToggleButton>
+            )}
+
+            {view === 'iam' && (
+              <ToggleButton
+                value={'iam'}
+              //  onClick={() => pushNewView('month')}
+              >
+                <VpnKeyOutlined fontSize="small" />
+                IAM
+              </ToggleButton>
+            )}
+
+            {view === 'settings' && (
+              <ToggleButton
+                value={'settings'}
+              //  onClick={() => pushNewView('month')}
+              >
+                <SettingsOutlined fontSize="small" />
+                Settings
+              </ToggleButton>
+            )}
+
+            {/* <ToggleButton
+              value="table"
+              onClick={() => pushNewView('locations')}
+            >
+              <LocationOnOutlined fontSize="small" />
+              Locations
+            </ToggleButton> */}
+
+            {/* <ToggleButton
+              value="crm"
+              onClick={() => pushNewView('crm')}
+            >
+              <PeopleOutline fontSize="small" />
+              CRM
+            </ToggleButton>
+
+            <ToggleButton
+              value="apps"
+              onClick={() => pushNewView('apps')}
+            >
+              <DeployedCodeIcon fontSize="small" />
+              Apps
+            </ToggleButton> */}
+
+
+
+
+          </StyledToggleButtonGroup>
+        </div>
+        <div className="flex compact fit">
+          {/* <TextField
+            placeholder="Search"
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <Search sx={{
+                  fontSize: '1.25rem',
+                  marginRight: "0.5rem"
+                }} />
+              )
+            }}
+          /> */}
+          <IconButton>
+            {(module ? Module?.IAM.members?.find(x => x.id() === Session.session?.id()) : Base?.IAM.members?.find(x => x.id() === Session.session?.id())) ? (
+              <Star sx={{
+                fontSize: '1.5rem'
+              }} />
+            ) : (
+              <StarOutline sx={{
+                fontSize: '1.5rem'
+              }} />
+            )}
+
+          </IconButton>
+          {Session.session ? (
+            <Avatar
+              onClick={() => setIsRightSidebarOpen(true)}
+              alt={Session.session.name}
+              src={`${MEDIA_BASE_URI}/${Session.session.getIconPath()}`}
+              sx={{
+                width: "2rem",
+                height: "2rem",
+                border: `0.15rem solid ${Session.session.theme_color || 'transparent'} !important`,
+                backgroundColor: theme.palette.background.paper,
+                cursor: 'pointer'
+              }}
+            >
+              <PersonOutline sx={{
+                fontSize: "1rem",
+                color: Session.session.theme_color
+              }} />
+            </Avatar>
+          ) : (
+            <Skeleton variant="circular" width={"2rem"} height={"2rem"} />
+          )}
+        </div>
+      </header>
+
+      <Drawer
+        // hideBackdrop
+        // variant="persistent"
+        anchor="right"
+        open={isRightSidebarOpen}
+        onClick={() => setIsRightSidebarOpen(false)}
+        onClose={() => setIsRightSidebarOpen(prev => !prev)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            display: 'flex',
+            flexDirection: 'column',
+            // position: 'fixed',
+            width: "25rem",
+            padding: "1rem",
+            maxWidth: "100%",
+            // overflow: "hidden",
+            backgroundColor: theme.palette.background.paper,
+            color: theme.palette.text.primary,
+            // zIndex: 5,
+            // borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+          },
         }}
       >
-        <div className="flex compact" style={{ width: "calc(100% - 3rem)" }}>
-          {!Session.Preferences.isSidebarDocked && (
-            <Tooltip title="Open Sidebar">
-              <IconButton onClick={() => Session.Preferences.setIsSidebarDocked(prev => !prev)}>
-                <MenuOutlined color="primary" />
-              </IconButton>
-            </Tooltip>
-          )}
-          {children}
-          {!isSM && desktopChildren}
-        </div>
+        <div className="column">
+          <div className="flex between center">
+            <div className="flex fit" style={{
+              width: 'calc(100% - 2.5rem)',
+            }}>
+              <ItemStub
+                item={Session.session}
+              />
+            </div>
+            <IconButton
+              onClick={() => setIsRightSidebarOpen(false)}
+            >
+              <CloseOutlined sx={{
+                fontSize: '1rem'
+              }} />
+            </IconButton>
+          </div>
+          <Divider />
+          <div className="column snug">
+            <ButtonBase
 
-        <div className="flex fit compact">
-          {rightSide}
-          <IconButton
-            onClick={() => Session.setIsRightSidebarOpen(true)}
-          >
-            <Avatar
-              src={`${MEDIA_BASE_URI}/${Session.session.getIconPath()}`}
-              sx={{ width: "2rem", height: "2rem" }}
-            />
-          </IconButton>
+              onClick={() => {
+                router.push(`/me`)
+              }}
+              className="flex compact"
+              sx={{
+                padding: "0.25rem 0.5rem",
+                borderRadius: "0.25rem"
+              }}
+            >
+              <PersonOutline sx={{
+                fontSize: "1rem"
+              }} />
+              <Typography>Your Profile</Typography>
+            </ButtonBase>
+            <ButtonBase
+
+              onClick={() => {
+                Session.Preferences.toggleMode()
+              }}
+              className="flex compact"
+              sx={{
+                padding: "0.25rem 0.5rem",
+                borderRadius: "0.25rem"
+              }}
+            >
+              <DarkModeOutlined sx={{
+                fontSize: "1rem"
+              }} />
+              <Typography>Dark Mode</Typography>
+            </ButtonBase>
+            <ButtonBase
+              className="flex compact"
+              sx={{
+                padding: "0.25rem 0.5rem",
+                borderRadius: "0.25rem"
+              }}
+            >
+              <SettingsOutlined sx={{
+                fontSize: "1rem"
+              }} />
+              <Typography>Settings</Typography>
+            </ButtonBase>
+            <ButtonBase
+              className="flex compact"
+              sx={{
+                padding: "0.25rem 0.5rem",
+                borderRadius: "0.25rem"
+              }}
+            >
+              <LogoutOutlined sx={{
+                fontSize: "1rem"
+              }} />
+              <Typography>Logout</Typography>
+            </ButtonBase>
+          </div>
         </div>
-        <Drawer
-          anchor="right"
-          open={Session.isRightSidebarOpen}
-          onClose={() => Session.setIsRightSidebarOpen(false)}
-          keepMounted
-          sx={{
-            zIndex: "2000",
-            '& .MuiDrawer-paper': {
-              position: 'absolute',
-              width: '25rem',
-              // padding: "0.5rem 0.5rem"
-            },
-          }}
-        >
-          {RightSidebar}
-        </Drawer>
-        {/* {SearchForm} */}
-      </header>
+      </Drawer >
     </>
   );
 }

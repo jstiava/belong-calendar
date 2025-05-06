@@ -2,7 +2,8 @@
 import React, { JSX, useEffect, useState } from 'react';
 
 import {
-    Menu as MenuIcon} from '@mui/icons-material';
+    Menu as MenuIcon
+} from '@mui/icons-material';
 
 
 import {
