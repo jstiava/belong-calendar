@@ -194,26 +194,26 @@ export default function AuthProvider({
       } : null)
         .then((res: boolean) => {
           if (!res) {
-            router.push('/me')
+            // router.push('/me')
           }
           console.log("Case 0")
           return;
         })
         .catch(err => {
-          router.push('/me')
+          // router.push('/me')
         })
       return;
     }
 
     // Session & Base protected
-    else if (!unprotected.some(path => router.pathname === path) || router.pathname.startsWith('/about')) {
+    else if (!unprotected.some(path => router.pathname === path) && !router.pathname.startsWith('/about')) {
       if (!Session.session) {
         Session.verify(base_path ? {
           value: base_path,
         } : null)
         .then((res: boolean) => {
           if (!res) {
-            router.push('/me')
+            // router.push('/me')
           }
           console.log({
             message: "Case 2",
@@ -222,7 +222,7 @@ export default function AuthProvider({
           return;
         })
         .catch(err => {
-          router.push('/me')
+          // router.push('/me')
         })
 
       } else {
@@ -265,6 +265,7 @@ export default function AuthProvider({
     return (
       <div className='column center middle' style={{ height: "100vh", width: "100vw", color: theme.palette.text.primary, backgroundColor: theme.palette.background.paper }}>
         <CircularProgress sx={{ color: theme.palette.text.primary }} />
+        <Typography>{router.pathname}</Typography>
         <Typography variant="caption">Belong Platforms LLC. 2025</Typography>
       </div>
     )
