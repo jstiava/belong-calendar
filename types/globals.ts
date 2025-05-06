@@ -1,7 +1,6 @@
 import { UseBase } from '@/lib/global/useBase';
 import { UseSession } from '@/lib/global/useSession';
 import axios, { API } from '@/lib/utils/axios';
-// import { fail } from '@/lib/utils/chalk';
 import {
   AttendeeData,
   Event,
@@ -258,8 +257,7 @@ export class Base {
   static decode(data: string) {
     const base = jwt.decode(String(data)) as any;
     if (!base) {
-      fail("Invalid base token")
-      throw Error("No base found")
+      throw Error("Invalid base token")
     }
 
     return new Base(base);
