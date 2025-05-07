@@ -36,7 +36,7 @@ export default function ItemStub({
     }
 
     return (
-        <ButtonBase className="flex compact top"
+        <ButtonBase className="flex left compact top"
             onClick={e => {
                 if (onClick) {
                     onClick(e);
