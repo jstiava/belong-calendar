@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import axios from '@/lib/utils/axios';
 import { ThemeProvider } from '@mui/material/styles';
-
-
 import {
   Visibility,
   VisibilityOff,
@@ -21,15 +19,22 @@ import {
   Alert,
   LinearProgress,
   useTheme,
+  Typography,
+  Link,
+  ButtonBase,
+  Avatar,
 } from '@mui/material';
 
-import { NewProfileRequest } from '@/types/globals';
+import { NewProfileRequest, Type } from '@/types/globals';
 import { useRouter } from 'next/router';
 import { useSnackbar } from 'notistack';
+import ResolveItemIcon from '@/components/ResolveItemIcon';
+import { DIVIDER_NO_ALPHA_COLOR } from '@/components/Divider';
 
-export default function CreateProfilePage(props: any) {
+export default function RegisterPage(props: any) {
   const router = useRouter();
   const theme = useTheme();
+
   const [newProfile, setNewProfile] = React.useState<NewProfileRequest>({
     name: '',
     nickname: '',
@@ -170,6 +175,102 @@ export default function CreateProfilePage(props: any) {
         });
       });
   };
+
+
+  return (
+    <div id="content" className='flex center middle' style={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary, width: "100vw", height: "100vh" }} >
+      <div className="column relaxed" style={{ width: "20rem", marginBottom: "10rem" }}>
+        <div className="flex center middle">
+          <Typography variant="h4">belong.</Typography>
+        </div>
+
+        <div className="column">
+          <ButtonBase
+            className='flex compact center middle'
+            sx={{
+              width: "100%",
+              borderRadius: "0.25rem",
+              border: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+              padding: "0.5rem 0.75rem"
+            }}>
+            <Avatar sx={{
+              width: '1.75rem',
+              height: "1.75rem",
+              backgroundColor: '#517ec0',
+            }}><ResolveItemIcon
+                sx={{
+                  fontSize: '0.875rem'
+                }}
+                item={{
+                  integration: "google",
+                  type: Type.Group
+                }} /></Avatar>
+            <Typography sx={{
+              fontWeight: 700
+            }}>Continue with Google</Typography>
+          </ButtonBase>
+        </div>
+        <div className="column">
+          <Typography variant="h6">Register</Typography>
+          <div className='column compact'>
+            <TextField
+              key="username"
+              type="username"
+              label="Username"
+              variant="outlined"
+              value={newProfile.username}
+              // onChange={handleLoginCredUsernameChange}
+              sx={{ width: '100%' }}
+            />
+            <TextField
+              key="email"
+              type="email"
+              label="Email"
+              variant="outlined"
+              value={newProfile.email}
+              // onChange={handleLoginCredUsernameChange}
+              sx={{ width: '100%' }}
+            />
+            <TextField
+              key="password"
+              type="password"
+              label="Password"
+              variant="outlined"
+              value={newProfile.password}
+              // onChange={handleLoginCredPasswordChange}
+              sx={{ width: '100%' }}
+            />
+            <TextField
+              key="confiormPassword"
+              type="confiormPassword"
+              label="Confirm Password"
+              variant="outlined"
+              value={newProfile.reenterPassword}
+              // onChange={handleLoginCredPasswordChange}
+              sx={{ width: '100%' }}
+            />
+
+          </div>
+        </div>
+          <div className="column compact">
+            <Button size='large' variant="contained" onClick={handleSubmit} style={{ width: '100%' }}>
+              Register
+            </Button>
+            <div className="flex left">
+              <Link
+                href="/login"
+                sx={{
+                  opacity: 0.75,
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  color: theme.palette.text.primary,
+                  textDecorationColor: theme.palette.text.primary
+                }}>Already have an account? Login.</Link>
+            </div>
+          </div>
+      </div>
+    </div>
+  )
 
   return (
     <>

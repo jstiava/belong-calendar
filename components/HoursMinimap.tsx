@@ -2,10 +2,9 @@ import Chronos from "@/lib/utils/chronos";
 import { Hours } from "@/lib/utils/medici"
 import { Schedule } from "@/schema"
 import { CloseOutlined, RemoveOutlined, WarningOutlined } from "@mui/icons-material";
-import { Box, Button, ButtonBase, IconButton, TextField, ThemeProvider, Tooltip, Typography, useTheme } from "@mui/material"
+import { Box, Button, ButtonBase, IconButton, Popover, Popper, TextField, ThemeProvider, Tooltip, Typography, useTheme } from "@mui/material"
 import dayjs, { Dayjs } from "dayjs";
-import { AnyARecord } from "dns";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StyledDatePicker from "./StyledDatePicker";
 
 
@@ -54,68 +53,275 @@ function HoursBox({
     start,
     end,
     compact = false,
-    onDelete
+    onDelete,
+    onAdd
 }: {
-    start: number | null,
-    end: number | null,
+    start: number,
+    end: number,
     compact?: boolean,
-    onDelete: any
+    onDelete: any,
+    onAdd: (present: { start_time: Chronos, end_time: Chronos }) => any
 }) {
+
 
     const theme = useTheme();
     const [isHovering, setIsHovering] = useState(false);
 
-    if (!start || !end) {
+
+    const oneTwentyFourthRef = useRef(0);
+    const [top, setTop] = useState<string | null>(null)
+    const [height, setHeight] = useState<string | null>(null);
+    const boxRef = useRef<any | null>(null);
+    const isDraggingRef = useRef(false);
+    const dragStartY = useRef(0);
+    const startHeight = useRef(0);
+    const startTop = useRef(0);
+    const isDraggingTop = useRef<boolean>(false);
+    const labelsRef = useRef<{
+        start: Chronos,
+        end: Chronos
+    } | null>(null);
+
+    const getBoxHeight = () => {
+        if (boxRef.current) {
+
+            if (oneTwentyFourthRef.current) {
+                return oneTwentyFourthRef.current;
+            }
+
+            const boxWithHeight = Number(boxRef.current.parentElement.parentElement.offsetHeight);
+            const result = Number((boxWithHeight / 24).toFixed(3));
+            oneTwentyFourthRef.current = result;
+            console.log({
+                message: oneTwentyFourthRef.current.toFixed(3),
+                boxWithHeight
+            });
+
+            return result;
+        }
+        return 0;
+    }
+
+    const onMouseDown = (e : any, handle : string) => {
+
+        if (!boxRef.current) {
+            return;
+        }
+
+        isDraggingRef.current = true;
+        dragStartY.current = e.clientY;
+        startTop.current = boxRef.current.offsetTop;
+        startHeight.current = boxRef.current.offsetHeight;
+        isDraggingTop.current = handle === 'top';
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const onMouseMove = (e : any) => {
+        if (!isDraggingRef.current || !boxRef.current || !labelsRef.current) return;
+
+        if (isDraggingTop.current) {
+            const deltaY = e.clientY - dragStartY.current;
+            const newTop = startTop.current + deltaY;
+            const boxHeight = getBoxHeight();
+            const newHeight = startHeight.current - deltaY;
+            const startTimeDiff = new Chronos(start).add(deltaY / boxHeight).truncate(4);
+
+            if (startTimeDiff.isBefore(new Chronos(2))) {
+                return;
+            }
+            else {
+                setTop(`${newTop}px`);
+                setHeight(`${newHeight}px`);
+                labelsRef.current = {
+                    start: new Chronos(Math.max(2, startTimeDiff.getHMN())),
+                    end: labelsRef.current.end
+                };
+            }
+
+
+        }
+        else {
+            const deltaY = e.clientY - dragStartY.current;
+            const newHeight = startHeight.current + deltaY;
+
+            const endTimeDiff = new Chronos(end).add(deltaY / getBoxHeight(), false).truncate(4);
+
+            if (endTimeDiff.isAfter(new Chronos(26, false))) {
+                return;
+            }
+            else {
+                setHeight(`${newHeight}px`);
+                labelsRef.current = {
+                    start: labelsRef.current.start,
+                    end: new Chronos(Math.min(26, endTimeDiff.getHMN())),
+                };
+            }
+        }
+
+    };
+
+    const onMouseUp = () => {
+        isDraggingRef.current = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+
+        if (!labelsRef.current) {
+            return;
+        }
+
+        onAdd({
+            start_time: labelsRef.current.start,
+            end_time: labelsRef.current.end
+        });
+
+        init();
+    };
+
+    const init = () => {
+        if (!start || !end) {
+            return;
+        }
+
+        /**
+         * value * (1 hour) - (starts at 2am)
+         */
+        setTop(`${100 * ((start * (1 / 24)) - 2 / 24)}%`)
+        setHeight(`${100 * ((end - start) * (1 / 24))}%`);
+
+        labelsRef.current = {
+            start: new Chronos(start),
+            end: new Chronos(end)
+        };
+    }
+
+
+
+    useEffect(() => {
+        getBoxHeight();
+    }, [])
+
+    useEffect(() => {
+
+        if (!start || !end) {
+            return;
+        }
+        init();
+
+    }, [start, end])
+
+    if (!top || !height) {
         return <></>
     }
 
     return (
-        <div
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-            className="column snug between center middle"
-            style={{
-                position: "absolute",
-                top: `${100 * ((start * (1 / 24)) - 2 / 24)}%`,
-                backgroundColor: `var(--bg-color)`,
-                width: "100%",
-                height: `${100 * ((end - start) * (1 / 24))}%`,
-                borderRadius: "0.5rem",
-                padding: "0.5rem 0",
-                cursor: 'pointer'
-            }}>
-            {isHovering && (
-                <IconButton onClick={onDelete}>
-                    <CloseOutlined sx={{
-                        fontSize: "1rem",
-                        color: 'var(--text-color)'
-                    }} />
-                </IconButton>
+        <>
+            {isDraggingRef.current && labelsRef.current && (
+                <>
+                    <Popper
+                        open={true}
+                        anchorEl={boxRef.current}
+                        placement="top"
+                        sx={{
+                            padding: "0.25rem",
+                            zIndex: 1000
+                        }}
+
+                    >
+                        <Typography sx={{
+                            fontSize: "0.75rem",
+                            backgroundColor: theme.palette.background.paper,
+                            padding: "0.25rem",
+                            borderRadius: "0.25rem"
+                        }}>{labelsRef.current.start.print()}</Typography>
+                    </Popper>
+                    <Popper
+                        open={true}
+                        anchorEl={boxRef.current}
+                        placement="bottom"
+                        sx={{
+                            padding: "0.25rem",
+                        }}
+                    >
+                        <Typography sx={{
+                            fontSize: "0.75rem",
+                            backgroundColor: theme.palette.background.paper,
+                            borderRadius: "0.25rem",
+                            padding: "0.25rem",
+                        }}>{labelsRef.current.end.print()}</Typography>
+                    </Popper>
+                </>
             )}
-            <div className="drag-handle top"
+            <div
+                ref={boxRef}
+                onMouseEnter={() => setIsHovering(true)}
+                onMouseLeave={() => setIsHovering(false)}
+                className="column snug between center middle"
                 style={{
-                    height: "0.15rem",
-                    borderRadius: "0.5rem",
-                    backgroundColor: `var(--text-color)`,
-                    width: isHovering ? "70%" : "50%",
                     position: "absolute",
-                    top: "0.5rem",
-                    cursor: "ns-resize",
-                    transition: "0.1s ease-in-out width"
-                }}></div>
-            <div className="drag-handle bottom"
-                style={{
-                    height: "0.15rem",
+                    top: top,
+                    backgroundColor: isDraggingRef.current ? 'transparent' : `var(--bg-color)`,
+                    width: "100%",
+                    height: height,
                     borderRadius: "0.5rem",
-                    backgroundColor: `var(--text-color)`,
-                    width: isHovering ? "70%" : "50%",
-                    position: "absolute",
-                    bottom: "0.5rem",
-                    cursor: "ns-resize",
-                    transition: "0.1s ease-in-out width"
-                }}
-            ></div>
-        </div >
+                    border: `0.25rem solid var(--bg-color)`,
+                    padding: "0.5rem 0",
+                    cursor: 'pointer',
+                    transition: "0.05s ease-in background"
+                }}>
+                {isHovering && !isDraggingRef.current && (
+                    <IconButton onClick={onDelete}>
+                        <CloseOutlined sx={{
+                            fontSize: "1rem",
+                            color: 'var(--text-color)'
+                        }} />
+                    </IconButton>
+                )}
+                <div
+                    onMouseDown={(e) => onMouseDown(e, 'top')}
+                    className="flex center middle snug"
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        cursor: "ns-resize",
+                        width: "100%",
+                        height: "1rem"
+                    }}>
+
+                    <div className="drag-handle top"
+                        style={{
+                            height: "0.175rem",
+                            borderRadius: "0.5rem",
+                            backgroundColor: `var(--text-color)`,
+                            width: isHovering ? "70%" : "50%",
+                            transition: "0.1s ease-in-out width"
+                        }}></div>
+                </div>
+                <div
+                    onMouseDown={(e) => onMouseDown(e, 'bottom')}
+                    className="flex center middle snug"
+                    style={{
+                        position: "absolute",
+                        bottom: 0,
+                        cursor: "ns-resize",
+                        width: "100%",
+                        height: "1rem"
+                    }}>
+
+                    <div className="drag-handle top"
+                        style={{
+                            height: "0.175rem",
+                            borderRadius: "0.5rem",
+                            backgroundColor: `var(--text-color)`,
+                            width: isHovering ? "70%" : "50%",
+                            transition: "0.1s ease-in-out width"
+                        }}></div>
+                </div>
+            </div >
+
+        </>
+
     )
 }
 
@@ -259,6 +465,8 @@ export default function HoursMinimap({
                                     })
                                 }
                                 <div style={{
+                                    height: "100%",
+                                    width: "100%",
                                     "--bg-color": theme.palette.primary.main,
                                     "--text-color": theme.palette.primary.contrastText
                                 }}>
@@ -266,15 +474,52 @@ export default function HoursMinimap({
                                         <RenderHours
                                             key={`${day}-${index}-hours`}
                                             hours={schedule.hours[day - Hours.HOURS_LOCATOR_PREFIX]}
+
                                             onDelete={({ start_time, end_time }: { start_time: number, end_time: number }) => {
                                                 const theCopy = new Schedule(schedule.eject());
-
                                                 theCopy.unmask({
                                                     start_time: new Chronos(start_time),
                                                     end_time: new Chronos(end_time, false),
                                                     dow: index
                                                 });
                                                 theCopy.as_text = theCopy.to_string();
+                                                console.log({
+                                                    original: schedule,
+                                                    start_time,
+                                                    end_time,
+                                                    dow: index,
+                                                    theCopy,
+                                                    message: "onDelete"
+                                                })
+                                                if (onChange) {
+                                                    onChange(theCopy)
+                                                }
+                                            }}
+
+                                            onAdd={({ past, present }: {
+                                                past: { start_time: number, end_time: number },
+                                                present: { start_time: number, end_time: number }
+                                            }) => {
+                                                const theCopy = new Schedule(schedule.eject());
+                                                theCopy.unmask({
+                                                    start_time: new Chronos(past.start_time),
+                                                    end_time: new Chronos(past.end_time, false),
+                                                    dow: index
+                                                });
+                                                theCopy.mask({
+                                                    start_time: new Chronos(present.start_time),
+                                                    end_time: new Chronos(present.end_time, false),
+                                                    dow: index
+                                                });
+                                                theCopy.as_text = theCopy.to_string();
+                                                console.log({
+                                                    original: schedule,
+                                                    past,
+                                                    present,
+                                                    dow: index,
+                                                    theCopy,
+                                                    message: "onAdd"
+                                                })
                                                 if (onChange) {
                                                     onChange(theCopy)
                                                 }
@@ -327,7 +572,7 @@ export default function HoursMinimap({
                         value={schedule.as_text}
                         variant="standard"
                         size="small"
-                />
+                    />
                     <Button onClick={() => {
                         if (onChange) {
                             onChange(new Schedule())
@@ -341,13 +586,19 @@ export default function HoursMinimap({
 }
 
 
+export interface HoursInterchange {
+    past: { start_time: number, end_time: number },
+    present: { start_time: number, end_time: number }
+}
 
 const RenderHours = ({
     hours,
-    onDelete
+    onDelete,
+    onAdd
 }: {
     hours: Hours,
-    onDelete: (props: { start_time: number, end_time: number }) => any
+    onDelete: (props: { start_time: number, end_time: number }) => any,
+    onAdd: (props: HoursInterchange) => any
 }) => {
 
     const handleDelete = (start: number, end: number) => {
@@ -362,10 +613,24 @@ const RenderHours = ({
         try {
 
             return (
-                <HoursBox compact={true} start={hours.min.getHMN()} end={hours.max.getHMN()} onDelete={(e: any) => {
-                    e.stopPropagation();
-                    handleDelete(hours.min.getHMN(), hours.max.getHMN())
-                }} />
+                <HoursBox compact={true} start={hours.min.getHMN()} end={hours.max.getHMN()}
+                    onAdd={(present: any) => {
+                        onAdd({
+                            past: {
+                                start_time: hours.min.getHMN(),
+                                end_time: hours.max.getHMN()
+                            },
+                            present: {
+                                start_time: present.start_time.getHMN(),
+                                end_time: present.end_time.getHMN()
+                            }
+                        });
+                    }}
+                    onDelete={(e: any) => {
+                        e.stopPropagation();
+                        handleDelete(hours.min.getHMN(), hours.max.getHMN())
+                    }}
+                />
             )
         }
         catch (err) {
@@ -379,24 +644,66 @@ const RenderHours = ({
 
     return (
         <>
-            <HoursBox start={hours.min.getHMN()} end={hours.breaks[0].getHMN()} onDelete={(e: any) => {
-                e.stopPropagation();
-                handleDelete(hours.min.getHMN(), hours.breaks[0].getHMN())
-            }} />
-            <HoursBox start={hours.breaks[hours.breaks.length - 1].getHMN()} end={hours.max.getHMN()} onDelete={(e: any) => {
-                e.stopPropagation();
-                handleDelete(hours.breaks[hours.breaks.length - 1].getHMN(), hours.max.getHMN())
-            }} />
+            <HoursBox
+                start={hours.min.getHMN()}
+                end={hours.breaks[0].getHMN()}
+                onAdd={(present: any) => {
+                    onAdd({
+                        past: {
+                            start_time: hours.min.getHMN(),
+                            end_time: hours.breaks[0].getHMN()
+                        },
+                        present: {
+                            start_time: present.start_time.getHMN(),
+                            end_time: present.end_time.getHMN()
+                        }
+                    });
+                }}
+                onDelete={(e: any) => {
+                    e.stopPropagation();
+                    handleDelete(hours.min.getHMN(), hours.breaks[0].getHMN())
+                }} />
+            <HoursBox start={hours.breaks[hours.breaks.length - 1].getHMN()} end={hours.max.getHMN()}
+                onAdd={(present: any) => {
+                    onAdd({
+                        past: {
+                            start_time: hours.breaks[hours.breaks.length - 1].getHMN(),
+                            end_time: hours.max.getHMN()
+                        },
+                        present: {
+                            start_time: present.start_time.getHMN(),
+                            end_time: present.end_time.getHMN()
+                        }
+                    });
+                }}
+                onDelete={(e: any) => {
+                    e.stopPropagation();
+                    handleDelete(hours.breaks[hours.breaks.length - 1].getHMN(), hours.max.getHMN())
+                }} />
 
             {hours.breaks.map((item, index) => {
                 if (index === 0 || index === hours.breaks.length - 1 || index % 2 === 0) {
                     return null
                 }
                 return (
-                    <HoursBox key={item.print()} start={hours.breaks[index].getHMN()} end={hours.breaks[index + 1].getHMN()} onDelete={(e: any) => {
-                        e.stopPropagation();
-                        handleDelete(hours.breaks[index].getHMN(), hours.breaks[index + 1].getHMN())
-                    }} />
+                    <HoursBox key={item.print()} start={hours.breaks[index].getHMN()}
+                        end={hours.breaks[index + 1].getHMN()}
+                        onAdd={(present: any) => {
+                            onAdd({
+                                past: {
+                                    start_time: hours.breaks[index].getHMN(),
+                                    end_time: hours.breaks[index + 1].getHMN()
+                                },
+                                present: {
+                                    start_time: present.start_time.getHMN(),
+                                    end_time: present.end_time.getHMN()
+                                }
+                            });
+                        }}
+                        onDelete={(e: any) => {
+                            e.stopPropagation();
+                            handleDelete(hours.breaks[index].getHMN(), hours.breaks[index + 1].getHMN())
+                        }} />
                 )
             })}
         </>

@@ -451,6 +451,7 @@ export default function Sidebar({
               padding: "1rem"
             }}>
             <Button
+            disableRipple
               onClick={() => {
                 router.push({
                   pathname: `/be/${Session.base?.id()}/integrations`,

@@ -122,123 +122,133 @@ export default function ThemePage(props: AppPageProps) {
     //     ]);
     // };
 
-    const [text, setText] = useState(parseTextToTokens('({preferredName}) {name}'));
-    const [draggedText, setDraggedText] = useState('');
+    const [schedule, setSchedule] = useState<Schedule | null>(new Schedule());
 
+    return (
+        <div id="content"
+            className="column"
+            style={{
+                marginTop: "10rem",
+                padding: "1rem",
+                width: "35rem"
+            }}>
 
-    // return (
-    //     <div id="content"
-    //         className="column"
-    //         style={{
-    //             marginTop: "10rem",
-    //             padding: "1rem",
-    //             width: "35rem"
-    //         }}>
+            <div className="column relaxed">
 
-    //         <div className="column relaxed">
+                {schedule && (
+                     <div className="column left" style={{
+                        width: "25rem",
+                      }}>
 
-    //             {Object.entries(QUESTIONS).map(([key, q]) => {
+                    <HoursMinimap
+                    mode="dark"
+                    schedule={schedule}
+                    onChange={(newSch) => setSchedule(newSch)}
+                    />
+                    </div>
+                )}
 
-    //                 if (['control_fullname', 'control_textbox', 'control_email'].some(x => x === q.type)) {
-    //                     return (
-    //                         <div className="flex compact" key={q.qid}>
-    //                             <TextFieldsOutlined sx={{
-    //                                 fontSize: "1rem"
-    //                             }} />
-    //                             <Typography variant="caption">{q.text}</Typography>
-    //                         </div>
-    //                     )
-    //                 }
-    //                 else if (q.type === 'control_radio') {
-    //                     return (
-    //                         <div className="column compact2 left" key={q.qid}>
-    //                             <div className="column compact2 left" style={{
-    //                                 width: "calc(100% - 20rem)"
-    //                             }}>
-    //                                 <div className="flex compact" >
-    //                                     <RadioButtonCheckedOutlined sx={{
-    //                                         fontSize: "1rem"
-    //                                     }} />
-    //                                     <Typography variant="caption">{q.text}</Typography>
-    //                                 </div>
+                {Object.entries(QUESTIONS).map(([key, q]) => {
 
-    //                             </div>
-    //                             {q.options && (
-    //                                 <div className="flex compact2 right" style={{
-    //                                     flexWrap: 'wrap'
-    //                                 }}>
-    //                                     {q.options.split('|').map(o => (
-    //                                         <Chip size="small" key={o} label={o} sx={{
-    //                                             marginBottom: "0.5rem"
-    //                                         }} />
-    //                                     ))}
-    //                                 </div>
-    //                             )}
-    //                         </div>
-    //                     )
-    //                 }
-    //                 else if (q.type === 'control_checkbox') {
-    //                     return (
-    //                         <div className="column compact2 left" key={q.qid}>
-    //                             <div className="flex compact" key={q.qid}>
-    //                                 <CheckBoxOutlined sx={{
-    //                                     fontSize: "1rem"
-    //                                 }} />
-    //                                 <Typography variant="caption" key={q.qid}>{q.text}</Typography>
-    //                             </div>
-    //                             {q.options && (
-    //                                 <div className="flex compact2 right" style={{
-    //                                     flexWrap: 'wrap'
-    //                                 }}>
-    //                                     {q.options.split('|').map(o => (
-    //                                         <Chip size="small" key={o} label={o} sx={{
-    //                                             marginBottom: "0.5rem"
-    //                                         }} />
-    //                                     ))}
-    //                                 </div>
-    //                             )}
-    //                         </div>
-    //                     )
-    //                 }
-    //                 else if (q.type === 'control_dropdown') {
-    //                     return (
-    //                         <div className="column compact2 left" key={q.qid}>
-    //                             <div className="flex compact" >
-    //                                 <ArrowDropDownCircleOutlined sx={{
-    //                                     fontSize: "1rem"
-    //                                 }} />
-    //                                 <Typography variant="caption">{q.text}</Typography>
-    //                                 {q.hidden === 'Yes' && <Typography variant="caption" sx={{
-    //                                     opacity: 0.5
-    //                                 }}>(Hidden)</Typography>}
-    //                             </div>
-    //                             {q.options && (
-    //                                 <div className="flex compact fit">
-    //                                     {q.options.split('|').map(o => (
-    //                                         <Chip size="small" key={o} label={o} />
-    //                                     ))}
-    //                                 </div>
-    //                             )}
-    //                         </div>
-    //                     )
-    //                 }
-    //                 else if (q.type === 'control_button') {
-    //                     return null;
-    //                 }
-    //                 else if (q.type === 'control_head') {
-    //                     return null;
-    //                 }
-    //                 else {
-    //                     return (
-    //                         <Typography key={q.qid}>{q.text} - {q.type} </Typography>
-    //                     )
-    //                 }
-    //             })}
-    //         </div>
-    //     </div>
-    // )
+                    if (['control_fullname', 'control_textbox', 'control_email'].some(x => x === q.type)) {
+                        return (
+                            <div className="flex compact" key={q.qid}>
+                                <TextFieldsOutlined sx={{
+                                    fontSize: "1rem"
+                                }} />
+                                <Typography>{q.text}</Typography>
+                            </div>
+                        )
+                    }
+                    else if (q.type === 'control_radio') {
+                        return (
+                            <div className="column compact2 left" key={q.qid}>
+                                <div className="column compact2 left" style={{
+                                    width: "calc(100% - 20rem)"
+                                }}>
+                                    <div className="flex compact" >
+                                        <RadioButtonCheckedOutlined sx={{
+                                            fontSize: "1rem"
+                                        }} />
+                                        <Typography>{q.text}</Typography>
+                                    </div>
 
-    return null;
+                                </div>
+                                {'options' in q && (
+                                    <div className="flex compact2 right" style={{
+                                        flexWrap: 'wrap'
+                                    }}>
+                                        {q.options.split('|').map(o => (
+                                            <Chip size="small" key={o} label={o} sx={{
+                                                marginBottom: "0.5rem"
+                                            }} />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    }
+                    else if (q.type === 'control_checkbox') {
+                        return (
+                            <div className="column compact2 left" key={q.qid}>
+                                <div className="flex compact" key={q.qid}>
+                                    <CheckBoxOutlined sx={{
+                                        fontSize: "1rem"
+                                    }} />
+                                    <Typography key={q.qid}>{q.text}</Typography>
+                                </div>
+                                {'options' in q && (
+                                    <div className="flex compact2 right" style={{
+                                        flexWrap: 'wrap'
+                                    }}>
+                                        {q.options.split('|').map(o => (
+                                            <Chip size="small" key={o} label={o} sx={{
+                                                marginBottom: "0.5rem"
+                                            }} />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    }
+                    else if (q.type === 'control_dropdown') {
+                        return (
+                            <div className="column compact2 left" key={q.qid}>
+                                <div className="flex compact" >
+                                    <ArrowDropDownCircleOutlined sx={{
+                                        fontSize: "1rem"
+                                    }} />
+                                    <Typography>{q.text}</Typography>
+                                    {'hidden' in q && q.hidden === 'Yes' && <Typography variant="caption" sx={{
+                                        opacity: 0.5
+                                    }}>(Hidden)</Typography>}
+                                </div>
+                                {'options' in q && (
+                                    <div className="flex compact fit">
+                                        {q.options.split('|').map(o => (
+                                            <Chip size="small" key={o} label={o} />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    }
+                    else if (q.type === 'control_button') {
+                        return null;
+                    }
+                    else if (q.type === 'control_head') {
+                        return null;
+                    }
+                    else {
+                        return (
+                            <Typography key={q.qid}>{q.text} - {q.type} </Typography>
+                        )
+                    }
+                })}
+            </div>
+        </div>
+    )
+
 }
 
 

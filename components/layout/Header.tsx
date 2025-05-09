@@ -387,7 +387,7 @@ export default function Header({
               onClick={() => {
                 router.push(`/me`)
               }}
-              className="flex compact"
+              className="flex compact left"
               sx={{
                 padding: "0.25rem 0.5rem",
                 borderRadius: "0.25rem"
@@ -403,7 +403,7 @@ export default function Header({
               onClick={() => {
                 Session.Preferences.toggleMode()
               }}
-              className="flex compact"
+              className="flex compact left"
               sx={{
                 padding: "0.25rem 0.5rem",
                 borderRadius: "0.25rem"
@@ -415,7 +415,7 @@ export default function Header({
               <Typography>Dark Mode</Typography>
             </ButtonBase>
             <ButtonBase
-              className="flex compact"
+              className="flex compact left"
               sx={{
                 padding: "0.25rem 0.5rem",
                 borderRadius: "0.25rem"
@@ -427,10 +427,13 @@ export default function Header({
               <Typography>Settings</Typography>
             </ButtonBase>
             <ButtonBase
-              className="flex compact"
+              className="flex compact left"
               sx={{
                 padding: "0.25rem 0.5rem",
                 borderRadius: "0.25rem"
+              }}
+              onClick={() => {
+                Session.logout();
               }}
             >
               <LogoutOutlined sx={{

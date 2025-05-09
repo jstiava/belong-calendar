@@ -23,6 +23,8 @@ export default class Chronos {
   private hour: number;
   private minute: number;
 
+  
+
   constructor(num?: number | any[], roundBy24: boolean = true) {
     this.hour = 0;
 
@@ -241,6 +243,14 @@ export default class Chronos {
 
   is(other: Chronos): boolean {
     return other.getHMN() === this.getHMN();
+  }
+
+  truncate(amount: number) {
+    const value = Math.round(this.getHMN() * amount) / amount;
+    this.hour = Math.trunc(value);
+    this.minute = Math.round(Math.abs(value - this.hour) * 60);
+
+    return this;
   }
 
   public static toMinutes(value: number) {

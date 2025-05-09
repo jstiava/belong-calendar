@@ -550,12 +550,12 @@ export class Hours {
       return;
     }
 
-    if (typeof arg1 != "number" || !max) {
+    if ((typeof arg1 != "number" && typeof arg1 != "string") || !max) {
       console.log(arg1, max, breaks, time_zone_offset)
       throw Error("An error occured while creating a hours")
     }
 
-    this.min = new Chronos(arg1, false);
+    this.min = new Chronos(Number(arg1), false);
     this.max = new Chronos(max, false);
     this.breaks = breaks?.map((item) => new Chronos(item, false)) || [];
     this.as_text = this.to_string();

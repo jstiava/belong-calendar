@@ -4,12 +4,12 @@ import axios from 'axios';
 
 const axiosInstance = axios.create({
   baseURL:
-    process.env.NODE_ENV === 'production' ? String(process.env.NEXT_PUBLIC_BACKEND_URL_PROD) : 'http://localhost:3000/',
-    // String(process.env.NEXT_PUBLIC_BACKEND_URL_PROD),
+    // process.env.NODE_ENV === 'production' ? String(process.env.NEXT_PUBLIC_BACKEND_URL_PROD) : 'http://localhost:3000/',
+    String(process.env.NEXT_PUBLIC_BACKEND_URL_PROD),
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",
-    "Accept": "application/json"
+    "Accept": "application/json",
   },
   withCredentials: true
 });

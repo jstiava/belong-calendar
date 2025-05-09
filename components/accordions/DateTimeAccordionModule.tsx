@@ -55,11 +55,13 @@ export default function DateTimeAccordionModule({
         <div className="column left" style={{
           width: "25rem",
         }}>
-          <HoursMinimap
-            mode="dark"
-            schedule={new Schedule(item.schedules[0])}
-            onChange={(newSch) => setSchedule(newSch)}
-          />
+         {schedule && (
+           <HoursMinimap
+           mode="dark"
+           schedule={schedule}
+           onChange={(newSch) => setSchedule(newSch)}
+         />
+         )}
         </div>
         <div className="flex fit">
           <StyledIconButton

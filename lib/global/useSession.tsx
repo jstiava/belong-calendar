@@ -79,7 +79,7 @@ export interface UseSession {
     value: string,
     type?: Type | null
   } | null) => Promise<boolean>;
-  login: (loginCred: any) => void;
+  login: (loginCred: any) => Promise<boolean>;
   logout: () => void;
   notifications: any[] | null;
   Preferences: UsePreferences;
@@ -322,12 +322,12 @@ export default function useSession(): UseSession {
   };
 
 
-  const login = (loginCred: any) => {
-    axios
+  const login = async (loginCred: any) => {
+    return await axios
       .post(API.LOGIN, { ...loginCred })
       .then(res => {
 
-        enqueueSnackbar('Signed In Successfully.', {
+        enqueueSnackbar('You are signed in..', {
           variant: 'success',
         });
 
@@ -347,12 +347,19 @@ export default function useSession(): UseSession {
 
         handleSetBases(basesSorted);
         router.push('/me');
+        enqueueSnackbar('Redirecting..', {
+          variant: 'success',
+        });
+
+        return true;
 
       })
       .catch(error => {
-        return enqueueSnackbar(error.message, {
+        enqueueSnackbar(error.message, {
           variant: 'error',
         });
+
+        return false;
       });
   };
 
