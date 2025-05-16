@@ -312,6 +312,10 @@ body, html {
   &.top {
   justify-content: flex-start;
   }
+
+   &.bottom {
+     justify-content: flex-end;
+  }
   
 
   section {
@@ -788,4 +792,9 @@ body, .custom-scroll {
 	border-radius: 0.25rem;
 	padding: 0.25rem 0.5rem;
 	font-weight: 700;
+}
+
+
+.CodeMirror * {
+  font-family: 'Source Sans 3', 'sans-serif';
 }

@@ -5,7 +5,7 @@ import { Box, Button, Chip, FormControl, IconButton, InputLabel, MenuItem, Selec
 import { Source_Sans_3 } from 'next/font/google';
 import React, { ChangeEvent, useRef, useState } from "react";
 import StyledTimePicker from "@/components/TimePicker";
-import { AddOutlined, ArrowDropDownCircleOutlined, CheckBoxOutlined, Lock, RadioButtonCheckedOutlined, SmartButton, TextFieldsOutlined, WarningAmberOutlined } from "@mui/icons-material";
+import { AddOutlined, ArrowDropDownCircleOutlined, CheckBoxOutlined, ColorizeOutlined, Lock, RadioButtonCheckedOutlined, SmartButton, TextFieldsOutlined, WarningAmberOutlined } from "@mui/icons-material";
 import StyledWeekPicker from "@/components/calendar/WeekPicker";
 import { AppPageProps, Mode, Type } from "@/types/globals";
 import { EventData, Events, Group, Profile, Schedule } from "@/schema";
@@ -20,9 +20,53 @@ import useEvents from "@/lib/global/useEvents";
 import useCalendar from "@/lib/useCalendar";
 import { DIVIDER_NO_ALPHA_COLOR } from "@/components/Divider";
 import Editor from "@/components/Editor";
+import SmallTextField from "@/components/SmallTextField";
+import CodeMirrorEditor from "@/components/CodeMirrorEditor";
 
 const sora = Source_Sans_3({ subsets: ['latin'] });
 
+
+const QUESTION_TYPES : Record<string, {
+    type: string,
+    label: string,
+    slug: string
+}> = {
+    'name': {
+        type: 'string',
+        label: "Name",
+        slug: "name"
+    },
+    'username': {
+        type: 'string',
+        label: "Username",
+        slug: "username"
+    },
+    'nickname': {
+        type: 'string',
+        label: "Nickname",
+        slug:  "nickname"
+    },
+    'email': {
+        type: 'string',
+        label: "Email",
+        slug:  "email"
+    },
+    'phone': {
+        type: 'string',
+        label: "Phone",
+        slug:  "phone"
+    },
+    'theme_color': {
+        type: 'color',
+        label: "Theme Color",
+        slug: "theme_color"
+    },
+    'icon_img': {
+        type: 'image',
+        label: "Icon Image",
+        slug: "icon_img"
+    }
+}
 
 const session = new Profile({
     "uuid": "a151902a-b398-4016-8a29-68bfa67842f3",
@@ -130,29 +174,116 @@ export default function ThemePage(props: AppPageProps) {
             style={{
                 marginTop: "10rem",
                 padding: "1rem",
-                width: "35rem"
+                width: "30rem"
             }}>
 
             <div className="column relaxed">
 
                 {schedule && (
-                     <div className="column left" style={{
+                    <div className="column left" style={{
                         width: "25rem",
-                      }}>
+                    }}>
 
-                    <HoursMinimap
-                    mode="dark"
-                    schedule={schedule}
-                    onChange={(newSch) => setSchedule(newSch)}
-                    />
+                        <HoursMinimap
+                            mode="dark"
+                            schedule={schedule}
+                            onChange={(newSch) => setSchedule(newSch)}
+                        />
                     </div>
                 )}
 
-                {Object.entries(QUESTIONS).map(([key, q]) => {
 
-                    if (['control_fullname', 'control_textbox', 'control_email'].some(x => x === q.type)) {
+
+
+                <div className="column compact">
+                    <Typography variant="h6">New Profile</Typography>
+                    {Object.entries(QUESTIONS).map(([key, entry]) => {
+
+                        if (!['control_radio', 'control_checkbox'].some(x => x === entry.type )) {
+                            return (
+                                <div
+                                    className="flex between"
+                                    key={key}
+                                >
+                                    <div className="flex compact fit top">
+                                        <TextFieldsOutlined sx={{
+                                            fontSize: "1rem",
+                                            marginTop: "0.25rem"
+                                        }} />
+                                        <div className="column snug left">
+                                            <Typography>{entry.text}</Typography>
+                                            {/* <Typography variant="caption" sx={{
+                                                opacity: 0.75,
+                                                fontWeight: 700
+                                            }}>{key}</Typography> */}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex" style={{
+                                        width: '60%'
+                                    }}>
+                                        <CodeMirrorEditor
+                                            variables={Object.entries(QUESTIONS).map(([key, entry]) => {
+                                                return {
+                                                    label: entry.text,
+                                                    slug: entry.qid,
+                                                    isCanBeNull: !('required' in entry) || entry.required === 'No'
+                                                }
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        if (entry.type === 'color') {
+                            return (
+                                <div
+                                    className="flex between"
+                                    key={key}
+                                >
+                                    <div className="flex compact fit top">
+                                        <ColorizeOutlined sx={{
+                                            fontSize: "1rem",
+                                            marginTop: "0.25rem"
+                                        }} />
+                                        <div className="column snug left">
+                                            <Typography>{entry.text}</Typography>
+                                            {/* <Typography variant="caption" sx={{
+                                                opacity: 0.75,
+                                                fontWeight: 700
+                                            }}>{key}</Typography> */}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex fit" style={{
+                                        width: "60%"
+                                    }}>
+                                        <SmallTextField
+                                            size="small"
+                                        />
+                                        <ColorPaletteSelector
+                                            handleChange={(e, newValue) => {
+                                                return;
+                                            }}
+                                            item={{
+                                                theme_color: theme.palette.primary.main
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        return null;
+                    })}
+                </div>
+
+                {/* {Object.entries(QUESTIONS).map(([key, q]) => {
+
+                    if (['control_textbox', 'control_email'].some(x => x === q.type)) {
                         return (
-                            <div className="flex compact" key={q.qid}>
+                            <div className="flex compact" key={q.slug}>
                                 <TextFieldsOutlined sx={{
                                     fontSize: "1rem"
                                 }} />
@@ -160,19 +291,35 @@ export default function ThemePage(props: AppPageProps) {
                             </div>
                         )
                     }
+                    else if (q.type === 'control_fullname' && 'sublabels' in q) {
+
+                        return (
+                            <div className="column compact" key={q.qid}>
+                                <Typography variant='h6'>Full Name</Typography>
+                                {Object.keys(q.sublabels).map((label, i) => (
+                                    <div className="flex compact" >
+                                        <TextFieldsOutlined sx={{
+                                            fontSize: "1rem",
+
+                                        }} />
+                                        <Typography sx={{
+                                            textTransform: 'capitalize'
+                                        }}>{label}</Typography>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    }
                     else if (q.type === 'control_radio') {
                         return (
                             <div className="column compact2 left" key={q.qid}>
-                                <div className="column compact2 left" style={{
-                                    width: "calc(100% - 20rem)"
-                                }}>
+                                <div className="column compact2 left">
                                     <div className="flex compact" >
                                         <RadioButtonCheckedOutlined sx={{
                                             fontSize: "1rem"
                                         }} />
                                         <Typography>{q.text}</Typography>
                                     </div>
-
                                 </div>
                                 {'options' in q && (
                                     <div className="flex compact2 right" style={{
@@ -244,7 +391,7 @@ export default function ThemePage(props: AppPageProps) {
                             <Typography key={q.qid}>{q.text} - {q.type} </Typography>
                         )
                     }
-                })}
+                })} */}
             </div>
         </div>
     )

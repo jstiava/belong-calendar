@@ -6,6 +6,9 @@ import GithubIcon from "./icons/GithubIcon"
 import StravaIcon from "./icons/StravaIcon"
 import JotformIcon from "./icons/Jotform"
 import { Type } from "@/types/globals"
+import StripeIcon from "./icons/StripeIcon"
+import ClickupIcon from "./icons/Clickup"
+import CanvasIcon from "./icons/CanvasIcon"
 
 export default function ResolveItemIcon({
     item,
@@ -37,11 +40,20 @@ export default function ResolveItemIcon({
         else if (item.integration === 'strava') {
             return <StravaIcon sx={sx} />
         }
+        else if (item.integration === 'stripe') {
+            return <StripeIcon sx={sx} />
+        }
         else if (item.integration === 'jotform') {
             return <JotformIcon sx={sx} />
         }
         else if (item.integration === 'outlook') {
             return <Microsoft sx={sx} />
+        }
+        else if (item.integration === 'clickup') {
+            return <ClickupIcon sx={sx} />
+        }
+         else if (item.integration === 'canvas') {
+            return <CanvasIcon sx={sx} />
         }
         else {
             return <ElectricalServicesOutlined sx={sx} />

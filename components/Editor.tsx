@@ -10,15 +10,21 @@ export interface OutputData {
     "blocks": any[]
 }
 
+export interface EditorVariable {
+    "id": string,
+    "name": string,
+    "slug": string
+}
 
-export default function Editor({ slug, data }: { slug: string, data: OutputData }) {
+
+export default function Editor({ slug, variables, data }: { slug: string, variables?: EditorVariable[], data: OutputData }) {
 
     const editorRef = useRef<EditorJS | any>(null);
     const holderRef = useRef<HTMLDivElement>(null);
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        setIsMounted(true); // Prevent SSR crash
+        setIsMounted(true);
     }, []);
 
     const saveData = async () => {
@@ -92,25 +98,17 @@ export default function Editor({ slug, data }: { slug: string, data: OutputData 
             });
 
 
-            new MentionTool({
-                holder: 'editorjs',
-                accessKey: "$", // Access key ( $ or @ )
-                allUsers: [ // The array with the data you want to show when the users type $
-                    {
-                        "id": "1234",
-                        "name": "Variable 1",
-                        "slug": "variable1"
-                    },
-                    {
-                        "id": "12345",
-                        "name": "Thing of v1",
-                        "slug": "variable1.something"
-                    },
-                ],
-                baseUrl: '',
-                searchAPIUrl: ''
-            })
+            if (variables) {
 
+                new MentionTool({
+                    holder: 'editorjs',
+                    accessKey: "$",
+                    allUsers: variables,
+                    baseUrl: '',
+                    searchAPIUrl: ''
+                })
+
+            }
             // // Here create new MentionTool with @ accessor key to use it as mention layout
             // new MentionTool({
             //     holder: 

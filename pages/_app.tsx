@@ -19,6 +19,11 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
+      />
+
       <ThemeProvider
         theme={lightTheme}
       >

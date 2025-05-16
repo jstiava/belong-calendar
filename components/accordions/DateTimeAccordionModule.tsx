@@ -1,4 +1,5 @@
-import { AppsOutlined, CalendarTodayOutlined, CancelOutlined, ScheduleOutlined } from '@mui/icons-material';
+"use client"
+import { AppsOutlined, CalendarTodayOutlined, CancelOutlined, HandymanOutlined, ScheduleOutlined } from '@mui/icons-material';
 import {
   Button,
   ButtonBase,
@@ -12,7 +13,7 @@ import Chronos from '@/lib/utils/chronos';
 import { CreatorPanelProps } from '@/lib/global/useCreate';
 import StyledDatePicker from '../StyledDatePicker';
 import StyledTimePicker from '../TimePicker';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import HoursMinimap from '../HoursMinimap';
 import StyledIconButton from '../StyledIconButton';
 
@@ -25,6 +26,7 @@ interface DateTimeAccordionModuleProps {
   onChange: any;
   handleMultiChange: any;
   switchToSchedule: any;
+  variables: any;
   props?: any;
 }
 
@@ -35,6 +37,7 @@ export default function DateTimeAccordionModule({
   onChange,
   handleMultiChange,
   switchToSchedule,
+  variables,
   ...props
 }: DateTimeAccordionModuleProps) {
   const theme = useTheme();
@@ -45,25 +48,41 @@ export default function DateTimeAccordionModule({
 
   const isTimeless = item ? !item.start_time && !item.date && !item.end_date && !item.end_time : true;
 
+  useEffect(() => {
+    if (item && (item.schedules && item.schedules.length > 0)) {
+      setSchedule(new Schedule(item.schedules[0]));
+    }
+  }, []);
+
   if (!item) {
     return <></>
   }
 
-  if (item.schedules && item.schedules.length > 0) {
+  if ((schedule && item.schedules) && item.schedules.length > 0) {
     return (
       <div className="flex between top">
         <div className="column left" style={{
           width: "25rem",
         }}>
-         {schedule && (
-           <HoursMinimap
-           mode="dark"
-           schedule={schedule}
-           onChange={(newSch) => setSchedule(newSch)}
-         />
-         )}
+          {schedule && (
+            <HoursMinimap
+              mode="dark"
+              schedule={schedule}
+              onChange={(newSch) => setSchedule(newSch)}
+            />
+          )}
         </div>
-        <div className="flex fit">
+        <div className="flex snug fit">
+          <StyledIconButton
+            title="Use Variables"
+            onClick={(e: any) => {
+              return;
+            }}
+          >
+            <HandymanOutlined sx={{
+              fontSize: "1.25rem",
+            }} />
+          </StyledIconButton>
           <StyledIconButton
             title="Remove Scheduling"
             onClick={() => {
@@ -163,7 +182,17 @@ export default function DateTimeAccordionModule({
 
                 )}
               </div>
-              <div className="flex fit">
+              <div className="flex fit snug">
+                <StyledIconButton
+                  title="Use Variables"
+                  onClick={(e: any) => {
+                    return;
+                  }}
+                >
+                  <HandymanOutlined sx={{
+                    fontSize: "1.25rem",
+                  }} />
+                </StyledIconButton>
                 <StyledIconButton
                   title="Remove Date/Time"
                   onClick={() => {

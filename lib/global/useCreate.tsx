@@ -3,7 +3,8 @@ import {
   Modal,
   Collapse,
   ThemeProvider,
-  Slide
+  Slide,
+  useMediaQuery
 } from '@mui/material';
 import React, { useState, useMemo, useCallback, CSSProperties, JSX } from 'react';
 import { UseBaseCore } from './useBase';
@@ -15,19 +16,20 @@ import { UseSession } from './useSession';
 import { CreatePanel } from '../useCreatePanel';
 import { redirect } from 'next/dist/server/api-utils';
 
-export const CreatorModules: Record<Type, any> = {
+export const CreatorModules: Record<Type | string, any> = {
   [Type.Event]: {
     title: "Create Event",
     description: "Enter a name, date and time, schedule, and creative additions.",
     header: [
       "media",
-      "share",
       "theme_color",
       "is_starred_by_profile"
     ],
     body: [
       "name",
       "dateTime",
+      "location",
+      "share",
     ],
     footer: [
       "description",
@@ -49,12 +51,38 @@ export const CreatorModules: Record<Type, any> = {
     footer: []
   },
   [Type.Location]: {},
-  [Type.Profile]: undefined,
+  [Type.Profile]: {
+    title: "Create Profile",
+    description: "Enter a name for your profile",
+    header: [
+      "theme_color"
+    ],
+    body: [
+      "name",
+      "username",
+      "email",
+      "phone"
+    ],
+    footer: []
+  },
   [Type.Custom]: {
     title: "Create Integration",
     body: [
       "apiKey",
     ],
+  },
+  '#jotform.form': {
+    title: "Integrate a Jotform",
+    description: "Track submissions and create actions.",
+    header: [
+
+    ],
+    body: [
+
+    ],
+    footer: [
+
+    ]
   },
   [Type.Schedule]: undefined,
 }
@@ -102,6 +130,7 @@ export interface UseCreator {
 export default function useCreator(source: Member | null, Base: UseBaseCore, Session?: UseSession, Parent?: UseBaseCore, parent?: Member | null): UseCreator {
 
   const theme = Base.theme;
+  const isMed = useMediaQuery(theme.breakpoints.down('md'));
   const [isOpen, setIsOpen] = useState(false);
   const [panels, setPanels] = useState<CreatorPanel[]>([]);
 
@@ -113,15 +142,16 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
   }, []);
 
   const removePanel = useCallback((id: string): void => {
-    console.log({
-      id, panels
-    })
-    setPanels(prev => {
-      const newPanel = prev.filter((item) => item.uuid != id);
-      if (newPanel.length === 0) toggleDrawer(false);
-      return newPanel;
+
+    setPanels((prev) => {
+      const updated = prev.filter((x) => x.uuid !== id);
+      if (updated.length === 0) {
+        toggleDrawer(false);
+      }
+      return updated;
     });
-  }, [panels, toggleDrawer]);
+
+  }, []);
 
   const addPanel = useCallback((newPanel: CreatorPanel) => {
     setPanels(prev => [...prev, newPanel]);
@@ -158,7 +188,7 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
           // metadata: item.metadata || {},
           callback: props.callback || null,
         }
-    
+
         toggleDrawer(true);
         addPanel(panel);
 
@@ -256,30 +286,36 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
       return null;
     }
 
-    return panels.map((item, index: number) => {
-      const key = `${item.type}-${item.mode}-${item.uuid}`;
-      console.log(key);
-      return (
-        <CreatePanel
-          key={key}
-          item={item}
-          source={source}
-          Base={Base}
-          Parent={Parent}
-          Session={Session}
-          removePanel={removePanel}
-          doesPanelExist={doesPanelExist}
-          index={index}
-          startCreator={startCreator}
-          parent={parent}
-        />
-      );
-    }).filter(Boolean);
+    console.log(panels);
+
+    return (
+      <>
+        {panels.map((item, index: number) => {
+          const key = `${item.type}-${item.mode}-${item.uuid}-${index}`;
+          return (
+            <CreatePanel
+              key={key}
+              item={item}
+              source={source}
+              Base={Base}
+              Parent={Parent}
+              Session={Session}
+              removePanel={removePanel}
+              doesPanelExist={doesPanelExist}
+              index={index}
+              startCreator={startCreator}
+              parent={parent}
+            />
+          );
+        }).filter(Boolean)}
+      </>
+    )
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [panels]);
 
   const CreateForm = (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={theme} key={`${source?.id()}-CreateForm`}>
       <Modal
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
@@ -322,13 +358,12 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
                     clear();
                   }
                 }}
-                className="flex compact"
+                className="column compact right bottom"
                 style={{
                   position: "relative",
-                  alignItems: 'center',
                   width: "100vw",
                   height: "100vh",
-                  justifyContent: 'center',
+                  padding: isMed ? "0rem" : '1rem'
                 }}
               >
                 {CreateNewForm}
@@ -362,7 +397,7 @@ export const CreatorPanelStyles: CSSProperties = {
   maxWidth: "100vw",
   maxHeight: '100vh',
   borderRadius: '0.5rem',
-  position: 'absolute'
+  // position: 'absolute'
 }
 
 export const CreatorPanelMobileStyles: CSSProperties = {

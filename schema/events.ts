@@ -64,6 +64,7 @@ export type EventData = {
   capacity: number | null;
   quantity: number | null;
   subtitle: string | null;
+  integration: string | null;
 
 
   metadata?: EventMetadata;

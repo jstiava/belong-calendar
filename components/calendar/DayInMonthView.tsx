@@ -16,7 +16,7 @@ import React, {
 } from 'react';
 import { CalendarEventBox } from '@/components/events/EventBlock';
 import dayjs from '@/lib/utils/dayjs';
-import { Event, Member } from '@/schema';
+import { Event, Member, Schedule } from '@/schema';
 import { Mode, Type } from '@/types/globals';
 import { AddOutlined, BugReportOutlined, CopyAllOutlined, PlayArrow } from '@mui/icons-material';
 import { StartViewer } from '@/lib/global/useView';
@@ -27,10 +27,11 @@ import { MultiDayEventBlock } from '../events/MultiDayEventBlock';
 import { ScheduleBlock } from '../events/ScheduleBlock';
 import { UseSession } from '@/lib/global/useSession';
 import CalendarDayRendered from '@/lib/CalendarDayRendered';
-import { isMoment, isMultiDayEvent, isSingleTimeEvent } from '@/lib/CalendarDays';
+import { isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
 import CalendarDay from '@/lib/CalendarDay';
 import { StackedEventBlock } from '../events/StackedEventBlock';
 import { StackedMomentBlock } from '../events/StackedMomentBlock';
+import { StackedScheduleBlock } from '../events/StackedScheduleBlock';
 
 
 function DayInMonthView({
@@ -124,9 +125,6 @@ function DayInMonthView({
       const theEvents: Event[] = [];
       const startOffset: Event[] = [];
       for (const event of theCalendarDayRendered.chaos.flat()) {
-        if (!event.start_time || !event.date) {
-          continue;
-        }
         theEvents.push(event);
       }
 
@@ -316,12 +314,12 @@ function DayInMonthView({
                 return null;
               }
 
-              if (!event.date) {
+              if (isMultiDayEvent(event)) {
                 return (
-                  <ScheduleBlock
-                    key={`${event.id()}`}
+                  <MultiDayEventBlock
+                    key={`MultiDay_${event.id()}`}
+                    DayInMonthRef={calDayRef}
                     column={date.day()}
-                    isStacked={true}
                     date={date}
                     referenceTime={6}
                     event={event}
@@ -330,49 +328,41 @@ function DayInMonthView({
                     handleCreate={handleCreate}
                     handleSelect={handleSelect}
                     handleDragStart={handleDragStart}
+                    isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
                     source={source}
-                    swap={swap}
                     style={{
                       position: "absolute",
                       top: `calc(${i} * 1.525rem)`,
-                      marginLeft: isLeftOffset ? "2.25rem" : "0rem",
-                      width: isLeftOffset ? "calc(100% - 2.25rem)" : "100%"
+                      marginLeft: isLeftOffset ? "2rem" : "0.15rem",
+                      gutter: "-0.15rem",
                     }}
                   />
                 )
               }
 
-              if (!event.date.isSame(date, 'd') && index != 0) {
-                return <></>;
+              if (!isNotScheduled(event) && ('schedules' in event && event.schedules)) {
+                return (
+                  <StackedScheduleBlock
+                    key={`${event.id()}`}
+                    column={index}
+                    referenceTime={6}
+                    event={event as Event & { schedules: Schedule[] }}
+                    standardHeight={standardHeight}
+                    handleView={handleView}
+                    handleCreate={handleCreate}
+                    handleSelect={handleSelect}
+                    handleDragStart={handleDragStart}
+                    isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                    source={source}
+                    swap={swap}
+                    style={{
+                      width: "100%"
+                    }}
+                  />
+                )
               }
 
-             if (isMultiDayEvent(event)) {
-              return (
-                <MultiDayEventBlock
-                  key={`MultiDay_${event.id()}`}
-                  DayInMonthRef={calDayRef}
-                  column={date.day()}
-                  date={date}
-                  referenceTime={6}
-                  event={event}
-                  standardHeight={standardHeight}
-                  handleView={handleView}
-                  handleCreate={handleCreate}
-                  handleSelect={handleSelect}
-                  handleDragStart={handleDragStart}
-                  isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
-                  source={source}
-                  style={{
-                    position: "absolute",
-                    top: `calc(${i} * 1.525rem)`,
-                    marginLeft: isLeftOffset ? "2rem" : "0.15rem",
-                    gutter: "-0.15rem",
-                  }}
-                />
-              )
-             }
-
-             return null;
+              return null;
 
             })}
 
@@ -434,29 +424,28 @@ function DayInMonthView({
                       )
                     }
 
-                    return (
-                      <ScheduleBlock
-                        isStacked={true}
-                        column={i}
-                        key={`${event.id()}`}
-                        referenceTime={6}
-                        date={date}
-                        event={event}
-                        standardHeight={standardHeight}
-                        handleView={handleView}
-                        handleCreate={handleCreate}
-                        handleSelect={(e, event) => {
-                          return;
-                        }}
-                        handleDragStart={handleDragStart}
-                        source={source}
-                        swap={swap}
-                        style={{
-                          marginLeft: isLeftOffset ? "2.1rem" : "0rem",
-                          width: isLeftOffset ? "calc(100% - 2.1rem)" : "100%"
-                        }}
-                      />
-                    )
+
+                    if (!isNotScheduled(event) && ('schedules' in event && event.schedules)) {
+                      return (
+                        <StackedScheduleBlock
+                          key={`${event.id()}`}
+                          column={index}
+                          referenceTime={6}
+                          event={event as Event & { schedules: Schedule[] }}
+                          standardHeight={standardHeight}
+                          handleView={handleView}
+                          handleCreate={handleCreate}
+                          handleSelect={handleSelect}
+                          handleDragStart={handleDragStart}
+                          isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                          source={source}
+                          swap={swap}
+                          style={{
+                            width: "100%"
+                          }}
+                        />
+                      )
+                    }
 
 
                   }

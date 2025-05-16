@@ -24,6 +24,7 @@ const MainBasePage = (props: AppPageProps) => {
 
     const Session = props.Session;
     const item = props.module ? props.module : Session.base;
+    const Controller = props.module ? props.Module : props.Base;
 
     const [actions, setActions] = useState<any>(null)
 
@@ -116,7 +117,7 @@ const MainBasePage = (props: AppPageProps) => {
                                             borderRadius: "0.25rem",
                                         }}
                                         onClick={() => {
-                                            props.Session.Creator.startCreator(Type.Event, Mode.Create, new Event({
+                                            Controller.Creator.startCreator(Type.Event, Mode.Create, new Event({
                                                 ...action.object,
                                                 date: null,
                                                 start_time: null,

@@ -19,6 +19,7 @@ export class Profile implements Member {
   public nickname!: string;
   public username!: string;
   public email!: string;
+  public phone!: string;
   public theme_color!: string;
   public valid!: boolean;
   public icon_img!: ImageStub | null;

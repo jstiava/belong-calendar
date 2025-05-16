@@ -244,7 +244,7 @@ export default function Sidebar({
               <ItemStub
                 item={module ? module : Session.base ? Session.base : Session.session}
                 parent={module ? Session.base : null}
-                onClick={(e : any) => {
+                onClick={(e: any) => {
                   const target = e.currentTarget || e.target;
                   setAnchorEl(target)
                 }}
@@ -396,7 +396,7 @@ export default function Sidebar({
                             textAlign: 'left',
                             lineHeight: '115%',
                             width: "calc(100% - 3rem)"
-                            
+
                           }}>{item.name}</Typography>
                         </div>
                         <StyledIconButton
@@ -450,22 +450,26 @@ export default function Sidebar({
               width: "100%",
               padding: "1rem"
             }}>
-            <Button
-            disableRipple
-              onClick={() => {
-                router.push({
-                  pathname: `/be/${Session.base?.id()}/integrations`,
-                  query: { ...router.query, view: undefined }
-                })
-              }}
-              endIcon={<MoreHorizOutlined />}
-              sx={{
-                color: theme.palette.text.primary
-              }}
-              className="flex between"
-            >
-              More Integrations
-            </Button>
+
+            {Session.base && (
+
+              <Button
+                disableRipple
+                onClick={() => {
+                  router.push({
+                    pathname: `/be/${Session.base?.id()}/integrations`,
+                    query: { ...router.query, view: undefined }
+                  })
+                }}
+                endIcon={<MoreHorizOutlined />}
+                sx={{
+                  color: theme.palette.text.primary
+                }}
+                className="flex between"
+              >
+                More Integrations
+              </Button>
+            )}
             <Button
               startIcon={<AddOutlined />}
               fullWidth

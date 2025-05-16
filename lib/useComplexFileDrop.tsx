@@ -294,7 +294,11 @@ export default function useComplexFileDrop(presets: ImageStub[] | null, uploads:
           return;
         });
 
-      return await axiosExternal.put(String(secureUrl), upload.file);
+      return await axiosExternal.put(String(secureUrl), upload.file)
+      .catch(err => {
+        console.log(err);
+        return;
+      })
     } catch (error) {
       console.error('Upload failed', error);
     }

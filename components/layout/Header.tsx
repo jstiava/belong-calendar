@@ -247,7 +247,7 @@ export default function Header({
                 value={'iam'}
               //  onClick={() => pushNewView('month')}
               >
-                <VpnKeyOutlined fontSize="small" />
+                <PeopleOutline fontSize="small" />
                 IAM
               </ToggleButton>
             )}

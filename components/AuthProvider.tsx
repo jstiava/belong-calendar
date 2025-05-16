@@ -188,13 +188,16 @@ export default function AuthProvider({
 
 
     // Session protected only
-    if (base_path || router.pathname === "/" || session_protected.some(path => router.pathname.startsWith(path))) {
+    if (base_path || session_protected.some(path => router.pathname.startsWith(path))) {
       Session.verify(base_path ? {
         value: base_path,
       } : null)
         .then((res: boolean) => {
           if (!res) {
-            // router.push('/me')
+            if (router.asPath != '/login') {
+              router.push('/login')
+              return;
+            }
           }
           console.log("Case 0")
           return;

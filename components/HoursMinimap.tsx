@@ -1,3 +1,4 @@
+"use client"
 import Chronos from "@/lib/utils/chronos";
 import { Hours } from "@/lib/utils/medici"
 import { Schedule } from "@/schema"
@@ -634,11 +635,11 @@ const RenderHours = ({
             )
         }
         catch (err) {
-            console.error({
+            console.log({
                 message: "Error rendering hours box",
                 hours
             })
-            return null;
+            return <></>;
         }
     }
 

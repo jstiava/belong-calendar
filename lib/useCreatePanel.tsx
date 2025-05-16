@@ -17,10 +17,11 @@ import {
   alpha,
   AvatarGroup,
   ToggleButton,
+  Chip,
 } from "@mui/material";
 import React, { useState, useEffect, useRef, useCallback, memo, ChangeEvent, Dispatch, SetStateAction } from "react";
-import { Event, EventData, Group, ImageDisplayType, Member, MemberData, MemberFactory, Schedule } from "@/schema";
-import { ArrowBack, CalendarMonthOutlined, Google, GroupWorkOutlined, LinkOutlined, PeopleOutline, PhotoLibraryOutlined, SaveOutlined, Star, StarOutline, TextFieldsOutlined, VpnKeyOutlined, WorkspacesOutlined } from "@mui/icons-material";
+import { Event, EventData, Group, ImageDisplayType, Member, MemberData, MemberFactory, Profile, ProfileData, Schedule } from "@/schema";
+import { ArrowBack, CalendarMonthOutlined, CloseOutlined, Google, GroupWorkOutlined, LinkOutlined, PeopleOutline, PhotoLibraryOutlined, SaveOutlined, Star, StarOutline, TextFieldsOutlined, VpnKeyOutlined, WorkspacesOutlined } from "@mui/icons-material";
 import { enqueueSnackbar } from "notistack";
 import { CreatePanelProps, CreatorModules, CreatorPanelMobileStyles, CreatorPanelProps, CreatorPanelStyles, SharedCreatorPanelStyles, StartCreator, UseCreateForm } from "./global/useCreate";
 import { TransitionGroup } from 'react-transition-group';
@@ -37,6 +38,10 @@ import DateTimeAccordionModule from "@/components/accordions/DateTimeAccordionMo
 import LargeTextField from "@/components/LargeTextField";
 import SmallTextField from "@/components/SmallTextField";
 import StyledToggleButtonGroup from "@/components/StyledToggleButtonGroup";
+import StyledIconButton from "@/components/StyledIconButton";
+import ItemStub from "@/components/ItemStub";
+import JotformFormModule from "@/components/accordions/JotformFormModule";
+import CodeMirrorEditor from "@/components/CodeMirrorEditor";
 
 
 const ensureHttpsPrefix = (value: string): `https://${string}` => {
@@ -45,20 +50,13 @@ const ensureHttpsPrefix = (value: string): `https://${string}` => {
 };
 
 
-const EventsCRUDPanels = [
-  {
-    name: "Header",
-
-  }
-]
-
 export default function useCreatePanel(
   item: MemberData & CreatorPanelProps,
   source: Member,
   Base: UseBaseCore,
   startCreator: StartCreator,
   removePanel: (id: string) => void,
-  setIsShareView: (value : boolean) => any,
+  setIsShareView: (value: boolean) => any,
   setColor: any,
   Session?: UseSession,
   Parent?: UseBaseCore,
@@ -75,9 +73,8 @@ export default function useCreatePanel(
   const [newItem, setNewItem] = useState<(MemberData & CreatorPanelProps) | null>(item || null);
   const [expanded, setExpanded] = useState('dateTime');
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [searchResults, setSearchResults] = useState<Member[] | null>(null);
   const isDialogOpen = Boolean(anchorEl);
-  const [isSchedule, setIsSchedule] = useState(false);
-
 
   // const IAM = null;
   const [uploads, setUploads] = useState<UploadType[]>([]);
@@ -92,19 +89,17 @@ export default function useCreatePanel(
 
   useEffect(() => {
 
-    if (!item.date) {
-      setIsSchedule(true);
-    }
-
     return () => {
 
       if (item.mode != Mode.Modify) {
         return;
       }
 
-      axios.post(API.RELINQUISH_ITEM, {
-        type: item.type,
-        uuid: item.uuid
+      axios.delete(API.RELINQUISH_ITEM, {
+        params: {
+          type: item.type,
+          uuid: item.uuid
+        }
       })
         .then((res) => {
           return true;
@@ -244,7 +239,6 @@ export default function useCreatePanel(
       }}
     >
 
-
       {uploadCount > 0 && (
         <div className="column" style={{
           padding: "1rem"
@@ -266,7 +260,8 @@ export default function useCreatePanel(
 
           <div className="flex compact fit">
 
-            {Modules.header && Modules.header.map((x : any) => {
+
+            {Modules && Modules.header && Modules.header.map((x: any) => {
 
               if (x === 'media') {
                 return (
@@ -295,59 +290,11 @@ export default function useCreatePanel(
 
           </div>
 
-          <div className="flex compact fit">
-            {Modules.header && Modules.header.map((x: any) => {
+          <div className="flex snug fit">
+            {Modules && Modules.header && Modules.header.map((x: any) => {
 
-              // if (x === 'share' && IAM) {
 
-              //   if (!IAM.members) {
-              //     return null;
-              //   }
-              //   return (
-
-              //     <AvatarGroup
-
-              //       total={Math.min(IAM.members.length, 3) + 1}
-              //       max={Math.min(IAM.members.length, 3)}
-              //       sx={{
-              //         cursor: 'pointer',
-              //         '& .MuiAvatar-root': { width: "2rem", height: "2rem", fontSize: 15 },
-              //       }}
-              //       slotProps={{
-              //         additionalAvatar: {
-              //           sx: {
-              //             backgroundColor: alpha(theme.palette.background.paper, 0.25),
-              //             color: `var(--text-color)`
-              //           }
-              //         }
-              //       }}
-              //       onClick={() => {
-              //         setIsShareView(true);
-              //       }}
-              //     >
-              //       {IAM.members && IAM.members.map(x => (
-              //         <Avatar
-              //           sx={{
-              //             width: "2rem",
-              //             height: "2rem",
-              //             backgroundColor: x.theme_color || theme.palette.primary.main,
-              //             color: x.theme_color ? theme.palette.getContrastText(x.theme_color) : theme.palette.primary.contrastText,
-              //             border: `2px solid ${x.theme_color || theme.palette.primary.main}`,
-              //           }}
-
-              //           alt={x.name || ''}
-              //           src={x instanceof Group && x.integration ? getIntegrationIcon(x.integration) || '' : `${MEDIA_BASE_URI}/${x.getIconPath()}`}
-              //         >{x.integration === 'google' ? (
-              //           <Google fontSize="small" />
-              //         ) : (
-              //           x instanceof Event ? <CalendarMonthOutlined fontSize="small" /> : <GroupWorkOutlined fontSize="small" />
-              //         )}</Avatar>
-              //       ))}
-              //     </AvatarGroup>
-              //   )
-              // }
-
-              if (x === 'share') {
+              if (x === "share") {
                 return (
                   <Button
                     key={x}
@@ -373,13 +320,42 @@ export default function useCreatePanel(
               //   )
               // }
             })}
+
+            <div style={{
+              position: "absolute",
+              top: "0.5rem",
+              right: "0.5rem"
+            }}>
+              <StyledIconButton
+                title="Close"
+                onClick={() => {
+                  removePanel(item.uuid);
+                }}
+              >
+                <CloseOutlined sx={{
+                  fontSize: '1rem'
+                }} />
+              </StyledIconButton>
+            </div>
           </div>
         </div>
 
         <div className="column compact left">
-          {Modules.body && Modules.body.map((x: any) => {
+          {Modules && Modules.body && Modules.body.map((x: any) => {
 
             if (x === 'name') {
+
+              if (item.variables) {
+
+                return (
+                  <CodeMirrorEditor
+                    placeholder={`New ${item.type} Name`}
+                    variables={item.variables}
+                    initialValue=""
+                    key={`${x}_with_vars`}
+                  />
+                )
+              }
               return (
                 <LargeTextField
                   label={`New ${item.type} Name`}
@@ -401,6 +377,7 @@ export default function useCreatePanel(
             if (x === 'dateTime') {
               return (
                 <DateTimeAccordionModule
+                  variables={item.variables}
                   key={x}
                   item={newItem}
                   handleChange={handleChange}
@@ -408,25 +385,27 @@ export default function useCreatePanel(
                   onChange={() => handleAccordionChange('dateTime')}
                   handleMultiChange={handleMultiChange}
                   switchToSchedule={() => {
-                    setIsSchedule(true);
                     setExpanded('scheduler');
 
                     if (!newItem.schedules || newItem.schedules.length === 0) {
 
                       const newSchedule = Schedule.createOffDrag(dayjs(String(item.date)), item.end_date ? dayjs(String(item.end_date)) : null, item.start_time ? new Chronos(Number(item.start_time)) : new Chronos(9), item.end_time ? new Chronos(Number(item.end_time)) : new Chronos(16));
-
                       // startCreator(Type.Schedule, Mode.Create, newSchedule, {
                       //   // callback: (item: any) => handleSelection(item),
                       //   connected: true
                       // })
 
-                      setNewItem((prev : any) => {
+                      setNewItem((prev: any) => {
                         if (!prev) {
                           return null;
                         }
                         return {
                           ...prev,
-                          schedules: [newSchedule.eject()]
+                          schedules: [newSchedule.eject()],
+                          date: null,
+                          start_time: null,
+                          end_date: null,
+                          end_time: null
                         }
                       })
                     }
@@ -438,7 +417,6 @@ export default function useCreatePanel(
             if (x === 'username') {
 
               return (
-
                 <SmallTextField
                   key={x}
                   name="username"
@@ -456,7 +434,6 @@ export default function useCreatePanel(
               return (
 
                 <div className="column compact" key={x}>
-
                   <Typography variant="h5">Connect to Jotform</Typography>
                   <SmallTextField
                     name="apiKey"
@@ -465,6 +442,56 @@ export default function useCreatePanel(
                     value={newItem.apiKey || ""}
                     onChange={(e) => handleChange("apiKey", e.target.value)}
                     onFocus={() => setExpanded("apiKey")}
+                  />
+                </div>
+              )
+            }
+
+            if (x === 'share' && Session) {
+              return (
+                <div className="column" key={x}>
+                  <SmallTextField
+                    size='small'
+                    // icon={<SearchOutlined />}
+                    label="Share"
+                    placeholder='Share with...'
+                    onChange={e => {
+                      const query = e.target.value;
+                      const bases = Session.search(query);
+                      const theEvents = Session.Events.search(query);
+                      const eventsFromBase = Base ? Base.Events.search(query) : [];
+
+                      setSearchResults([...bases, ...theEvents, ...eventsFromBase])
+                    }}
+
+                  />
+                  <div className="column">
+                    {searchResults && searchResults.map(item => (
+                      <ItemStub
+                        key={item.id()}
+                        item={item}
+                        onClick={() => {
+                          return;
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            }
+
+            if (x === 'location') {
+              return (
+                <div className="column" key={x}>
+                  <SmallTextField
+                    size='small'
+                    // icon={<SearchOutlined />}
+                    label="Location"
+                    placeholder='Location'
+                    onChange={e => {
+                      return;
+                    }}
+
                   />
                 </div>
               )
@@ -490,40 +517,7 @@ export default function useCreatePanel(
         </div>
         <div className="column compact">
 
-          {item.integration === '#jotform.form' && (
-            <div className="column left relaxed" key={'#jotform.form'}>
-              <div className="column compact left">
-                <Typography variant='h6'>Purpose</Typography>
-                <StyledToggleButtonGroup value="attendees">
-                  <ToggleButton value="attendees">
-                    <PeopleOutline sx={{
-                      fontSize: "1rem"
-                    }} />
-                    Attendees
-                  </ToggleButton>
-                  <ToggleButton value="iam">
-                    <VpnKeyOutlined sx={{
-                      fontSize: "1rem"
-                    }} />
-                    Access
-                  </ToggleButton>
-                  <ToggleButton value="iam">
-                    <CalendarMonthOutlined sx={{
-                      fontSize: "1rem"
-                    }} />
-                    Events
-                  </ToggleButton>
-                  <ToggleButton value="groups">
-                    <WorkspacesOutlined sx={{
-                      fontSize: "1rem"
-                    }} />
-                    Groups
-                  </ToggleButton>
-                </StyledToggleButtonGroup>
-              </div>
 
-            </div>
-          )}
 
           {newItem.link && (
             <div className="column" key={'link'}>
@@ -744,13 +738,6 @@ export const CreatePanel = memo((createProps: CreatePanelProps) => {
         }}
       >
         <div >
-          <div className="column snug" style={{
-            display: isShareView ? 'flex' : 'none',
-            opacity: isShareView ? 1 : 0,
-            transform: "rotateY(180deg)",
-            // animation: "fadeIn 0.4s ease-in-out forwards"
-          }}>{editor.ShareForm}</div>
-
           <div className="column snug" style={{
             display: !isShareView ? 'flex' : 'none',
             opacity: !isShareView ? 1 : 0,

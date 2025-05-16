@@ -40,9 +40,22 @@ export const IntegrationTemplates = [
         },
     },
     {
+        name: "Connect to Stripe",
+        slug: 'stripe',
+        url: 'https://connect.stripe.com/oauth/authorize',
+        type: "OAuth2",
+        subtitle: "Display orders, track fufillment, and analyze your business processes.",
+        theme_color: '#533afd',
+        query: {
+            client_id: "ca_SIl1FyP14rYz4LuNiwH2DpuyBaUelnjl",
+            response_type: 'code',
+            scope: 'read_write'
+        },
+    },
+    {
         name: "Connect to Google",
         slug: 'google',
-        url: " https://accounts.google.com/o/oauth2/v2/auth",
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
         type: "OAuth2",
         subtitle: "Use all google tools and services.",
         theme_color: '#517ec0',
@@ -65,6 +78,27 @@ export const IntegrationTemplates = [
             client_id: "Iv23liT56uQvuP29AUtr",
             scope: 'repo, notifications',
         },
+    },
+    {
+        name: "Connect to Clickup",
+        slug: 'clickup',
+        url: "https://app.clickup.com/api",
+        type: "OAuth2",
+        subtitle: "Integrate with a todo manager.",
+        theme_color: '#7612fa',
+        query: {
+            client_id: "B7AD2VPD2X1DT2KFJSMNBMZC4LENX6RM",
+            state: ''
+        },
+    },
+     {
+        name: "Connect to Canvas (Instructure)",
+        slug: 'canvas',
+        url: "http://localhost:3000/api/v1/auth/callback",
+        type: "OAuth2",
+        subtitle: "Integrate with your studies.",
+        theme_color: '#e4060f',
+        query: {},
     },
 ]
 
