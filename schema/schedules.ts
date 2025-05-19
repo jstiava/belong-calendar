@@ -262,6 +262,12 @@ export class Schedule implements Member {
         return copy;
     }
 
+
+    /**
+     * 
+     * @param day 
+     * @returns 
+     */
     removeHoursOnDay(day: string | number) {
         const pointer = typeof day === "number" ? day : getDayIndex(day);
         if (pointer == -1) {
@@ -272,6 +278,7 @@ export class Schedule implements Member {
         this.days[pointer] = Hours.CLOSED;
 
         if (copy < 2) {
+            // Closed or open
             return;
         }
 
@@ -314,19 +321,20 @@ export class Schedule implements Member {
                 this.days[pointer] = newHours ? Hours.OPEN : Hours.CLOSED;
                 return;
             }
-            for (let i = 0; i < this.days.length; i++) {
-                if (this.days[i] === hoursOfDayPointer) {
-                    this.days[i] = newHours ? Hours.OPEN : Hours.CLOSED;
-                }
-            }
             if (hoursOfDayPointer > Hours.OPEN) {
-                this.removeHoursOnDay(day);
+                const count = this.days.filter(d => d === hoursOfDayPointer).length;
+                if (count <= 1) {
+                    this.removeHoursOnDay(day);
+                }
             }
             return;
         }
 
         if (hoursOfDayPointer > Hours.OPEN) {
-            this.removeHoursOnDay(day);
+            const count = this.days.filter(d => d === hoursOfDayPointer).length;
+            if (count <= 1) {
+                this.removeHoursOnDay(day);
+            }
         }
         const index = this.hours.push(newHours) - 1;
         this.days[pointer] = index + Hours.HOURS_LOCATOR_PREFIX;
@@ -566,9 +574,9 @@ export class Schedule implements Member {
             this.replaceHoursOnDayWith(other.dow, theMask);
             return;
         }
-        
+
         this.replaceHoursOnDayWith(other.dow, theMask.union(hours));
-        return;   
+        return;
     }
 
     unmask = (other: { start_time: Chronos, end_time: Chronos, dow: number }) => {
@@ -579,9 +587,9 @@ export class Schedule implements Member {
             this.replaceHoursOnDayWith(other.dow, theMask);
             return;
         }
-        
+
         this.replaceHoursOnDayWith(other.dow, hours.subtract(other));
-        return;   
+        return;
     }
 
 
@@ -615,7 +623,7 @@ export class Schedule implements Member {
             other,
             newHours
         })
-        
+
         if (!newHours) {
             throw Error("Could not create new hours.")
         }

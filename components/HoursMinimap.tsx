@@ -74,6 +74,7 @@ function HoursBox({
     const [height, setHeight] = useState<string | null>(null);
     const boxRef = useRef<any | null>(null);
     const isDraggingRef = useRef(false);
+    const [isDragging, setIsDragging] = useState(false);
     const dragStartY = useRef(0);
     const startHeight = useRef(0);
     const startTop = useRef(0);
@@ -110,6 +111,7 @@ function HoursBox({
         }
 
         isDraggingRef.current = true;
+        setIsDragging(true)
         dragStartY.current = e.clientY;
         startTop.current = boxRef.current.offsetTop;
         startHeight.current = boxRef.current.offsetHeight;
@@ -165,6 +167,7 @@ function HoursBox({
 
     const onMouseUp = () => {
         isDraggingRef.current = false;
+        setIsDragging(false)
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
 
@@ -210,6 +213,8 @@ function HoursBox({
         }
         init();
 
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [start, end])
 
     if (!top || !height) {
@@ -218,15 +223,15 @@ function HoursBox({
 
     return (
         <>
-            {isDraggingRef.current && labelsRef.current && (
+            {isDragging && labelsRef.current && (
                 <>
                     <Popper
+                    disablePortal
                         open={true}
                         anchorEl={boxRef.current}
                         placement="top"
                         sx={{
                             padding: "0.25rem",
-                            zIndex: 1000
                         }}
 
                     >
@@ -234,15 +239,18 @@ function HoursBox({
                             fontSize: "0.75rem",
                             backgroundColor: theme.palette.background.paper,
                             padding: "0.25rem",
-                            borderRadius: "0.25rem"
+                            borderRadius: "0.25rem",
+                            whiteSpace: 'nowrap'
                         }}>{labelsRef.current.start.print()}</Typography>
                     </Popper>
                     <Popper
+                    disablePortal
                         open={true}
                         anchorEl={boxRef.current}
                         placement="bottom"
                         sx={{
                             padding: "0.25rem",
+                            width: "fit-content"
                         }}
                     >
                         <Typography sx={{
@@ -250,6 +258,7 @@ function HoursBox({
                             backgroundColor: theme.palette.background.paper,
                             borderRadius: "0.25rem",
                             padding: "0.25rem",
+                            whiteSpace: 'nowrap'
                         }}>{labelsRef.current.end.print()}</Typography>
                     </Popper>
                 </>

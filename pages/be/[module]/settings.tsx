@@ -167,10 +167,10 @@ const MainBasePage = (props: AppPageProps) => {
                                     color="error"
                                     variant="contained"
                                     onClick={() => {
-                                        axiosInstance.delete(`/api/v1/groups`, {
+                                        axiosInstance.delete(`/api/v1/${item.type.toString().toLowerCase()}`, {
                                             params: {
                                                 purge: true,
-                                                group_id: props.module ? props.module.id() : props.Session.base.id()
+                                                [`${item.type.toString().toLowerCase()}_id`]: item.id()
                                             }
                                         })
                                             .then(res => {

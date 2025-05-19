@@ -160,15 +160,6 @@ export default function useEvents(
     const localObject = new Event(target, true);
     const globalObject = new Event(target, true).globalize();
 
-    localObject.junctions.set(source.uuid, new Junction({
-      ...Junction.getHostTemplate(),
-      [source.getHostColumnString()]: source.uuid,
-      [source instanceof Event ? 'child_event_id' : 'event_id']: localObject.uuid,
-      is_public: false,
-      is_shown: true,
-      status: JunctionStatus.Accepted
-    }, Type.Event));
-
     setDays(prev => {
       if (!prev) return null;
       const newDays = prev;
@@ -219,17 +210,8 @@ export default function useEvents(
     for (const newEvent of newEvents) {
       const localObject = new Event(newEvent, true);
       const globalObject = new Event(newEvent, true).globalize();
+      
       globals.push(globalObject);
-
-      localObject.junctions.set(source.uuid, new Junction({
-        ...Junction.getHostTemplate(),
-        [source.getHostColumnString()]: source.uuid,
-        [source instanceof Event ? 'child_event_id' : 'event_id']: localObject.uuid,
-        is_public: false,
-        is_shown: true,
-        status: JunctionStatus.Accepted
-      }, Type.Event));
-
       newDays.add(localObject);
       setEvents(prev => {
         if (!prev) return [localObject];

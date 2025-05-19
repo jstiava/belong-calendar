@@ -382,6 +382,7 @@ export class Event implements Member {
   capacity!: number | null;
   quantity!: number | null;
   subtitle!: string | null;
+  integration!: string | null;
 
   // Junction tables:
   junctions!: Map<string, Junction>;
@@ -477,7 +478,7 @@ export class Event implements Member {
     return serial;
   }
 
-  copy = (localize: boolean = false, reduced: boolean = false, rekey: boolean = false): EventData => {
+  copy = (localize: boolean = false, reduced: boolean = false, rekey: boolean = false) => {
 
     const {...data} = this as Partial<Record<string, any>>;
 
@@ -487,7 +488,7 @@ export class Event implements Member {
       }
     });
 
-    return {
+    return new Event({
       ...data,
       uuid: rekey ? String(uuidv4()) : data.uuid,
       start_time: data.start_time ? String(data.start_time.getHMN().toFixed(3)) : null,
@@ -496,10 +497,9 @@ export class Event implements Member {
       end_date: data.end_date ? Number(data.end_date.yyyymmdd()) : null,
       junctions: this.junctions ? Array.from(this.junctions.values()) : [],
       attendees: this.attendees ? this.attendees.map((a) => a.copy()) : null,
-      children: this.children ? reduced ? this.children.map(s => s.uuid) : this.children.map((s) => s.copy(localize, reduced, rekey)) : null,
       schedules: data.schedules ? data.schedules.map((s: Schedule) => s.copy()) : null,
       type: Type.Event
-    } as EventData
+    })
   }
 
 

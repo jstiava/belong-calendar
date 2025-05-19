@@ -73,16 +73,18 @@ export default function DateTimeAccordionModule({
           )}
         </div>
         <div className="flex snug fit">
-          <StyledIconButton
-            title="Use Variables"
-            onClick={(e: any) => {
-              return;
-            }}
-          >
-            <HandymanOutlined sx={{
-              fontSize: "1.25rem",
-            }} />
-          </StyledIconButton>
+          {variables && (
+            <StyledIconButton
+              title="Use Variables"
+              onClick={(e: any) => {
+                return;
+              }}
+            >
+              <HandymanOutlined sx={{
+                fontSize: "1.25rem",
+              }} />
+            </StyledIconButton>
+          )}
           <StyledIconButton
             title="Remove Scheduling"
             onClick={() => {
@@ -183,16 +185,18 @@ export default function DateTimeAccordionModule({
                 )}
               </div>
               <div className="flex fit snug">
-                <StyledIconButton
-                  title="Use Variables"
-                  onClick={(e: any) => {
-                    return;
-                  }}
-                >
-                  <HandymanOutlined sx={{
-                    fontSize: "1.25rem",
-                  }} />
-                </StyledIconButton>
+                {variables && (
+                  <StyledIconButton
+                    title="Use Variables"
+                    onClick={(e: any) => {
+                      return;
+                    }}
+                  >
+                    <HandymanOutlined sx={{
+                      fontSize: "1.25rem",
+                    }} />
+                  </StyledIconButton>
+                )}
                 <StyledIconButton
                   title="Remove Date/Time"
                   onClick={() => {

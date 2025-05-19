@@ -199,7 +199,9 @@ export default function AppLayout(props: {
 
             {Session.Creator.CreateForm}
             <>
-                {Base?.Creator.CreateForm}
+            {Base?.Creator.CreateForm}
+            </>
+            <>
                 {Base?.Viewer.EventPopover}
             </>
 

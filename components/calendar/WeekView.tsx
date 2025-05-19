@@ -86,7 +86,7 @@ const WeekView = ({
     //   });
 
 
-    const copy = new Event(theEvent.copy());
+    const copy = theEvent.copy();
 
     copy.start_time = item.currStart.getDayjs(5).toLocalChronos();
     copy.end_time = item.currEnd.getDayjs(5).toLocalChronos();

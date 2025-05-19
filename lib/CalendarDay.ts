@@ -7,6 +7,7 @@ import { Dayjs } from 'dayjs';
 
 export default class CalendarDay {
 
+  loading: boolean = false;
   version: number = 0;
   count: number = 0;
   date: Dayjs;

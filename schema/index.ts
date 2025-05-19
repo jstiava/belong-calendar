@@ -1,7 +1,7 @@
 import { Type } from '@/types/globals';
 import { EventData, Event } from './events';
 import { GroupData, Group } from './groups';
-import { Junction } from './junctions';
+import { Junction, JunctionData } from './junctions';
 import { LocationData, Location } from './locations';
 import { Profile } from './profiles';
 import axios, { API } from '@/lib/utils/axios';
@@ -25,15 +25,16 @@ export interface Member {
     theme_color: string | null;
     type: Type;
     metadata: any;
-    junctions: Map<string, Junction>;
+    junctions: Map<string, JunctionData>;
     id: () => string;
     eject: () => any;
-    copy: (localize?: boolean, reduced?: boolean, rekey?: boolean) => MemberData;
+    copy: (localize?: boolean, reduced?: boolean, rekey?: boolean) => Member;
     getItem: () => Member;
     getIconPath: (quick?: boolean) => string | null;
     getHostColumnString: () => string;
     getType: () => Type;
     token?: string | null;
+    icon_img?: ImageStub | null;
 }
 
 export const isMember: Function[] = [Group, Location, Event, Profile];

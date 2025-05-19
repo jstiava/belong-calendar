@@ -3,15 +3,16 @@ import { AppPageProps } from '@/types/globals';
 import { useRouter } from 'next/router';
 import { Box, Button, Checkbox, Chip, styled, Typography, useTheme } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { Group, Member } from '@/schema';
+import { Group, Member, MemberFactory } from '@/schema';
 import ItemStub from '@/components/ItemStub';
 import { DataGrid, GridColDef, GridRenderCellParams, useGridApiRef } from '@mui/x-data-grid';
 import dayjs from '@/lib/utils/dayjs';
 import { Dayjs } from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Divider, { DIVIDER_NO_ALPHA_COLOR } from '@/components/Divider';
 import StyledIconButton from '@/components/StyledIconButton';
 import { CloseOutlined } from '@mui/icons-material';
+import axiosInstance from '@/lib/utils/axios';
 
 const CustomCheckbox = (props: any) => (
     <Checkbox
@@ -33,6 +34,36 @@ const MainBasePage = (props: AppPageProps) => {
 
     const item = props.module ? props.module : props.Session.base;
     const IAM = props.module ? props.Module.IAM : props.Base.IAM;
+
+
+
+    useEffect(() => {
+
+        const item = props.module ? props.module : props.Session.base;
+        if (!item) {
+            return;
+        }
+
+        if (!item.integration) {
+            return;
+        }
+
+        axiosInstance.get(`/api/v1/auth/${item.integration}`, {
+            params: {
+                uuid: item.id(),
+                source: MemberFactory.getToken(item)
+            }
+        })
+            .then(res => {
+                console.log(res)
+                // setActions(res.data.actions)
+            })
+            .catch(err => {
+                console.log(err);
+            })
+
+            
+    }, [props.module, props.Session.base])
 
     const columns: GridColDef[] = [
         {

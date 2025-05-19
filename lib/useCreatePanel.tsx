@@ -14,34 +14,35 @@ import {
   getContrastRatio,
   Typography,
   Avatar,
-  alpha,
-  AvatarGroup,
-  ToggleButton,
-  Chip,
+  MenuItem,
+  ButtonBase,
+  CircularProgress,
 } from "@mui/material";
-import React, { useState, useEffect, useRef, useCallback, memo, ChangeEvent, Dispatch, SetStateAction } from "react";
-import { Event, EventData, Group, ImageDisplayType, Member, MemberData, MemberFactory, Profile, ProfileData, Schedule } from "@/schema";
-import { ArrowBack, CalendarMonthOutlined, CloseOutlined, Google, GroupWorkOutlined, LinkOutlined, PeopleOutline, PhotoLibraryOutlined, SaveOutlined, Star, StarOutline, TextFieldsOutlined, VpnKeyOutlined, WorkspacesOutlined } from "@mui/icons-material";
+import React, { useState, useEffect, useRef, useCallback, memo, ChangeEvent, Fragment } from "react";
+import { EventData, ImageDisplayType, Junction, JunctionBuilder, JunctionData, Member, MemberData, MemberFactory, Schedule } from "@/schema";
+import { AddOutlined, ArrowBack, CalendarMonthOutlined, ChangeHistoryOutlined, CloseOutlined, EditCalendar, FirstPage, FirstPageOutlined, LastPageOutlined, LinkOutlined, MarkunreadMailboxOutlined, PhotoLibraryOutlined, SaveOutlined, SendOutlined, TextFieldsOutlined } from "@mui/icons-material";
 import { enqueueSnackbar } from "notistack";
 import { CreatePanelProps, CreatorModules, CreatorPanelMobileStyles, CreatorPanelProps, CreatorPanelStyles, SharedCreatorPanelStyles, StartCreator, UseCreateForm } from "./global/useCreate";
 import { TransitionGroup } from 'react-transition-group';
 import { UseSession } from "./global/useSession";
-import { getIntegrationIcon, Mode, Type } from "@/types/globals";
+import { Mode, Type } from "@/types/globals";
 import Chronos from "./utils/chronos";
 import dayjs from "dayjs";
 import axios, { API } from "./utils/axios";
 import { UseBaseCore } from "./global/useBase";
-import useIAM from "./global/useIAM";
 import useComplexFileDrop, { MEDIA_BASE_URI, UploadType } from "./useComplexFileDrop";
 import ColorPaletteSelector from "@/components/accordions/ColorPaletteSelector";
 import DateTimeAccordionModule from "@/components/accordions/DateTimeAccordionModule";
 import LargeTextField from "@/components/LargeTextField";
 import SmallTextField from "@/components/SmallTextField";
-import StyledToggleButtonGroup from "@/components/StyledToggleButtonGroup";
 import StyledIconButton from "@/components/StyledIconButton";
 import ItemStub from "@/components/ItemStub";
-import JotformFormModule from "@/components/accordions/JotformFormModule";
 import CodeMirrorEditor from "@/components/CodeMirrorEditor";
+import MultipleSelectChip from "@/components/MultipleChipSelect";
+import ResolveItemIcon from "@/components/ResolveItemIcon";
+import { useTimeout } from "@mui/x-data-grid/internals";
+import Divider from "@/components/Divider";
+import JotformFormModule from "@/components/accordions/JotformFormModule";
 
 
 const ensureHttpsPrefix = (value: string): `https://${string}` => {
@@ -66,17 +67,21 @@ export default function useCreatePanel(
 
   console.log("Create panel")
 
-  const { theme, Events, Locations, ...OtherBase } = Base;
-  const Modules = CreatorModules[item.type as Type]
-
   const inputRef = useRef<any>(null);
+
+  const { theme, Events, Locations, ...OtherBase } = Base;
+  const Modules = CreatorModules[item.type as Type];
+
+  const [progress, setProgress] = useState('editing');
   const [newItem, setNewItem] = useState<(MemberData & CreatorPanelProps) | null>(item || null);
   const [expanded, setExpanded] = useState('dateTime');
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [searchResults, setSearchResults] = useState<Member[] | null>(null);
-  const isDialogOpen = Boolean(anchorEl);
 
-  // const IAM = null;
+  const [junctions, setJunctions] = useState<Member[]>([]);
+  const [locations, setLocations] = useState<Member[]>([]);
+  const [actions, setActions] = useState<any[]>([]);
+
+  // Uploads.
   const [uploads, setUploads] = useState<UploadType[]>([]);
   const { FileUpload, FilePreview, handleUpload, openDialog, isUploadPresent, isFileUploadOpen, uploadCount } = useComplexFileDrop(MemberFactory.collect_media(item), uploads, setUploads);
 
@@ -88,6 +93,28 @@ export default function useCreatePanel(
   }, [inputRef]);
 
   useEffect(() => {
+
+    try {
+
+      const startJunction = new JunctionBuilder()
+        .from(Junction.toPointer(source)).to({
+          type: item.type,
+          value: item.uuid
+        })
+        .allowAll()
+        .isPrivate()
+        .fromChildToParent()
+        .denyAll().build('hosts');
+
+      const copy = source.copy();
+      copy.junctions.set(source.id(), startJunction[0]);
+
+      setJunctions([copy]);
+
+    }
+    catch (err) {
+      console.log(err);
+    }
 
     return () => {
 
@@ -293,18 +320,6 @@ export default function useCreatePanel(
           <div className="flex snug fit">
             {Modules && Modules.header && Modules.header.map((x: any) => {
 
-
-              if (x === "share") {
-                return (
-                  <Button
-                    key={x}
-                    onClick={() => {
-                      setIsShareView(true);
-                    }}
-                  >Share</Button>
-                )
-              }
-
               // if (x === 'is_starred_by_profile' && ((IAM && IAM.members) && Session.session)) {
 
               //   const isFound = IAM.members.some(x => x.id() === Session.session!.id());
@@ -449,53 +464,248 @@ export default function useCreatePanel(
 
             if (x === 'share' && Session) {
               return (
-                <div className="column" key={x}>
-                  <SmallTextField
-                    size='small'
-                    // icon={<SearchOutlined />}
+                <div className="column compact" key={x}>
+
+                  <MultipleSelectChip
                     label="Share"
-                    placeholder='Share with...'
-                    onChange={e => {
+                    onChange={(e: any) => {
                       const query = e.target.value;
                       const bases = Session.search(query);
                       const theEvents = Session.Events.search(query);
                       const eventsFromBase = Base ? Base.Events.search(query) : [];
 
-                      setSearchResults([...bases, ...theEvents, ...eventsFromBase])
+                      return [...bases, ...theEvents, ...eventsFromBase];
                     }}
+                    selected={junctions}
+                    setSelected={setJunctions}
+                    initialRecommendations={
+                      <div className="column snug">
+                        {Session.session && !junctions.some(j => j.id() === Session.session!.id()) && (
+                          <ButtonBase
+                            disableRipple
+                            onClick={() => {
 
+                              if (!Session.session) {
+                                return;
+                              }
+
+                              setJunctions((prev: any) => {
+                                const copy = prev;
+                                const filtered = copy.filter((x : any) => x.id() != Session.session!.id());
+                                filtered.push(Session.session);
+                                return filtered;
+                              })
+                            }}
+                            className="flex compact left"
+                            sx={{
+                              padding: "0.25rem 0.5rem",
+                              borderRadius: "0.25rem"
+                            }}
+                          >
+                            <Avatar sx={{
+
+                              width: "2rem",
+                              height: "2rem",
+                              backgroundColor: Session.session.theme_color
+                            }} src={('icon_img' in Session.session && Session.session.icon_img) ? `${MEDIA_BASE_URI}/${Session.session.icon_img.path}` : undefined}>
+                              <ResolveItemIcon
+                                item={Session.session}
+                                sx={{
+                                  fontSize: "1rem",
+                                  color: Session.session.theme_color ? theme.palette.getContrastText(Session.session.theme_color) : theme.palette.text.primary
+                                }}
+                              />
+                            </Avatar>
+                            <Typography>Share with me.</Typography>
+                          </ButtonBase>
+                        )}
+                      </div>
+                    }
                   />
-                  <div className="column">
-                    {searchResults && searchResults.map(item => (
-                      <ItemStub
-                        key={item.id()}
-                        item={item}
-                        onClick={() => {
-                          return;
-                        }}
-                      />
-                    ))}
-                  </div>
                 </div>
               )
             }
 
-            if (x === 'location') {
+            if (x === 'location' && Session) {
               return (
-                <div className="column" key={x}>
-                  <SmallTextField
-                    size='small'
-                    // icon={<SearchOutlined />}
-                    label="Location"
-                    placeholder='Location'
-                    onChange={e => {
-                      return;
-                    }}
+                <div className="column compact" key={x}>
 
+                  <MultipleSelectChip
+                    label="Locations"
+                    onChange={(e: any) => {
+                      const query = e.target.value;
+                      const bases = Session.search(query);
+                      const theEvents = Session.Events.search(query);
+                      const eventsFromBase = Base ? Base.Events.search(query) : [];
+
+                      return [...bases, ...theEvents, ...eventsFromBase];
+                    }}
+                    selected={locations}
+                    setSelected={setLocations}
+                    initialRecommendations={
+                      <div className="column snug">
+                        {Session.session && !junctions.some(j => j.id() === Session.session!.id()) && (
+                          <div className="column snug">
+                            <Typography>No results.</Typography>
+                          </div>
+                        )}
+                      </div>
+                    }
                   />
                 </div>
               )
             }
+
+            if (x === 'actions' && Session) {
+              return (
+                <div className="column compact" key={x}>
+
+                  <MultipleSelectChip
+                    label="Actions"
+                    onChange={(e: any) => {
+                      const query = e.target.value;
+                      const bases = Session.search(query);
+                      const theEvents = Session.Events.search(query);
+                      const eventsFromBase = Base ? Base.Events.search(query) : [];
+
+                      return [...bases, ...theEvents, ...eventsFromBase];
+                    }}
+                    selected={actions}
+                    setSelected={setActions}
+                    initialRecommendations={
+                      <div className="column snug">
+                        {Session.session && !junctions.some(j => j.id() === Session.session!.id()) && (
+                          <div className="column snug">
+                            <div className="column snug" style={{
+                              padding: '0.5rem 0.25rem'
+                            }}>
+                              <ButtonBase
+                                disableRipple
+                                onClick={() => {
+                                  return;
+                                }}
+                                className="flex compact left"
+                                sx={{
+                                  padding: "0.25rem 0.5rem",
+                                  borderRadius: "0.25rem"
+                                }}
+                              >
+                                <Avatar sx={{
+                                  width: "1.75rem",
+                                  height: "1.75rem",
+                                  border: `1px dashed ${theme.palette.primary.main}`,
+                                  backgroundColor: theme.palette.background.paper
+                                }}>
+                                  <FirstPageOutlined sx={{
+                                    fontSize: "1rem",
+                                    color: theme.palette.primary.main
+                                  }} />
+                                </Avatar>
+                                <div className="column snug left">
+                                  <Typography sx={{
+                                    fontSize: "1rem"
+                                  }}>On Event Starts</Typography>
+                                </div>
+                              </ButtonBase>
+                              <ButtonBase
+                                disableRipple
+                                onClick={() => {
+                                  return;
+                                }}
+                                className="flex compact left"
+                                sx={{
+                                  padding: "0.25rem 0.5rem",
+                                  borderRadius: "0.25rem"
+                                }}
+                              >
+                                <Avatar sx={{
+                                  width: "1.75rem",
+                                  height: "1.75rem",
+                                  border: `1px dashed ${theme.palette.primary.main}`,
+                                  backgroundColor: theme.palette.background.paper
+                                }}>
+                                  <LastPageOutlined sx={{
+                                    fontSize: "1rem",
+                                    color: theme.palette.primary.main
+                                  }} />
+                                </Avatar>
+                                <div className="column snug left">
+                                  <Typography sx={{
+                                    fontSize: "1rem"
+                                  }}>On Event Ends</Typography>
+                                </div>
+                              </ButtonBase>
+                              <ButtonBase
+                                disableRipple
+                                onClick={() => {
+                                  return;
+                                }}
+                                className="flex compact left"
+                                sx={{
+                                  padding: "0.25rem 0.5rem",
+                                  borderRadius: "0.25rem"
+                                }}
+                              >
+                                <Avatar sx={{
+                                  width: "1.75rem",
+                                  height: "1.75rem",
+                                  border: `1px dashed ${theme.palette.primary.main}`,
+                                  backgroundColor: theme.palette.background.paper
+                                }}>
+                                  <ChangeHistoryOutlined sx={{
+                                    fontSize: "1rem",
+                                    color: theme.palette.primary.main
+                                  }} />
+                                </Avatar>
+                                <div className="column snug left">
+                                  <Typography sx={{
+                                    fontSize: "1rem"
+                                  }}>On Updated</Typography>
+                                </div>
+                              </ButtonBase>
+                            </div>
+                            <Divider />
+                            <div className="column snug" style={{
+                              padding: '0.5rem 0.25rem'
+                            }}>
+                              <ButtonBase
+                                disableRipple
+                                onClick={() => {
+                                  return;
+                                }}
+                                className="flex compact left"
+                                sx={{
+                                  padding: "0.25rem 0.5rem",
+                                  borderRadius: "0.25rem"
+                                }}
+                              >
+                                <Avatar sx={{
+                                  width: "1.75rem",
+                                  height: "1.75rem",
+                                  border: `1px dashed ${theme.palette.primary.main}`,
+                                  backgroundColor: theme.palette.background.paper
+                                }}>
+                                  <MarkunreadMailboxOutlined sx={{
+                                    fontSize: "0.875rem",
+                                    color: theme.palette.primary.main
+                                  }} />
+                                </Avatar>
+                                <div className="column snug left">
+                                  <Typography sx={{
+                                    fontSize: "1rem"
+                                  }}>On a Submission</Typography>
+                                </div>
+                              </ButtonBase>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    }
+                  />
+                </div>
+              )
+            }
+
 
             if (x === 'tagline') {
 
@@ -516,6 +726,13 @@ export default function useCreatePanel(
           })}
         </div>
         <div className="column compact">
+
+          {item.integration === '#jotform.form' && (
+            <JotformFormModule
+              item={newItem} handleChange={undefined} expanded={expanded} onChange={undefined} handleMultiChange={handleMultiChange} source={source}
+              startCreator={startCreator}
+            />
+          )}
 
 
 
@@ -555,19 +772,29 @@ export default function useCreatePanel(
               </IconButton>
               <div className="flex snug fit">
                 <Button
-                  startIcon={<SaveOutlined />}
+                  endIcon={progress === 'editing' ? item.mode === Mode.Create ? <SendOutlined /> : item.mode === Mode.Modify ? item.type === Type.Event ? <EditCalendar /> : <SaveOutlined /> : <SaveOutlined /> : ''}
                   variant="contained"
                   onClick={async () => {
                     try {
+                      setProgress('saving');
                       await save();
-                      removePanel(item.uuid);
+                      setTimeout(async () => {
+                        removePanel(item.uuid);
+                      }, 500)
                     }
                     catch (err) {
+                      setProgress('editing')
                       return;
                     }
                   }}
                 >
-                  Save
+                  {progress === 'editing' ? (
+                    <Fragment key={progress}>{item.mode === Mode.Create ? `New ${item.type.toString()}` : 'Save'}</Fragment>
+                  ) : (
+                    <Fragment key={progress}><CircularProgress size={16} sx={{
+                      color: theme.palette.primary.contrastText
+                    }} /></Fragment>
+                  )}
                 </Button>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import { MEDIA_BASE_URI } from "@/lib/useComplexFileDrop"
 import { Event, Group, Member, Profile } from "@/schema"
 import { CalendarMonthOutlined, WorkspacesOutlined, LocationOnOutlined, PersonOutline, Google } from "@mui/icons-material";
-import { Avatar, AvatarGroup, ButtonBase, CircularProgress, Skeleton, Typography, useTheme } from "@mui/material"
+import { Avatar, AvatarGroup, ButtonBase, CircularProgress, Skeleton, SxProps, Typography, useTheme } from "@mui/material"
 import ResolveItemIcon from "./ResolveItemIcon";
 import { Type } from "@/types/globals";
 
@@ -10,11 +10,13 @@ import { Type } from "@/types/globals";
 export default function ItemStub({
     item,
     parent,
-    onClick
+    onClick,
+    sx = {}
 }: {
     item: Member | null,
     parent?: Member | null,
     onClick?: any
+    sx?: SxProps
 }) {
 
     const theme = useTheme();
@@ -37,9 +39,10 @@ export default function ItemStub({
 
     return (
         <ButtonBase className="flex left compact top"
-        sx={{
-            width: "calc(100% - 1rem)"
-        }}
+            sx={{
+                width: "calc(100% - 1rem)",
+                ...sx
+            }}
             onClick={e => {
                 if (onClick) {
                     onClick(e);
@@ -90,10 +93,10 @@ export default function ItemStub({
                     />
                 </Avatar>
             </AvatarGroup>
-            <div className="column snug" 
-             style={{
-                overflow: "hidden"
-            }}
+            <div className="column snug"
+                style={{
+                    overflow: "hidden"
+                }}
             >
                 <Typography sx={{
                     fontWeight: 700,
@@ -106,7 +109,7 @@ export default function ItemStub({
                     overflow: "hidden",
                     width: "100%"
                 }}>{item.name}</Typography>
-                <div className="flex compact2">
+                <div className="flex compact2 top left">
                     <ResolveItemIcon
                         item={item}
                         sx={{
@@ -117,7 +120,12 @@ export default function ItemStub({
                     <Typography sx={{
                         fontSize: "0.85rem",
                         lineHeight: "125%",
-                        textTransform: 'capitalize'
+                        textTransform: 'capitalize',
+                        display: "inline-block",
+                        whiteSpace: "nowrap",
+                        overflow: "clip",
+                        textOverflow: "ellipsis",
+                        textAlign: 'left'
                     }}>{item instanceof Event && item.subtitle ? item.subtitle : item instanceof Group ? item.integration ? `Integration (${item.integration})` : item.type : item.type}</Typography>
                 </div>
             </div>

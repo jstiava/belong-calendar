@@ -52,6 +52,17 @@ export const IntegrationTemplates = [
             scope: 'read_write'
         },
     },
+     {
+        name: "Connect with Stripe API Key",
+        slug: 'stripeAPI',
+        url: 'https://connect.stripe.com/oauth/authorize',
+        type: "Key",
+        subtitle: "Display orders, track fufillment, and analyze your business processes.",
+        theme_color: '#533afd',
+        query: {
+            // API-Key
+        },
+    },
     {
         name: "Connect to Google",
         slug: 'google',
@@ -225,11 +236,12 @@ const MainBasePage = (props: AppPageProps) => {
                                             return;
                                         }
                                         props.Session.Creator.startCreator(Type.Custom, Mode.Create, null, {
+                                            doNotPrepJunctions: true,
                                             callback: async (item: any) => {
                                                 axiosInstance.get(`/api/v1/auth/identify`, {
                                                     params: {
                                                         apiKey: item.apiKey,
-                                                        integration: 'jotform'
+                                                        integration: x.slug
                                                     }
                                                 })
                                                     .then(res => {

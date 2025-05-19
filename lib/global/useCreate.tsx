@@ -30,6 +30,7 @@ export const CreatorModules: Record<Type | string, any> = {
       "dateTime",
       "location",
       "share",
+      "actions"
     ],
     footer: [
       "description",
@@ -110,16 +111,23 @@ export interface UseCreateForm {
 }
 
 export interface CreatorPanel {
-  uuid: string,
+  uuid?: string,
   type: Type,
   mode: Mode,
-  callback?: (item: any) => any,
+  callback?: any,
   onQuit?: () => any,
   [key: string]: any
 }
 
+type StartCreatorProps = {
+  callback?: (result?: any) => any;
+  doNotPrepJunctions?: boolean;
+  variables?: any[];
+  [key : string]: any;
+};
 
-export type StartCreator = (type: Type, mode: Mode, item?: Member | Schedule | null, props?: any) => void;
+
+export type StartCreator = (type: Type, mode: Mode, item?: Member | Schedule | null, props?: StartCreatorProps) => void;
 
 export interface UseCreator {
   isOpen: boolean;
@@ -151,6 +159,8 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
       return updated;
     });
 
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const addPanel = useCallback((newPanel: CreatorPanel) => {
@@ -169,101 +179,105 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
 
 
 
-  const startCreator = useCallback(async (type: Type, mode: Mode, item: Member | null = null, props: any = {}) => {
+  const startCreator = useCallback(
+    async (type: Type, mode: Mode, item: Member | null = null, props: StartCreatorProps = {}) => {
 
-    let key = null;
-    if (!source) {
-      console.log("No source");
-      return;
-    }
-
-    if (!item) {
-
-      if (type === Type.Custom) {
-        const panel = {
-          ...props,
-          key,
-          type: type,
-          mode: mode,
-          // metadata: item.metadata || {},
-          callback: props.callback || null,
-        }
-
-        toggleDrawer(true);
-        addPanel(panel);
-
+      let key = null;
+      if (!source) {
+        console.log("No source");
         return;
-      };
+      }
 
-      item = MemberFactory.create(type, {
-        theme_color: source ? source.theme_color : parent ? parent.theme_color : theme.palette.primary.main
-      })
-    }
-    else {
-      item.theme_color = item.theme_color ? item.theme_color : source ? source.theme_color : parent ? parent.theme_color : theme.palette.primary.main;
-    }
+      if (!item) {
 
-    switch (mode) {
-      case Mode.Copy:
+        if (type === Type.Custom) {
+          const panel = {
+            ...props,
+            key,
+            type: type,
+            mode: mode,
+            // metadata: item.metadata || {},
+            callback: props.callback || null,
+          }
 
-        if (!item) {
-          console.log("Nothing to copy.")
-          return false;
-        }
-        const theCopy = item.copy(false, false, true);
-        Base.add(type, theCopy);
-        return true;
+          toggleDrawer(true);
+          addPanel(panel);
 
-      case Mode.Delete:
-        if (props.callback) {
-          props.callback();
-        }
+          return;
+        };
 
-        if (item.type === Type.Event) {
-          return Base.Events.remove(props.items)
-        }
-        return handleDelete(type, mode, props);
+        item = MemberFactory.create(type, {
+          theme_color: source ? source.theme_color : parent ? parent.theme_color : theme.palette.primary.main
+        })
+      }
+      else {
+        item.theme_color = item.theme_color ? item.theme_color : source ? source.theme_color : parent ? parent.theme_color : theme.palette.primary.main;
+      }
 
-      case Mode.Create:
-        key = true;
-        if (source) item.junctions.set(source.id(), MemberFactory.connect(source, item));
-        if (parent) item.junctions.set(parent.id(), MemberFactory.connect(parent, item));
-        if (Session && ((!source && !parent) && Session.session)) {
-          item.junctions.set(Session.session.id(), MemberFactory.connect(Session.session, item))
-        }
+      switch (mode) {
+        case Mode.Copy:
 
-      case Mode.Modify:
-        key = await MemberFactory.acquire(item, source)
-          .then(res => {
-            return true;
-          })
-          .catch(err => {
-            console.log(err);
-            enqueueSnackbar("Something went wrong.", {
-              variant: "error"
-            })
+          if (!item) {
+            console.log("Nothing to copy.")
             return false;
-          })
-    }
+          }
+          const theCopy = item.copy(false, false, true);
+          Base.add(type, theCopy.eject());
+          return true;
 
-    const ejected = item.eject ? item.eject() : item;
+        case Mode.Delete:
+          if (props.callback) {
+            props.callback();
+          }
 
-    const panel = {
-      ...props,
-      ...ejected,
-      key,
-      type: type,
-      mode: mode,
-      token: MemberFactory.getToken(item),
-      // metadata: item.metadata || {},
-      callback: props.callback || null,
-    }
+          if (item.type === Type.Event) {
+            return Base.Events.remove(props.items)
+          }
+          return handleDelete(type, mode, props);
 
-    toggleDrawer(true);
-    addPanel(panel);
+        case Mode.Create:
+          key = true;
+          if (!props.doNotPrepJunctions) {
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addPanel, removePanel, toggleDrawer, Base, source, parent]);
+            if (source) item.junctions.set(source.id(), MemberFactory.connect(source, item));
+            if (parent) item.junctions.set(parent.id(), MemberFactory.connect(parent, item));
+            if (Session && ((!source && !parent) && Session.session)) {
+              item.junctions.set(Session.session.id(), MemberFactory.connect(Session.session, item))
+            }
+          }
+
+        case Mode.Modify:
+          key = await MemberFactory.acquire(item, source)
+            .then(res => {
+              return true;
+            })
+            .catch(err => {
+              console.log(err);
+              enqueueSnackbar("Something went wrong.", {
+                variant: "error"
+              })
+              return false;
+            })
+      }
+
+      const ejected = item.eject ? item.eject() : item;
+
+      const panel = {
+        ...props,
+        ...ejected,
+        key,
+        type: type,
+        mode: mode,
+        token: MemberFactory.getToken(item),
+        // metadata: item.metadata || {},
+        callback: props.callback || null,
+      }
+
+      toggleDrawer(true);
+      addPanel(panel);
+
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [addPanel, removePanel, toggleDrawer, Base, source, parent]);
 
 
   const doesPanelExist = (uuid: string): boolean => {

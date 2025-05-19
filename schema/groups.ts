@@ -116,7 +116,7 @@ export class Group implements Member {
   }
 
   copy = () => {
-    return this.eject();
+    return new Group(this.eject());
   }
 
   eject = (): GroupData => {

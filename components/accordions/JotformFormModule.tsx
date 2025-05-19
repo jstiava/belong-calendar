@@ -16,10 +16,7 @@ import { CreatorPanelProps, StartCreator } from '@/lib/global/useCreate';
 import StyledDatePicker from '../StyledDatePicker';
 import StyledTimePicker from '../TimePicker';
 import { useEffect, useState } from 'react';
-import HoursMinimap from '../HoursMinimap';
-import StyledIconButton from '../StyledIconButton';
 import axiosInstance from '@/lib/utils/axios';
-import StyledToggleButtonGroup from '../StyledToggleButtonGroup';
 import { Mode, Type } from '@/types/globals';
 import CodeMirrorEditor from '../CodeMirrorEditor';
 
@@ -71,6 +68,7 @@ export default function JotformFormModule({
         console.log(err);
       })
 
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 

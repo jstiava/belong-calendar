@@ -92,7 +92,7 @@ export class CalendarDays<T extends CalendarDay> {
 
             for (let currDate = event.date.max(this.start); !currDate.isSame(event.end_date.min(this.end.add(1, 'day')), 'date'); currDate = currDate.add(1, 'day')) {
                 const day = this.days.getOrCreate(currDate.yyyymmdd(), () => this.create(event.date.yyyymmdd()));
-                day.add(new Event(event.copy()));
+                day.add(event.copy());
             }
             return;
         }

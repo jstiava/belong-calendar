@@ -45,6 +45,7 @@ function doesCollide(
 
 export default class CalendarDayRendered implements CalendarDay {
 
+  loading = false;
   version: number = 0;
   count: number = 0;
   date: Dayjs;
