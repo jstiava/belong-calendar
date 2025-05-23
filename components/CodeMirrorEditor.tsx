@@ -134,7 +134,7 @@ const chipPlugin = ViewPlugin.fromClass(
 
         buildDecorations(): DecorationSet {
             const builder = new RangeSetBuilder<Decoration>();
-            const regex = /\$\{([^{}]+)\}/g;
+            const regex = /\{\{([^{}]+)\}\}/g;
             // const regex = /\$\{([^}]+)\}/g;
 
             for (let i = 0; i < this.view.state.doc.lines; i++) {
@@ -168,7 +168,8 @@ const chipPlugin = ViewPlugin.fromClass(
 const CodeMirrorEditor = ({
     initialValue,
     variables,
-    placeholder
+    placeholder,
+    onChange
 }: {
     initialValue?: string;
     variables: {
@@ -176,7 +177,8 @@ const CodeMirrorEditor = ({
         slug: string,
         isCanBeNull: boolean
     }[];
-    placeholder?: string
+    placeholder?: string,
+    onChange?: (text: string) => any
 }) => {
 
     const theme = useTheme();
@@ -197,6 +199,17 @@ const CodeMirrorEditor = ({
         keys: ['slug', 'label']
     });
 
+
+    const trackTextExtension = EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+            const newText = update.state.doc.toString();
+            console.log(newText);
+           if (onChange) {
+             onChange(newText);
+           } // <- update the React state
+        }
+    });
+
     const handleOpenVarPanel = () => {
         console.log("Open var panel")
         setIsVarPanelOpen(true);
@@ -213,7 +226,7 @@ const CodeMirrorEditor = ({
 
             const theSelected = mirroredFiltered.current[selected.current];
             const { from, to } = cmRef.current.state.selection.main;
-            const text = `\${${theSelected.slug}}`;
+            const text = `{{${theSelected.slug}}}`;
 
             console.log({
                 index: selected.current,
@@ -316,6 +329,7 @@ const CodeMirrorEditor = ({
                 doc: initialValue ? initialValue : '',
                 extensions: [
                     // variableChipField,
+                    trackTextExtension,
                     chipPlugin,
                     keymaps,
                     // autocompletion(),
@@ -330,6 +344,7 @@ const CodeMirrorEditor = ({
                             border: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
                             borderRadius: "0.25rem",
                             padding: "0.25rem",
+                            minHeight: "2rem"
                         },
                         ".cm-scroller": {
                             fontFamily: 'unset'
@@ -552,7 +567,7 @@ const CodeMirrorEditor = ({
                                     }
                                     const { from, to } = cmRef.current.state.selection.main;
 
-                                    const text = `\${${x.slug}}`;
+                                    const text = `{{${x.slug}}}`;
 
                                     console.log({
                                         message: "Enter found",

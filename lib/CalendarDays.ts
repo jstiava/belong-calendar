@@ -2,7 +2,7 @@
 import { Dayjs } from "dayjs";
 import CalendarDay from "./CalendarDay";
 import Chronos from "./utils/chronos";
-import { Event } from "@/schema";
+import { Event, Schedule } from "@/schema";
 import dayjs from '@/lib/utils/dayjs';
 
 
@@ -28,6 +28,10 @@ export function isSingleTimeEvent(event: Event): event is Event & { date: Dayjs;
 
 export function isNotScheduled(event: Event): event is Event & { date: Dayjs, start_time: Chronos } {
     return dayjs.isDayjs(event.date) && event.start_time instanceof Chronos;
+}
+
+export function isScheduled(event: Event): event is Event & { schedules: Schedule[], date: null, start_time: null, end_date: null, end_time: null} {
+    return 'schedules' in event && event.schedules != null;
 }
 
 

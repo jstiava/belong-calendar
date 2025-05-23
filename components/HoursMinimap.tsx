@@ -571,6 +571,7 @@ export default function HoursMinimap({
                         mode={'dark'}
                         label={'End Date'}
                         key="event_endDate"
+                        
                     />
                 </div>
                 <div className="flex top compact">

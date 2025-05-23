@@ -1,11 +1,10 @@
-import { Expand, OpenInFull, LocationOnOutlined, VerifiedOutlined, EditOutlined, AddOutlined, BugReportOutlined, DeleteOutline, HideImageOutlined, CalendarMonthOutlined, ScheduleOutlined } from '@mui/icons-material';
-import { useTheme, ButtonBase, Zoom, Fab, Typography, Popover, Tabs, Tab, Button, getContrastRatio, darken, alpha, Checkbox } from '@mui/material';
-import { MouseEvent, useState, useRef, useEffect, CSSProperties } from 'react';
-import Chronos from '@/lib/utils/chronos';
-import { Event, Events, JunctionStatus, Member, Schedule } from '@/schema';
-import { Type, Mode, adjustForContrast } from '@/types/globals';
+import { ScheduleOutlined } from '@mui/icons-material';
+import { useTheme, ButtonBase, Typography, alpha } from '@mui/material';
+import { MouseEvent, useState, useRef, useEffect } from 'react';
+import { Event, JunctionStatus, Member, Schedule } from '@/schema';
+import { Type } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 
 
@@ -21,7 +20,9 @@ export const StackedScheduleBlock = ({
   isSelected,
   source,
   swap,
-  style = {}
+  style = {},
+  date,
+  showHoursForDay = false
 }: {
   column: number;
   event: Event & {
@@ -36,7 +37,9 @@ export const StackedScheduleBlock = ({
   isSelected: boolean;
   source?: Member | null;
   swap: (newEvent: Event, oldEvent?: Event) => void;
-  style?: any
+  style?: any,
+  date?: Dayjs,
+  showHoursForDay?: boolean
 }) => {
   const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
@@ -54,11 +57,21 @@ export const StackedScheduleBlock = ({
   const end = event.end_time;
 
   const [isMember, setIsMember] = useState(false);
+  const [isOpenDetailed, setIsOpenDetailed] = useState<any | null>(null);
 
   useEffect(() => {
     if (!source) {
       return;
     }
+    const theIsOpenInfo = event.isOpenDetailed(date);
+    console.log({
+      message: "Stacked Schedule Block",
+      isOpen: theIsOpenInfo,
+      date: date?.yyyymmdd()
+    })
+    setIsOpenDetailed(theIsOpenInfo);
+
+
     const member = event.junctions.get(source.id());
     if (!member) return;
     if (member.status === JunctionStatus.Accepted) {
@@ -66,7 +79,7 @@ export const StackedScheduleBlock = ({
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source]);
+  }, [source, event]);
 
   const [isHovered, setIsHovered] = useState(false);
 
@@ -163,12 +176,23 @@ export const StackedScheduleBlock = ({
             }} />
           </div>
           <div className="flex left">
-            <Typography sx={{
-              fontSize: "0.75rem",
-              width: "100%",
-              textAlign: 'left',
-              lineHeight: '115%'
-            }}>{event.name}</Typography>
+            {showHoursForDay && isOpenDetailed ? (
+              <Typography
+                key={"hours_view"}
+                sx={{
+                  fontSize: "0.75rem",
+                  width: "100%",
+                  textAlign: 'left',
+                  lineHeight: '115%'
+                }}>{isOpenDetailed ? isOpenDetailed.isOpen ? isOpenDetailed.schedule ? isOpenDetailed.schedule.as_text : 'Open' : isOpenDetailed.schedule ? isOpenDetailed.schedule.as_text : 'Closed' : 'Error'}</Typography>
+            ) : (
+              <Typography sx={{
+                fontSize: "0.75rem",
+                width: "100%",
+                textAlign: 'left',
+                lineHeight: '115%'
+              }}>{event.name}</Typography>
+            )}
           </div>
         </ButtonBase>
       </>

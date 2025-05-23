@@ -22,8 +22,8 @@ export interface UseBaseCore {
   Calendar: UseCalendar,
   Events: UseEvents,
   Locations?: UseLocations,
-  add: (type: Type, item: MemberData) => any,
-  update: (type: Type, item: MemberData) => any,
+  add: (type: Type, item: MemberData, sharing?: any, actions?: any) => any,
+  update: (type: Type, item: MemberData, sharing?: any, actions?: any) => any,
 }
 
 export interface UseBase {
@@ -33,7 +33,7 @@ export interface UseBase {
   Locations: UseLocations,
   loading: boolean,
   Creator: UseCreator,
-  add: (type: Type, item: MemberData) => any,
+  add: (type: Type, item: MemberData, sharing?: any, actions?: any) => any,
   update: (type: Type, item: MemberData) => any,
   debug: () => any,
   Viewer: ReturnType<typeof useViewEvent>,
@@ -65,16 +65,16 @@ export default function useBase(source: Member | null, Session: UseSession, setS
     }, null, 2)
   }
 
-  const add = (type: Type, item: MemberData) => {
+  const add = (type: Type, item: MemberData, sharing?: any, actions?: any) => {
     switch (type) {
       case Type.Event:
-        return Events.add(item);
+        return Events.add(item, sharing, actions);
       case Type.Location:
         return Locations.add(item);
     }
   }
 
-  const update = async (type: Type, item: MemberData) => {
+  const update = async (type: Type, item: MemberData, sharing?: any, actions?: any) => {
 
     console.log({
       message: "Update",
@@ -83,20 +83,20 @@ export default function useBase(source: Member | null, Session: UseSession, setS
     })
 
     if (source && item.uuid === source.id()) {
-      
+
       return await axiosInstance.patch(`/api/v1/groups`, {
         isUser: source instanceof Profile,
         source: MemberFactory.getToken(source),
         uuid: item.uuid,
         data: item,
       })
-      .then(res => {
-        return res;
-      })
-      .catch(err => {
-        console.log(err);
-        throw Error("Something went wrong that prevented an event update.")
-      })
+        .then(res => {
+          return res;
+        })
+        .catch(err => {
+          console.log(err);
+          throw Error("Something went wrong that prevented an event update.")
+        })
 
     }
 
@@ -107,7 +107,7 @@ export default function useBase(source: Member | null, Session: UseSession, setS
         return await Locations.update(item);
     }
 
-    
+
   }
 
 

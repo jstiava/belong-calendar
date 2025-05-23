@@ -22,15 +22,7 @@ export default function ResolveItemIcon({
     sx?: SxProps
 }) {
 
-    if (item.type === Type.Event) {
-        return <CalendarMonthOutlined sx={sx} />
-    }
-
-    if (item.type === Type.Group) {
-        if (!item.integration) {
-            return <WorkspacesOutlined sx={sx} />
-        }
-
+    if (item.integration) {
         if (item.integration === 'google') {
             return <Google sx={sx} />
         }
@@ -52,12 +44,20 @@ export default function ResolveItemIcon({
         else if (item.integration === 'clickup') {
             return <ClickupIcon sx={sx} />
         }
-         else if (item.integration === 'canvas') {
+        else if (item.integration === 'canvas') {
             return <CanvasIcon sx={sx} />
         }
-        else {
-            return <ElectricalServicesOutlined sx={sx} />
+    }
+
+    if (item.type === Type.Event) {
+        return <CalendarMonthOutlined sx={sx} />
+    }
+
+    if (item.type === Type.Group) {
+        if (!item.integration) {
+            return <WorkspacesOutlined sx={sx} />
         }
+        return <ElectricalServicesOutlined sx={sx} />
     }
 
     if (item.type === Type.Location) {

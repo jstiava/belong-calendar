@@ -15,6 +15,7 @@ import ItemStub from './ItemStub';
 import { Member, MemberFactory } from '@/schema';
 import { MEDIA_BASE_URI } from '@/lib/useComplexFileDrop';
 import ResolveItemIcon from './ResolveItemIcon';
+import { InfoOutlined, WarningOutlined } from '@mui/icons-material';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -42,21 +43,25 @@ const names = [
 
 
 export default function FilteredSelect({
+  getId = (item) => { return item.id() },
   label,
   onChange,
   selected,
   setSelected,
-  initialRecommendations
+  initialRecommendations,
+  onClick
 }: {
+  getId?: (item: any) => string,
   label: string,
   onChange: any,
-  selected: Member[],
+  selected: any[],
   setSelected: any,
-  initialRecommendations: JSX.Element
+  initialRecommendations: JSX.Element,
+  onClick: any
 }) {
 
   const theme = useTheme();
-  const [filtered, setFiltered] = useState<Member[] | null>(null);
+  const [filtered, setFiltered] = useState<any[] | null>(null);
   const inputRef = useRef<any>(null);
   const isMed = useMediaQuery(theme.breakpoints.down('md'));
   const searchQuery = useRef<string | null>(null);
@@ -64,19 +69,19 @@ export default function FilteredSelect({
   const [anchorEl, setAnchorEl] = useState<any | null>(null);
   const isPopoverOpen = Boolean(anchorEl);
 
-  const handleAdd = (target: Member) => {
+  const handleAdd = (target: any) => {
     setSelected((prev: any) => {
       const copy = prev;
-      const filtered = copy.filter((x : any) => x.id() != target.id());
+      const filtered = copy.filter((x: any) => getId(x) != getId(target));
       filtered.push(target);
       return filtered;
     })
   }
 
-   const handleRemove = (target: Member) => {
+  const handleRemove = (target: any) => {
     setSelected((prev: any) => {
       const copy = prev;
-      const filtered = copy.filter((x : any) => x.id() != target.id());
+      const filtered = copy.filter((x: any) => getId(x) != getId(target));
       return filtered;
     })
   }
@@ -113,19 +118,35 @@ export default function FilteredSelect({
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
               {selected.map((item) => (
                 <Chip
-                  key={item.id()}
+                  key={getId(item)}
                   label={item.name}
                   sx={{
                     padding: 0,
                     '& .MuiChip-icon': {
                       marginLeft: 0,
-                    }
+                    },
+
                   }}
-                  icon={'icon_img' in item ? <Avatar sx={{
+                  icon={item.status && item.status === 'action_required' ? (
+                    <Avatar sx={{
+                      width: "1.75rem",
+                      height: "1.75rem",
+                      backgroundColor: theme.palette.warning.main
+                    }}
+                      src={('icon_img' in item && item.icon_img) ? `${MEDIA_BASE_URI}/${item.icon_img.path}` : undefined}>
+                      <WarningOutlined
+                        sx={{
+                          fontSize: "0.75rem",
+                          color: theme.palette.warning.contrastText
+                        }}
+                      />
+                    </Avatar>
+                  ) : (<Avatar sx={{
                     width: "1.75rem",
                     height: "1.75rem",
                     backgroundColor: item.theme_color
-                  }} src={('icon_img' in item && item.icon_img) ? `${MEDIA_BASE_URI}/${item.icon_img.path}` : undefined}>
+                  }}
+                    src={('icon_img' in item && item.icon_img) ? `${MEDIA_BASE_URI}/${item.icon_img.path}` : undefined}>
                     <ResolveItemIcon
                       item={item}
                       sx={{
@@ -133,10 +154,10 @@ export default function FilteredSelect({
                         color: item.theme_color ? theme.palette.getContrastText(item.theme_color) : theme.palette.text.primary
                       }}
                     />
-                  </Avatar> : undefined}
+                  </Avatar>)}
                   onMouseDown={(e) => e.stopPropagation()}
-                  onClick={e => {
-                    alert(item.id())
+                  onClick={(e) => {
+                    onClick(item);
                   }}
                   onDelete={e => {
                     handleRemove(item);
@@ -148,11 +169,23 @@ export default function FilteredSelect({
           sx={{
             '& .MuiSelect-select': {
               padding: '0.75rem 0.75rem',
-              minHeight: "2.1rem"
+              minHeight: "2.125rem",
+              height: 'fit-content'
             }
           }}
         />
       </FormControl>
+      {selected.some(x => x.status === 'action_required') && (
+        <div className="flex compact2 center" style={{
+          color: theme.palette.warning.main,
+          padding: "0.25rem"
+        }}>
+          <InfoOutlined sx={{
+            fontSize: "0.875rem",
+          }} />
+          <Typography variant="caption">Action Required</Typography>
+        </div>
+      )}
       <Popover
         // disableAutoFocus
         // disableEnforceFocus
@@ -222,7 +255,7 @@ export default function FilteredSelect({
             }}>
             {filtered && filtered.length > 0 ? filtered.map(item => (
               <ItemStub
-                key={item.id()}
+                key={getId(item)}
                 item={item}
                 onClick={() => {
                   setAnchorEl(null);

@@ -17,9 +17,10 @@ import {
   MenuItem,
   ButtonBase,
   CircularProgress,
+  Popover,
 } from "@mui/material";
 import React, { useState, useEffect, useRef, useCallback, memo, ChangeEvent, Fragment } from "react";
-import { EventData, ImageDisplayType, Junction, JunctionBuilder, JunctionData, Member, MemberData, MemberFactory, Schedule } from "@/schema";
+import { EventData, ImageDisplayType, Junction, JunctionBuilder, Event, Member, MemberData, MemberFactory, Schedule } from "@/schema";
 import { AddOutlined, ArrowBack, CalendarMonthOutlined, ChangeHistoryOutlined, CloseOutlined, EditCalendar, FirstPage, FirstPageOutlined, LastPageOutlined, LinkOutlined, MarkunreadMailboxOutlined, PhotoLibraryOutlined, SaveOutlined, SendOutlined, TextFieldsOutlined } from "@mui/icons-material";
 import { enqueueSnackbar } from "notistack";
 import { CreatePanelProps, CreatorModules, CreatorPanelMobileStyles, CreatorPanelProps, CreatorPanelStyles, SharedCreatorPanelStyles, StartCreator, UseCreateForm } from "./global/useCreate";
@@ -43,6 +44,7 @@ import ResolveItemIcon from "@/components/ResolveItemIcon";
 import { useTimeout } from "@mui/x-data-grid/internals";
 import Divider from "@/components/Divider";
 import JotformFormModule from "@/components/accordions/JotformFormModule";
+import { IntegrationTemplates } from "@/pages/me/integrations";
 
 
 const ensureHttpsPrefix = (value: string): `https://${string}` => {
@@ -80,8 +82,12 @@ export default function useCreatePanel(
   const [junctions, setJunctions] = useState<Member[]>([]);
   const [locations, setLocations] = useState<Member[]>([]);
   const [actions, setActions] = useState<any[]>([]);
+  const [actionBank, setActionBank] = useState([]);
+  const [variables, setVariables] = useState([]);
 
-  // Uploads.
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const isJunctionPopoverOpen = Boolean(anchorEl);
+
   const [uploads, setUploads] = useState<UploadType[]>([]);
   const { FileUpload, FilePreview, handleUpload, openDialog, isUploadPresent, isFileUploadOpen, uploadCount } = useComplexFileDrop(MemberFactory.collect_media(item), uploads, setUploads);
 
@@ -92,10 +98,90 @@ export default function useCreatePanel(
     }
   }, [inputRef]);
 
+  const registerActions = (values: any[]) => {
+
+    setActions(prev => ([...prev, ...values]))
+  }
+
+
+  const registerJunction = (value: Member) => {
+
+
+    if (value.integration && item.integration) {
+
+      const integration = IntegrationTemplates.find(x => x.slug === value.integration);
+      if (integration && integration.types) {
+
+        const key = item.integration as keyof typeof integration.types;
+        const types = integration.types[key] ?? null;
+        if (types) {
+          const events = types['events'];
+          if (events) {
+            registerActions(events.map((x: any) => ({
+              ...x,
+              integration: value.integration,
+              source: value.id(),
+              template: {},
+              status: 'action_required',
+            })));
+          }
+        }
+      }
+    }
+
+    setJunctions(prev => {
+      return [...prev, value];
+    });
+
+  }
+
+  const updateAction = (value: any) => {
+    setActions(prev => {
+      const copy = [...prev];
+      const filtered = prev.filter(x => x.slug != value.slug)
+      return [...filtered, value];
+    })
+  }
+
+  const unregisterJunction = (value: Member) => {
+
+    setJunctions(prev => {
+
+      const copy = [...prev];
+      const filtered = prev.filter(x => x.uuid != value.uuid);
+
+      /**
+       * TODO
+       * - Remove action associated with the junction.
+       */
+
+      return filtered;
+    })
+  }
+
+
   useEffect(() => {
 
-    try {
+    if (item.doNotPrepJunctions) {
+      return;
+    }
 
+    axios.get(`/api/v1/auth/jotform/actions`, {
+      params: {
+        uuid: source.id(),
+        source: MemberFactory.getToken(source),
+        form_id: item.local_id,
+        action: 'getSubmissionVariables'
+      }
+    })
+      .then(res => {
+        setVariables(res.data.variables)
+      })
+      .catch(err => {
+        console.log(err);
+      })
+
+    try {
       const startJunction = new JunctionBuilder()
         .from(Junction.toPointer(source)).to({
           type: item.type,
@@ -103,13 +189,18 @@ export default function useCreatePanel(
         })
         .allowAll()
         .isPrivate()
+        .designate({
+          id: item.local_id,
+          type: `#jotform.form`
+        })
         .fromChildToParent()
-        .denyAll().build('hosts');
+        .denyAll()
+        .build('hosts');
 
       const copy = source.copy();
       copy.junctions.set(source.id(), startJunction[0]);
 
-      setJunctions([copy]);
+      registerJunction(copy);
 
     }
     catch (err) {
@@ -206,10 +297,10 @@ export default function useCreatePanel(
 
       if (typeof item.callback !== "function") {
         if (item.mode === Mode.Create) {
-          item.callback = (x: MemberData) => Base.add(item.type, x);
+          item.callback = (i: any, s: any, a: any) => Base.add(item.type, i, s, a);
         }
         else if (item.mode === Mode.Modify) {
-          item.callback = (x: MemberData) => Base.update(item.type, x);
+          item.callback = (i: any, s: any, a: any) => Base.update(item.type, i, s, a);
         }
       }
 
@@ -235,7 +326,19 @@ export default function useCreatePanel(
       const wordmark = files.find(x => x.display_type === ImageDisplayType.Wordmark);
       copyOfEvent.wordmark_img = wordmark || null;
 
-      await item.callback(copyOfEvent);
+      if (copyOfEvent) {
+        copyOfEvent.junctions = null;
+      }
+
+      if (copyOfEvent.variables) {
+        delete copyOfEvent.variables
+      }
+
+      if (copyOfEvent.token) {
+        delete copyOfEvent.token;
+      }
+
+      await item.callback(copyOfEvent, junctions.map(x => x.eject()), actions);
     }
     catch (err) {
       console.log(err)
@@ -262,7 +365,9 @@ export default function useCreatePanel(
         '--bg-color': theme.palette.background.paper,
         backgroundColor: "var(--bg-color)",
         color: "var(--text-color)",
-        borderRadius: '0.5rem'
+        borderRadius: '0.5rem',
+        height: "100%",
+        overflowY: 'scroll'
       }}
     >
 
@@ -366,8 +471,11 @@ export default function useCreatePanel(
                   <CodeMirrorEditor
                     placeholder={`New ${item.type} Name`}
                     variables={item.variables}
-                    initialValue=""
+                    initialValue={item.name}
                     key={`${x}_with_vars`}
+                    onChange={text => {
+                      handleChange('name', text)
+                    }}
                   />
                 )
               }
@@ -462,12 +570,34 @@ export default function useCreatePanel(
               )
             }
 
-            if (x === 'share' && Session) {
+            if (x === 'share' && Session && !item.variables) {
               return (
                 <div className="column compact" key={x}>
-
+                  <Popover
+                    anchorEl={anchorEl}
+                    open={isJunctionPopoverOpen}
+                    // placement='left-start'
+                    onClose={(e: any) => {
+                      e.stopPropagation();
+                      setAnchorEl(null)
+                    }}
+                    anchorOrigin={{
+                      vertical: 'top',
+                      horizontal: 'center',
+                    }}
+                    transformOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'right',
+                    }}
+                  >
+                    <Typography>Test</Typography>
+                  </Popover>
                   <MultipleSelectChip
                     label="Share"
+                    onClick={(item: Member) => {
+                      console.log(item);
+                      return;
+                    }}
                     onChange={(e: any) => {
                       const query = e.target.value;
                       const bases = Session.search(query);
@@ -491,7 +621,7 @@ export default function useCreatePanel(
 
                               setJunctions((prev: any) => {
                                 const copy = prev;
-                                const filtered = copy.filter((x : any) => x.id() != Session.session!.id());
+                                const filtered = copy.filter((x: any) => x.id() != Session.session!.id());
                                 filtered.push(Session.session);
                                 return filtered;
                               })
@@ -531,6 +661,10 @@ export default function useCreatePanel(
                 <div className="column compact" key={x}>
 
                   <MultipleSelectChip
+                    onClick={(item: Member) => {
+                      console.log(item);
+                      return;
+                    }}
                     label="Locations"
                     onChange={(e: any) => {
                       const query = e.target.value;
@@ -556,11 +690,33 @@ export default function useCreatePanel(
               )
             }
 
-            if (x === 'actions' && Session) {
+            if (x === 'actions' && Session && !item.variables) {
               return (
                 <div className="column compact" key={x}>
 
                   <MultipleSelectChip
+                    getId={(item) => item.slug}
+                    onClick={(item: any) => {
+                      console.log(item);
+                      startCreator(item.result, item.status === 'action_required' ? Mode.Create : Mode.Modify, new Event(item.template), {
+                        callback: (x) => {
+                          console.log(x);
+                          updateAction({
+                            ...item,
+                            template: x,
+                            status: 'completed'
+                          })
+                          return;
+                        },
+                        variables: variables.map((x: any) => ({
+                          label: x.text,
+                          slug: x.name,
+                          isCanBeNull: true
+                        })),
+                        doNotPrepJunctions: true
+                      })
+                      return;
+                    }}
                     label="Actions"
                     onChange={(e: any) => {
                       const query = e.target.value;
@@ -725,37 +881,28 @@ export default function useCreatePanel(
 
           })}
         </div>
-        <div className="column compact">
 
-          {item.integration === '#jotform.form' && (
-            <JotformFormModule
-              item={newItem} handleChange={undefined} expanded={expanded} onChange={undefined} handleMultiChange={handleMultiChange} source={source}
-              startCreator={startCreator}
+        {newItem.link && (
+          <div className="column" key={'link'}>
+            <TextField
+              name="link"
+              variant="standard"
+              label="Link"
+              value={newItem.link || ""}
+              onChange={(e) => handleChange("link", ensureHttpsPrefix(e.target.value))}
+              onFocus={() => setExpanded("link")}
             />
-          )}
-
-
-
-          {newItem.link && (
-            <div className="column" key={'link'}>
-              <TextField
-                name="link"
-                variant="standard"
-                label="Link"
-                value={newItem.link || ""}
-                onChange={(e) => handleChange("link", ensureHttpsPrefix(e.target.value))}
-                onFocus={() => setExpanded("link")}
-              />
-            </div>
-          )}
-          <div className="flex between" style={{
-            padding: "0.25rem 0.5rem"
+          </div>
+        )}
+        <div className="column compact" style={{
+          position: 'sticky',
+          bottom: "0"
+        }}>
+          <div className="flex right" style={{
+            padding: "0.25rem 0.5rem",
           }}>
             <div className="flex compact fit" style={{
-              position: "relative"
             }}>
-            </div>
-            <div className="flex compact fit">
               <IconButton
                 style={{ position: "relative", height: "fit-content", color: "var(--text-color)" }}
                 onClick={() => {
@@ -772,6 +919,7 @@ export default function useCreatePanel(
               </IconButton>
               <div className="flex snug fit">
                 <Button
+                  disabled={actions.some(x => x.status === 'action_required')}
                   endIcon={progress === 'editing' ? item.mode === Mode.Create ? <SendOutlined /> : item.mode === Mode.Modify ? item.type === Type.Event ? <EditCalendar /> : <SaveOutlined /> : <SaveOutlined /> : ''}
                   variant="contained"
                   onClick={async () => {
@@ -964,15 +1112,13 @@ export const CreatePanel = memo((createProps: CreatePanelProps) => {
           zIndex: index,
         }}
       >
-        <div >
-          <div className="column snug" style={{
-            display: !isShareView ? 'flex' : 'none',
-            opacity: !isShareView ? 1 : 0,
-            // animation: "fadeInAndFlip 0.3s ease-in-out forwards",
-          }}>
-            {editor.Form}
-          </div>
-
+        <div className="column snug" style={{
+          display: !isShareView ? 'flex' : 'none',
+          opacity: !isShareView ? 1 : 0,
+          height: "100%"
+          // animation: "fadeInAndFlip 0.3s ease-in-out forwards",
+        }}>
+          {editor.Form}
         </div>
       </Paper >
     </ThemeProvider >

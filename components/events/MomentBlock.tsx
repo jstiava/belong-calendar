@@ -169,9 +169,11 @@ export const MomentBlock = ({
             textOverflow: "ellipsis",
             width: "100%",
             textAlign: "left"
-          }}>{event.start_time.print(true)} <span style={{
-            fontWeight: 700,
-          }}>{event.name}</span></Typography>
+          }}>{event.start_time.print(true)} <span
+              dangerouslySetInnerHTML={{ __html: event.name }}
+              style={{
+                fontWeight: 700,
+              }} /></Typography>
         </ButtonBase>
       </>
     )

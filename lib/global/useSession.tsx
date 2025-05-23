@@ -308,7 +308,7 @@ export default function useSession(): UseSession {
     };
 
     try {
-      await MemberFactory.login(newBase);
+      await MemberFactory.login(newBase, session ? session : undefined);
       setBase(newBase);
     }
     catch (err) {
@@ -378,9 +378,12 @@ export default function useSession(): UseSession {
             message: "Could not find base",
             target
           })
+
           return false;
         }
-        return changeBase(pageBase);
+        else {
+          return changeBase(pageBase);
+        }
       }
 
     }

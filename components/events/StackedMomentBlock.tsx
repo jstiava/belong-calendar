@@ -184,7 +184,7 @@ export const StackedMomentBlock = ({
               width: "100%",
               textAlign: 'left',
               lineHeight: "115%"
-            }}>{event.name}</Typography>
+            }}><span dangerouslySetInnerHTML={{ __html: event.name }} /></Typography>
           </div>
         </ButtonBase>
       </>

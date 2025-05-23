@@ -18,7 +18,8 @@ import {
   DarkModeOutlined,
   KeyOutlined,
   VpnKeyOutlined,
-  Star
+  Star,
+  MoreVertOutlined
 } from '@mui/icons-material';
 import {
   Avatar,
@@ -37,6 +38,8 @@ import {
   ButtonBase,
   Divider,
   Drawer,
+  Fade,
+  Popover,
 } from '@mui/material';
 // import useSearchDialog, { UseSearchDialog } from '@/lib/useSearchDialog';
 import { UseSession } from '@/lib/global/useSession';
@@ -74,6 +77,9 @@ export default function Header({
 
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [view, setView] = useState<string | null>(null);
+
+  const [anchorEl, setAnchorEl] = useState<any | null>(null);
+  const isPopoverOpen = Boolean(anchorEl);
 
   const pushNewView = (tab: string) => {
 
@@ -261,6 +267,62 @@ export default function Header({
                 Settings
               </ToggleButton>
             )}
+
+             {view === 'apps' && (
+              <ToggleButton
+                value={'apps'}
+              //  onClick={() => pushNewView('month')}
+              >
+                <DeployedCodeIcon fontSize="small" />
+                Apps
+              </ToggleButton>
+            )}
+
+            <Popover
+              anchorEl={anchorEl}
+              open={isPopoverOpen}
+              onClick={(e) => {
+                setAnchorEl(null);
+              }}
+              onClose={(e: any) => {
+                e.stopPropagation();
+                setAnchorEl(null)
+              }}
+              slots={{
+                transition: Fade,
+              }}
+              slotProps={{
+                paper: {
+                  sx: {
+                    maxWidth: "100vw",
+                    width: "10rem"
+                  }
+                },
+                transition: {
+                  timeout: 300,
+                },
+              }}
+
+            >
+              <div className="column snug">
+                {/* <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('integrations')}><ElectricalServicesOutlined fontSize="small" /><Typography>Integrations</Typography></MenuItem> */}
+                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('ian')}><PeopleOutline fontSize="small" /><Typography>IAM</Typography></MenuItem>
+                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('settings')}><SettingsOutlined fontSize="small" /><Typography>Settings</Typography></MenuItem>
+                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('apps')}><DeployedCodeIcon fontSize="small" /><Typography>Apps</Typography></MenuItem>
+              </div>
+            </Popover>
+
+            <StyledIconButton
+              title="More"
+              onClick={(e : any) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const target = e.currentTarget || e.target;
+                setAnchorEl(target)
+              }}
+            >
+              <MoreVertOutlined fontSize="small" />
+            </StyledIconButton>
 
             {/* <ToggleButton
               value="table"

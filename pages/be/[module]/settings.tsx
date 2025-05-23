@@ -167,7 +167,7 @@ const MainBasePage = (props: AppPageProps) => {
                                     color="error"
                                     variant="contained"
                                     onClick={() => {
-                                        axiosInstance.delete(`/api/v1/${item.type.toString().toLowerCase()}`, {
+                                        axiosInstance.delete(`/api/v1/${item.type.toString().toLowerCase()}s`, {
                                             params: {
                                                 purge: true,
                                                 [`${item.type.toString().toLowerCase()}_id`]: item.id()
@@ -178,7 +178,7 @@ const MainBasePage = (props: AppPageProps) => {
                                                     variant: "success"
                                                 });
                                                 Session.reload();
-                                                router.push('/me')
+                                                router.push('/me');
                                             })
                                             .catch(err => {
                                                 enqueueSnackbar("Purge failed.", {

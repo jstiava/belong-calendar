@@ -14,7 +14,6 @@ import { TransitionGroup } from 'react-transition-group';
 import { useSnackbar } from 'notistack';
 import { UseSession } from './useSession';
 import { CreatePanel } from '../useCreatePanel';
-import { redirect } from 'next/dist/server/api-utils';
 
 export const CreatorModules: Record<Type | string, any> = {
   [Type.Event]: {
@@ -75,15 +74,9 @@ export const CreatorModules: Record<Type | string, any> = {
   '#jotform.form': {
     title: "Integrate a Jotform",
     description: "Track submissions and create actions.",
-    header: [
-
-    ],
-    body: [
-
-    ],
-    footer: [
-
-    ]
+    header: [],
+    body: [],
+    footer: []
   },
   [Type.Schedule]: undefined,
 }
@@ -101,7 +94,7 @@ export interface CreatePanelProps {
 export interface CreatorPanelProps {
   type: Type,
   mode: Mode,
-  callback?: (item: any | any[]) => any
+  callback?: (item: any, sharing?: any[], actions?: any[]) => any
 }
 
 export interface UseCreateForm {
@@ -120,7 +113,7 @@ export interface CreatorPanel {
 }
 
 type StartCreatorProps = {
-  callback?: (result?: any) => any;
+  callback?: (item: any, sharing?: any[], actions?: any[]) => any
   doNotPrepJunctions?: boolean;
   variables?: any[];
   [key : string]: any;
@@ -227,7 +220,7 @@ export default function useCreator(source: Member | null, Base: UseBaseCore, Ses
 
         case Mode.Delete:
           if (props.callback) {
-            props.callback();
+            props.callback(item);
           }
 
           if (item.type === Type.Event) {
@@ -409,7 +402,7 @@ export const CreatorPanelStyles: CSSProperties = {
   right: "1rem",
   width: '35rem',
   maxWidth: "100vw",
-  maxHeight: '100vh',
+  maxHeight: '95vh',
   borderRadius: '0.5rem',
   // position: 'absolute'
 }

@@ -30,7 +30,8 @@ const MainBasePage = (props: AppPageProps) => {
 
     useEffect(() => {
 
-        const item = props.module ? props.module : Session.base;
+        setActions(null);
+
         if (!item) {
             return;
         }
@@ -53,8 +54,7 @@ const MainBasePage = (props: AppPageProps) => {
                 console.log(err);
             })
 
-    }, [props.module, Session.base])
-
+    }, [props.module, Session.base, item]);
 
 
     return (
@@ -97,12 +97,10 @@ const MainBasePage = (props: AppPageProps) => {
                     </div>
                     <div className="flex top wrap">
                         {actions.map((action: any) => {
-
                             try {
                                 return (
-
                                     <ButtonBase
-                                        key={action.uuid}
+                                        key={action.local_id}
                                         disableRipple
                                         className="flex"
                                         style={{
@@ -141,19 +139,19 @@ const MainBasePage = (props: AppPageProps) => {
                                             >
                                                 {action.type === '#jotform.form' && (
                                                     <JotformForm
-                                                    sx={{
-                                                        fontSize: "1.25rem",
-                                                        color: item.theme_color ? theme.palette.getContrastText(item.theme_color) : theme.palette.text.primary
-                                                    }}
-                                                />
+                                                        sx={{
+                                                            fontSize: "1.25rem",
+                                                            color: item.theme_color ? theme.palette.getContrastText(item.theme_color) : theme.palette.text.primary
+                                                        }}
+                                                    />
                                                 )}
-                                                 {action.type === '#google.calendar' && (
+                                                {action.type === '#google.calendar' && (
                                                     <GoogleCalendarIcon
-                                                    sx={{
-                                                        fontSize: "1.25rem",
-                                                        color: item.theme_color ? theme.palette.getContrastText(item.theme_color) : theme.palette.text.primary
-                                                    }}
-                                                />
+                                                        sx={{
+                                                            fontSize: "1.25rem",
+                                                            color: item.theme_color ? theme.palette.getContrastText(item.theme_color) : theme.palette.text.primary
+                                                        }}
+                                                    />
                                                 )}
                                             </Avatar>
                                             <div className="column compact right" style={{
@@ -177,8 +175,16 @@ const MainBasePage = (props: AppPageProps) => {
                             }
                         })}
                     </div>
+
                 </div>
             )}
+            <div className="column">
+                <Typography sx={{
+                    whiteSpace: 'pre-wrap'
+                }}>
+                    {JSON.stringify(item)}
+                </Typography>
+            </div>
         </div>
     );
 }

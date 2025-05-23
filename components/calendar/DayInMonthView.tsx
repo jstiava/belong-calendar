@@ -7,6 +7,7 @@ import {
   IconButton,
   ButtonBase,
   Popover,
+  CircularProgress,
 } from '@mui/material';
 import React, {
   useState,
@@ -27,7 +28,7 @@ import { MultiDayEventBlock } from '../events/MultiDayEventBlock';
 import { ScheduleBlock } from '../events/ScheduleBlock';
 import { UseSession } from '@/lib/global/useSession';
 import CalendarDayRendered from '@/lib/CalendarDayRendered';
-import { isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
+import { isMoment, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
 import CalendarDay from '@/lib/CalendarDay';
 import { StackedEventBlock } from '../events/StackedEventBlock';
 import { StackedMomentBlock } from '../events/StackedMomentBlock';
@@ -154,11 +155,11 @@ function DayInMonthView({
         result.push(item);
       }
 
-      console.log({
-        date: date.yyyymmdd(),
-        theCalendarDayRendered,
-        calendarDay
-      })
+      // console.log({
+      //   date: date.yyyymmdd(),
+      //   theCalendarDayRendered,
+      //   calendarDay
+      // })
 
 
       setCalendarDayRendered(theCalendarDayRendered)
@@ -252,35 +253,76 @@ function DayInMonthView({
         }}
         ref={calDayRef}
       >
+         {!calendarDay || (calendarDay && calendarDay.loading) && (
+            <div
+              key="loading"
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)"
+              }}
+            >
+              <CircularProgress size={16} sx={{
+                color: theme.palette.text.primary
 
-        <ButtonBase
-          sx={{
-            display: 'flex',
-            position: 'absolute',
-            top: `calc(0.1rem + calc(${calendarDayRendered.topOffset} * 1.525rem))`,
-            left: "0",
-            fontWeight: 700,
-            width: '1.75rem',
-            textAlign: "center",
-            margin: "0 0.15rem",
-            height: "1.75rem",
-            // border: '1px solid',
-            borderRadius: "0.15rem",
-            borderColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
-            backgroundColor: date.isToday() ? theme.palette.primary.main : '#efefef',
-            color: date.isToday() ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary,
-            overflow: 'visible',
-            '& span': {
-              padding: 0
-            }
-          }}
-          onClick={(e) => {
-            Calendar.gotoStartOfWeek(date);
-          }}
-        ><Typography sx={{
-          fontSize: "0.85rem",
-          fontWeight: 800
-        }}>{date.format('D')}</Typography></ButtonBase>
+              }} />
+            </div>
+          )}
+        <div className='flex compact2' style={{
+          position: 'absolute',
+          top: `calc(0.1rem + calc(${calendarDayRendered.topOffset} * 1.525rem))`,
+          left: "0",
+          width: "100%"
+        }}>
+          <ButtonBase
+            sx={{
+              fontWeight: 700,
+              width: '1.75rem',
+              textAlign: "center",
+              margin: "0 0.15rem",
+              height: "1.75rem",
+              // border: '1px solid',
+              borderRadius: "0.15rem",
+              borderColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
+              backgroundColor: date.isToday() ? theme.palette.primary.main : '#efefef',
+              color: date.isToday() ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary,
+              overflow: 'visible',
+              '& span': {
+                padding: 0
+              }
+            }}
+            onClick={(e) => {
+              Calendar.gotoStartOfWeek(date);
+            }}
+          ><Typography sx={{
+            fontSize: "0.85rem",
+            fontWeight: 800
+          }}>{date.format('D')}</Typography>
+
+          </ButtonBase>
+          {(source instanceof Event && (isScheduled(source) && source.schedules)) && (
+            <StackedScheduleBlock
+              key={`${source.id()}`}
+              column={index}
+              referenceTime={6}
+              event={source}
+              standardHeight={standardHeight}
+              handleView={handleView}
+              handleCreate={handleCreate}
+              handleSelect={handleSelect}
+              handleDragStart={handleDragStart}
+              isSelected={false}
+              source={source}
+              swap={swap}
+              style={{
+                width: `calc(100% - 2rem)`
+              }}
+              date={date}
+              showHoursForDay
+            />
+          )}
+        </div>
         <div
           style={{
             position: 'relative',

@@ -67,6 +67,9 @@ export type EventData = {
   integration: string | null;
 
 
+  startDateTime?: string;
+  endDateTime?: string;
+  
   metadata?: EventMetadata;
   reservations?: ReservationData[] | null;
 
@@ -122,7 +125,7 @@ export class Events {
       })
   }
 
-  static post = async (source: Member, values: EventData | EventData[]) => {
+  static post = async (source: Member, values: EventData | EventData[], sharing?: any, actions?: any) => {
 
     if (!(values instanceof Array)) {
       values = [values];
@@ -133,6 +136,8 @@ export class Events {
         isUser: source instanceof Profile,
         source: MemberFactory.getToken(source),
         events: values,
+        sharing,
+        actions
       })
       .then(res => {
 
@@ -353,10 +358,7 @@ export class Events {
 }
 
 
-
-
-
-export class Event implements Member {  
+export class Event implements Member {
   uuid!: string;
   name!: string;
   start_time!: Chronos | null;
@@ -480,7 +482,7 @@ export class Event implements Member {
 
   copy = (localize: boolean = false, reduced: boolean = false, rekey: boolean = false) => {
 
-    const {...data} = this as Partial<Record<string, any>>;
+    const { ...data } = this as Partial<Record<string, any>>;
 
     Object.keys(data).forEach(key => {
       if (typeof data[key] === 'function') {
@@ -559,7 +561,7 @@ export class Event implements Member {
       }
 
 
-      if ((x.start_date && x.start_date.isBefore(date.add(1, 'd'), 'd') ) && x.end_date.isAfter(date.add(-1, 'd'), 'd')) {
+      if ((x.start_date && x.start_date.isBefore(date.add(1, 'd'), 'd')) && x.end_date.isAfter(date.add(-1, 'd'), 'd')) {
         return true;
       }
 
@@ -627,7 +629,7 @@ export class Event implements Member {
     }
   }
 
-  isOpenDetailed = (date: Dayjs = dayjs(), time: Chronos = dayjs().toLocalChronos()): { date: Dayjs, hours: Hours | boolean | null, schedule: Schedule | null, isOpen: boolean, context: string, regular: Schedule | null, lateNight: boolean } | null => {
+  isOpenDetailed = (date: Dayjs = dayjs(), time: Chronos = dayjs().toLocalChronos()): { date: Dayjs, hours: Hours | boolean | null, schedule: Schedule | null, isOpen: boolean, context: string, regular: Schedule | null, lateNight: boolean, metadata: string } | null => {
     const template = {
       date,
       hours: null,
@@ -635,7 +637,8 @@ export class Event implements Member {
       isOpen: null,
       context: null,
       regular: null,
-      lateNight: false
+      lateNight: false,
+      metadata: null
     }
 
     try {
@@ -648,18 +651,21 @@ export class Event implements Member {
               ...template,
               isOpen: date.yyyymmdd() <= this.end_date.yyyymmdd(),
               context: "Open",
+              metadata: "Multi-Day Event, after start date, no end date."
             };
           }
           return {
             ...template,
             isOpen: true,
             context: "Open",
+            metadata: "Multi-Day Event, within start and end date."
           };
         }
         return {
           ...template,
           isOpen: false,
           context: "Closed",
+          metadata: "Date exists, not within start and end range."
         };
       }
 
@@ -678,7 +684,8 @@ export class Event implements Member {
             isOpen: yesturContext.isOpen,
             context: yesturContext.context,
             regular: yesturFrame[0].isNotRegular() ? this.getRegularHours(date.add(-1, 'day')) : null,
-            lateNight: true
+            lateNight: true,
+            metadata: "Scheduled. Case A."
           };
         }
       }
@@ -692,7 +699,8 @@ export class Event implements Member {
         isOpen: isOpenWithContext.isOpen,
         context: isOpenWithContext.context,
         regular: frame[0].isNotRegular() ? this.getRegularHours(date) : null,
-        lateNight: false
+        lateNight: false,
+        metadata: "Scheduled. Case B."
       }
     }
     catch {
@@ -700,7 +708,8 @@ export class Event implements Member {
         ...template,
         isOpen: false,
         context: "Closed",
-        regular: this.getRegularHours()
+        regular: this.getRegularHours(),
+        metadata: "Scheduled. Case C."
       }
     }
   }
@@ -875,7 +884,7 @@ export class Event implements Member {
     this.end_date = event.end_date ? dayjs(String(event.end_date)) : null;
     this.start_time = this.start_time ? new Chronos(Number(event.start_time), false) : null;
     this.end_time = this.end_time ? new Chronos(Number(event.end_time), false) : null;
-    this.schedules = event.schedules && event.schedules[0] != null ? event.schedules.map((x : any) => {
+    this.schedules = event.schedules && event.schedules[0] != null ? event.schedules.map((x: any) => {
       return new Schedule(x, is_local);
     }) : [];
     this.schedules = this.schedules ? Schedule.rank(this.schedules) as Schedule[] : null;
@@ -891,7 +900,7 @@ export class Event implements Member {
       this.end_date = null;
     }
 
-    this.children = event.children?.map((e : EventData) => new Event(e, is_local)) || null;
+    this.children = event.children?.map((e: EventData) => new Event(e, is_local)) || null;
     this.token = event.token || null;
     this.metadata = event.metadata || {};
     this.isVisible = false;

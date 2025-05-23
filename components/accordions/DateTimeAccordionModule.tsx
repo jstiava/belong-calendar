@@ -16,6 +16,7 @@ import StyledTimePicker from '../TimePicker';
 import { useEffect, useState } from 'react';
 import HoursMinimap from '../HoursMinimap';
 import StyledIconButton from '../StyledIconButton';
+import CodeMirrorEditor from '../CodeMirrorEditor';
 
 
 
@@ -106,6 +107,63 @@ export default function DateTimeAccordionModule({
     )
   }
 
+  if (typeof item.startDateTime === 'string' || typeof item.endDateTime === 'string') {
+    return (
+      <div className="flex">
+        <div className="flex compact">
+          <div className="column snug left" style={{
+            width: '40%'
+          }}>
+            <Typography sx={{
+              fontSize: "0.75rem",
+              fontWeight: 600
+            }}>Start Date & Time</Typography>
+            <CodeMirrorEditor
+              key={"startDateTime"}
+              initialValue={item.startDateTime}
+              onChange={(text) => {
+                handleChange('startDateTime', text);
+              }}
+              variables={variables}
+            />
+          </div>
+          <div className="column snug left" style={{
+            width: '40%'
+          }}>
+            <Typography sx={{
+              fontSize: "0.75rem",
+              fontWeight: 600
+            }}>End Date & Time</Typography>
+            <CodeMirrorEditor
+              key={"endDateTime"}
+              initialValue={item.endDateTime}
+              onChange={(text) => {
+                handleChange('endDateTime', text);
+              }}
+              variables={variables}
+            />
+          </div>
+        </div>
+        <div className="flex compact fit">
+          <StyledIconButton
+            title="Remove Date/Time"
+            onClick={() => {
+              handleMultiChange({
+                startDateTime: null,
+                endDateTime: null
+              })
+            }}
+          >
+            <CancelOutlined sx={{
+              fontSize: "1.25rem"
+            }} />
+          </StyledIconButton>
+        </div>
+
+      </div>
+    )
+  }
+
   return (
     <div className="column left" style={{
       padding: '0.5rem 0'
@@ -189,6 +247,10 @@ export default function DateTimeAccordionModule({
                   <StyledIconButton
                     title="Use Variables"
                     onClick={(e: any) => {
+                      handleMultiChange({
+                        startDateTime: '',
+                        endDateTime: ''
+                      })
                       return;
                     }}
                   >

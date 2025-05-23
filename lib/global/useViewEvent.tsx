@@ -513,7 +513,8 @@ export default function useViewEvent(
                         })
                       }
                     }}>
-                    {event && event.name}
+                      
+                    {event && <span dangerouslySetInnerHTML={{ __html: event.name }} />}
                   </Link>
                 </div>
                 {event && (event.icon_img && !event.cover_img) ? (

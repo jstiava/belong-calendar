@@ -16,7 +16,7 @@ export interface UseLocations {
   remove(target: Location): Promise<void>;
   remove(target: Location[]): Promise<void>;
   search: (query: AdvancedLocationSearchQuery) => Promise<any[]>;
-  update: (newLocation: LocationData) => void;
+  update: (newLocation: LocationData) => Promise<any>;
 }
 
 export interface AdvancedLocationSearchQuery {
@@ -124,7 +124,7 @@ export default function useLocations(source: Member | null): UseLocations {
   };
 
 
-  const update = async (target: LocationData): Promise<void> => {
+  const update = async (target: LocationData): Promise<any> => {
     if (!source) {
       enqueueSnackbar('No source for locations.', {
         variant: 'error',

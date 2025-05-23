@@ -19,7 +19,7 @@ export interface UseEvents {
    */
   days: CalendarDays<CalendarDay> | null;
   events: Event[] | null;
-  add: (newEvent: EventData | EventData[]) => Promise<void>;
+  add: (newEvent: EventData | EventData[], sharing? : any, actions?: any) => Promise<void>;
   get(target: string, date?: number, localOnly?: boolean): Promise<Event | null>;
   get(target: string[], date?: number, localOnly?: boolean): Promise<Event[] | null>;
   remove(target: Event): Promise<void>;
@@ -192,7 +192,8 @@ export default function useEvents(
   }
 
 
-  const add = async (newEvents: EventData | EventData[]): Promise<void> => {
+  const add = async (newEvents: EventData | EventData[], sharing? : Member[], actions?: any[]): Promise<void> => {
+    
     if (!source || !days) {
       enqueueSnackbar('No source or no calendar for events.', {
         variant: 'error',
@@ -208,17 +209,19 @@ export default function useEvents(
     const newDays = { ...days };
 
     for (const newEvent of newEvents) {
+      
       const localObject = new Event(newEvent, true);
       const globalObject = new Event(newEvent, true).globalize();
       
       globals.push(globalObject);
       newDays.add(localObject);
+
       setEvents(prev => {
         if (!prev) return [localObject];
         const newList = prev.filter(x => x.id() != localObject.id());
         newList.push(localObject);
         return newList;
-      })
+      });
 
     }
 
@@ -226,7 +229,7 @@ export default function useEvents(
     setDays(newDays);
 
 
-    await Events.post(source, globals.map(x => x.eject()))
+    await Events.post(source, globals.map(x => x.eject()), sharing, actions)
       .then(res => {
         enqueueSnackbar(`New event created.`, {
           variant: 'success',

@@ -213,7 +213,7 @@ export const CalendarEventBox = ({
             }}
           >
             <span style={{ fontSize: '0.75rem', }}>
-              {event.start_time.to(event.end_time)} <strong>{event.name}</strong>
+              {event.start_time.to(event.end_time)} <strong> {event && <span dangerouslySetInnerHTML={{ __html: event.name }} />}</strong>
             </span>
             {event.location_name && (
               <>
@@ -263,7 +263,7 @@ export const CalendarEventBox = ({
           }}
         >
           <div
-          className="column snug top left"
+            className="column snug top left"
             style={{
               width: '100%',
               borderRadius: '0.25rem',

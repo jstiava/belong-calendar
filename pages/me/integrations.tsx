@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { Avatar, Button, lighten, Typography, useTheme } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { ChangeEvent, useState } from 'react';
-import { Group } from '@/schema';
+import { Group, Event } from '@/schema';
 import axiosInstance from '@/lib/utils/axios';
 import ResolveItemIcon from '@/components/ResolveItemIcon';
 
@@ -21,9 +21,38 @@ export const IntegrationTemplates = [
         type: "Key",
         theme_color: '#0097ff',
         subtitle: "Import a form, extend its functionality, track respondents, manage your notifications, and close automatically.",
-        query: {
-            // apiKey: "60aeed6c99a57e4ee8b55bb638deb000"
-        },
+        query: {},
+        events: [
+            {
+                slug: '@newForm',
+                name: "With New Form",
+                isRequired: false,
+                result: Type.Event
+            }
+        ],
+        types: {
+            '#jotform.form': {
+                events: [
+                    {
+                        slug: '@submit',
+                        name: "With New Submit",
+                        description: "",
+                        isRequired: true,
+                        result: Type.Event,
+                    }
+                ],
+                actions: [
+                    {
+                        slug: 'doCloseForm',
+                        name: "Close Form"
+                    },
+                    {
+                        slug: 'doOpenForm',
+                        name: 'Open Form'
+                    }
+                ]
+            }
+        }
     },
     {
         name: "Connect to Strava",
@@ -52,7 +81,7 @@ export const IntegrationTemplates = [
             scope: 'read_write'
         },
     },
-     {
+    {
         name: "Connect with Stripe API Key",
         slug: 'stripeAPI',
         url: 'https://connect.stripe.com/oauth/authorize',
@@ -102,7 +131,7 @@ export const IntegrationTemplates = [
             state: ''
         },
     },
-     {
+    {
         name: "Connect to Canvas (Instructure)",
         slug: 'canvas',
         url: "http://localhost:3000/api/v1/auth/callback",

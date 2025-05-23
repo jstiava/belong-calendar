@@ -15,7 +15,93 @@ const CalendarPage = (props: AppPageProps) => {
 
     const Session = props.Session
     const Controller = props.module ? props.Module : props.Base;
+
+    const item = props.module ? props.module : props.Session.base;
     const prefix = '/be/';
+
+    const pushNewView = (tab: string) => {
+
+        let theView = undefined;
+        if (['month', 'week', 'day'].some(x => x === tab)) {
+            theView = tab;
+            tab = 'calendar';
+        }
+
+        const theModule = router.query.module;
+        if (router.query.module) {
+            delete router.query.module;
+        }
+        const { base, ...rest } = router.query;
+
+        if (theModule && base) {
+            rest.base = base;
+        }
+
+        const isSession = router.asPath.startsWith('/me');
+
+        router.push({
+            pathname: `${isSession ? `/me/` : `/be/${theModule ? `${String(theModule)}/` : Session.base?.id()}/`}${tab}`,
+            query: { ...rest, view: theView }
+        })
+    };
+
+
+    const handleKeyPress = (event: KeyboardEvent) => {
+
+        if (Controller.Creator.isOpen) {
+            return;
+        }
+
+        // if (event.ctrlKey && event.key === 'v') {
+        //   event.preventDefault();
+        //   handlePasteAction();
+        //   return;
+        // }
+
+        if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
+            event.preventDefault();
+            // handleSelect(event, true);
+        }
+
+        if (event.key === "ArrowRight") {
+            event.preventDefault();
+            Controller.Calendar.next();
+            return;
+        }
+
+        if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            Controller.Calendar.prev();
+            return;
+        }
+
+        if (event.key === "w") {
+            pushNewView('week');
+            return;
+        }
+
+        if (event.key === "d") {
+            pushNewView('day');
+            return;
+        }
+
+        if (event.key === "m") {
+            pushNewView('month')
+            return;
+        }
+
+    };
+
+    useEffect(() => {
+
+        window.addEventListener('keydown', handleKeyPress);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyPress);
+        };
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [Controller.Calendar])
 
 
     useEffect(() => {
@@ -32,11 +118,12 @@ const CalendarPage = (props: AppPageProps) => {
             }
         }
 
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router])
 
 
-    if (!props.Session.base) {
+    if (!item) {
         return <></>
     }
 
@@ -44,7 +131,7 @@ const CalendarPage = (props: AppPageProps) => {
         return (
             <MonthView
                 Preferences={Session.Preferences}
-                source={Session.base}
+                source={item}
                 Calendar={Controller.Calendar}
                 handleCreate={Controller.Creator.startCreator}
                 handleView={null}
@@ -69,20 +156,20 @@ const CalendarPage = (props: AppPageProps) => {
                 // setSelected={setSelected}
                 // handleSelect={handleSelect}
                 Preferences={Session.Preferences}
-                source={Session.base}
+                source={item}
                 Calendar={Controller.Calendar}
                 handleCreate={Controller.Creator.startCreator}
-                handleView={null}
+                handleView={Controller.Viewer.handleOpenEventPopover}
                 days={Controller.Events.days as any}
                 Events={Controller.Events}
                 selected={null}
                 setSelected={function (value: SetStateAction<Event[] | null>): void {
                     throw new Error('Function not implemented.');
-                } }
+                }}
                 handleSelect={function (e: MouseEvent, event: Event): void {
                     throw new Error('Function not implemented.');
-                } }
-                />
+                }}
+            />
         )
     }
 

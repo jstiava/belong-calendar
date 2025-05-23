@@ -12,6 +12,7 @@ import { useRouter } from "next/router";
 import { Typography, useTheme, CircularProgress } from "@mui/material";
 import useIAM from "@/lib/global/useIAM";
 import { useSnackbar } from "notistack";
+import Module from "module";
 
 
 export default function AppLayout(props: {
@@ -30,6 +31,7 @@ export default function AppLayout(props: {
     const { enqueueSnackbar } = useSnackbar();
     const Session = props.Session;
     const Base = props.Base;
+    const Module = props.Module;
 
     const [cache, setCache] = useState<{
         session: string,
@@ -80,7 +82,8 @@ export default function AppLayout(props: {
                         return;
                     }
 
-                    await MemberFactory.login(res, Session.base!)
+                    await MemberFactory.login(res, Session.base!);
+                    await MemberFactory.fetchMetadata(res);
                     props.setModule!(res);
                     setCache({
                         session: Session.session.id(),
@@ -199,11 +202,23 @@ export default function AppLayout(props: {
 
             {Session.Creator.CreateForm}
             <>
-            {Base?.Creator.CreateForm}
+                {Base?.Creator.CreateForm}
             </>
             <>
                 {Base?.Viewer.EventPopover}
             </>
+
+            <>
+                {Module && (
+                    <>
+                        {Module.Creator.CreateForm}
+                        <>
+                            {Module.Viewer.EventPopover}
+                        </>
+                    </>
+                )}
+            </>
+
 
         </>
     )

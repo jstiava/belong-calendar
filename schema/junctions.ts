@@ -95,7 +95,6 @@ export interface JunctionStub {
 export type JunctionData = Partial<HostData> & Partial<Membership> & Partial<AttendeeData>;
 
 
-
 export class JunctionBuilder {
 
   private parent: Pointer | null = null;
@@ -129,6 +128,27 @@ export class JunctionBuilder {
   syncWithRefreshTokenExpiry() {
     const target = this.isReversed ? this.reverse : this.data;
     target.onRefreshTokenExpiryChange = true;
+    return this;
+  }
+
+  designate(value: {
+    id?: string,
+    type?: string,
+    external_child_webhook_resource_id?: string
+  }) {
+    const target = this.isReversed ? this.reverse : this.data;
+
+    if (value.id) {
+      target.external_child_id = value.id;
+    }
+
+    if (value.type) {
+      target.external_child_type = value.type;
+    }
+
+    if (value.external_child_webhook_resource_id) {
+      target.external_child_webhook_resource_id = value.external_child_webhook_resource_id
+    }
     return this;
   }
 
@@ -380,6 +400,7 @@ export class Junction {
 
     return result;
   }
+  
 
   static resolveType = (item: (HostData | Membership) & { [key: string]: any }, excludeType: Type): {
     uuid: string,
