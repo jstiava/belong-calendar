@@ -1,10 +1,150 @@
 import { MEDIA_BASE_URI } from "@/lib/useComplexFileDrop"
 import { Event, Group, Member, Profile } from "@/schema"
-import { CalendarMonthOutlined, WorkspacesOutlined, LocationOnOutlined, PersonOutline, Google } from "@mui/icons-material";
+import { CalendarMonthOutlined, WorkspacesOutlined, LocationOnOutlined, PersonOutline, Google, ScheduleOutlined, TodayOutlined } from "@mui/icons-material";
 import { Avatar, AvatarGroup, ButtonBase, CircularProgress, Skeleton, SxProps, Typography, useTheme } from "@mui/material"
 import ResolveItemIcon from "./ResolveItemIcon";
-import { Type } from "@/types/globals";
+import { isAllSingleDay, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from "@/lib/CalendarDays";
 
+
+function ResolveItemSubtitle({
+    item
+}: {
+    item: Member
+}) {
+
+    const theme = useTheme();
+
+    const sx = {
+        fontSize: "0.85rem",
+        lineHeight: "125%",
+        textTransform: 'capitalize',
+        display: "inline-block",
+        whiteSpace: "nowrap",
+        overflow: "clip",
+        textOverflow: "ellipsis",
+        textAlign: 'left'
+    };
+
+    if (item instanceof Event) {
+
+        if (item.subtitle) {
+            return (
+                <div className="flex compact2 top left">
+                    <ResolveItemIcon
+                        item={item}
+                        sx={{
+                            fontSize: "0.875rem",
+                            color: theme.palette.text.primary
+                        }}
+                    />
+                    <Typography sx={sx}>{item.subtitle}</Typography>
+                </div>
+            )
+        }
+
+        if (isSingleTimeEvent(item)) {
+            return (
+                <div className="flex compact2 center left">
+                    <TodayOutlined
+                        sx={{
+                            fontSize: "0.875rem",
+                            color: theme.palette.text.primary
+                        }}
+                    />
+                    <Typography sx={sx}>{item.start_time.print(true)}</Typography>
+                </div>
+            )
+        }
+
+
+
+        if (isAllSingleDay(item)) {
+            return (
+                <div className="flex compact2 center left">
+                    <TodayOutlined
+                        sx={{
+                            fontSize: "0.875rem",
+                            color: theme.palette.text.primary
+                        }}
+                    />
+                    <Typography sx={sx}>{item.date.format("MMM DD, YYYY")}</Typography>
+                </div>
+            )
+        }
+
+        if (isMultiDayEvent(item)) {
+            return (
+                <div className="flex compact2 center left">
+                    <CalendarMonthOutlined
+                        sx={{
+                            fontSize: "0.875rem",
+                            color: theme.palette.text.primary
+                        }}
+                    />
+                    <Typography sx={sx}>{item.date.to(item.end_date)}</Typography>
+                </div>
+            )
+        }
+
+
+        if (isScheduled(item) && !isNotScheduled(item)) {
+            return (
+                <div className="flex compact2 center left">
+                    <ScheduleOutlined
+                        sx={{
+                            fontSize: "0.875rem",
+                            color: theme.palette.text.primary
+                        }}
+                    />
+                    <Typography sx={sx}>Event</Typography>
+                </div>
+            )
+        }
+    }
+
+    if (item instanceof Group) {
+        return (
+            <div className="flex compact2 center left">
+                <ResolveItemIcon
+                    item={item}
+                    sx={{
+                        fontSize: "0.875rem",
+                        color: theme.palette.text.primary
+                    }}
+                />
+                <Typography sx={sx}>{item.integration ? `Integration (${item.integration})` : item.type}</Typography>
+            </div>
+        );
+    }
+
+    if (item instanceof Location) {
+        return (
+            <div className="flex compact2 center left">
+                <ResolveItemIcon
+                    item={item}
+                    sx={{
+                        fontSize: "0.875rem",
+                        color: theme.palette.text.primary
+                    }}
+                />
+                <Typography sx={sx}>{item.type}</Typography>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex compact2 center left">
+            <ResolveItemIcon
+                item={item}
+                sx={{
+                    fontSize: "0.875rem",
+                    color: theme.palette.text.primary
+                }}
+            />
+            <Typography sx={sx}>{item.type}</Typography>
+        </div>
+    );
+}
 
 
 export default function ItemStub({
@@ -60,7 +200,7 @@ export default function ItemStub({
                             transform: "translate(-0.25rem, -0.4rem)",
                             width: "1rem",
                             height: "1rem",
-                            border: `0.15rem solid ${parent.theme_color || 'transparent'} !important`,
+                            border: `0.15rem solid ${parent?.theme_color || 'transparent'} !important`,
                             backgroundColor: parent.theme_color,
                             color: parent.theme_color ? theme.palette.getContrastText(parent.theme_color) : theme.palette.text.primary
                         }}
@@ -108,26 +248,12 @@ export default function ItemStub({
                     textOverflow: "ellipsis",
                     overflow: "hidden",
                     width: "100%"
-                }}>{item.name}</Typography>
-                <div className="flex compact2 top left">
-                    <ResolveItemIcon
-                        item={item}
-                        sx={{
-                            fontSize: "0.875rem",
-                            color: theme.palette.text.primary
-                        }}
-                    />
-                    <Typography sx={{
-                        fontSize: "0.85rem",
-                        lineHeight: "125%",
-                        textTransform: 'capitalize',
-                        display: "inline-block",
-                        whiteSpace: "nowrap",
-                        overflow: "clip",
-                        textOverflow: "ellipsis",
-                        textAlign: 'left'
-                    }}>{item instanceof Event && item.subtitle ? item.subtitle : item instanceof Group ? item.integration ? `Integration (${item.integration})` : item.type : item.type}</Typography>
-                </div>
+                }}><span dangerouslySetInnerHTML={{ __html: item.name }} /></Typography>
+
+
+                <ResolveItemSubtitle
+                    item={item}
+                />
             </div>
         </ButtonBase>
     )

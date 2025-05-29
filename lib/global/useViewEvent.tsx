@@ -308,6 +308,7 @@ export default function useViewEvent(
     if (!(theEvent instanceof Event)) {
       return;
     }
+
     setEvent(theEvent);
 
     const isOpen = theEvent.isOpenDetailed(props.date);

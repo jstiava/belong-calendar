@@ -25,7 +25,7 @@ import { AddOutlined, ArrowBack, CalendarMonthOutlined, ChangeHistoryOutlined, C
 import { enqueueSnackbar } from "notistack";
 import { CreatePanelProps, CreatorModules, CreatorPanelMobileStyles, CreatorPanelProps, CreatorPanelStyles, SharedCreatorPanelStyles, StartCreator, UseCreateForm } from "./global/useCreate";
 import { TransitionGroup } from 'react-transition-group';
-import { UseSession } from "./global/useSession";
+import { UseSession, UseSession_SessionOnly } from "./global/useSession";
 import { Mode, Type } from "@/types/globals";
 import Chronos from "./utils/chronos";
 import dayjs from "dayjs";
@@ -61,13 +61,11 @@ export default function useCreatePanel(
   removePanel: (id: string) => void,
   setIsShareView: (value: boolean) => any,
   setColor: any,
-  Session?: UseSession,
+  Session?: UseSession_SessionOnly,
   Parent?: UseBaseCore,
   parent?: Member,
 
 ): UseCreateForm {
-
-  console.log("Create panel")
 
   const inputRef = useRef<any>(null);
 
@@ -166,22 +164,26 @@ export default function useCreatePanel(
       return;
     }
 
-    axios.get(`/api/v1/auth/jotform/actions`, {
-      params: {
-        uuid: source.id(),
-        source: MemberFactory.getToken(source),
-        form_id: item.local_id,
-        action: 'getSubmissionVariables'
-      }
-    })
-      .then(res => {
-        setVariables(res.data.variables)
+
+    if (item.integration === '#jotform.form') {
+      axios.get(`/api/v1/auth/jotform/actions`, {
+        params: {
+          uuid: source.id(),
+          source: MemberFactory.getToken(source),
+          form_id: item.local_id,
+          action: 'getSubmissionVariables'
+        }
       })
-      .catch(err => {
-        console.log(err);
-      })
+        .then(res => {
+          setVariables(res.data.variables)
+        })
+        .catch(err => {
+          console.log(err);
+        })
+    }
 
     try {
+
       const startJunction = new JunctionBuilder()
         .from(Junction.toPointer(source)).to({
           type: item.type,
@@ -189,16 +191,20 @@ export default function useCreatePanel(
         })
         .allowAll()
         .isPrivate()
-        .designate({
-          id: item.local_id,
-          type: `#jotform.form`
-        })
         .fromChildToParent()
         .denyAll()
-        .build('hosts');
+
+      if (true) {
+        startJunction
+          .fromParentToChild()
+          .designate({
+            id: item.local_id,
+            type: `#jotform.form`
+          })
+      }
 
       const copy = source.copy();
-      copy.junctions.set(source.id(), startJunction[0]);
+      copy.junctions.set(source.id(), startJunction.build('hosts')[0]);
 
       registerJunction(copy);
 
@@ -603,8 +609,17 @@ export default function useCreatePanel(
                       const bases = Session.search(query);
                       const theEvents = Session.Events.search(query);
                       const eventsFromBase = Base ? Base.Events.search(query) : [];
+                      console.log({
+                        bases,
+                        theEvents,
+                        eventsFromBase
+                      })
 
-                      return [...bases, ...theEvents, ...eventsFromBase];
+                      const combined = [...bases, ...theEvents, ...eventsFromBase];
+                      const deduped = Array.from(
+                        new Map(combined.map(item => [item.id, item])).values()
+                      );
+                      return deduped;
                     }}
                     selected={junctions}
                     setSelected={setJunctions}
@@ -633,7 +648,6 @@ export default function useCreatePanel(
                             }}
                           >
                             <Avatar sx={{
-
                               width: "2rem",
                               height: "2rem",
                               backgroundColor: Session.session.theme_color
@@ -671,7 +685,6 @@ export default function useCreatePanel(
                       const bases = Session.search(query);
                       const theEvents = Session.Events.search(query);
                       const eventsFromBase = Base ? Base.Events.search(query) : [];
-
                       return [...bases, ...theEvents, ...eventsFromBase];
                     }}
                     selected={locations}

@@ -2,9 +2,7 @@
 import {
   Typography,
   useTheme,
-  Chip,
   Button,
-  IconButton,
   ButtonBase,
   Popover,
   CircularProgress,
@@ -15,18 +13,13 @@ import React, {
   useRef,
   MouseEvent,
 } from 'react';
-import { CalendarEventBox } from '@/components/events/EventBlock';
 import dayjs from '@/lib/utils/dayjs';
 import { Event, Member, Schedule } from '@/schema';
 import { Mode, Type } from '@/types/globals';
-import { AddOutlined, BugReportOutlined, CopyAllOutlined, PlayArrow } from '@mui/icons-material';
+import { AddOutlined, BugReportOutlined, CopyAllOutlined } from '@mui/icons-material';
 import { StartViewer } from '@/lib/global/useView';
-import { Hours } from '@/lib/utils/medici';
-import { MomentBlock } from '../events/MomentBlock';
 import { UseCalendar } from '@/lib/useCalendar';
 import { MultiDayEventBlock } from '../events/MultiDayEventBlock';
-import { ScheduleBlock } from '../events/ScheduleBlock';
-import { UseSession } from '@/lib/global/useSession';
 import CalendarDayRendered from '@/lib/CalendarDayRendered';
 import { isMoment, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
 import CalendarDay from '@/lib/CalendarDay';
@@ -253,22 +246,22 @@ function DayInMonthView({
         }}
         ref={calDayRef}
       >
-         {!calendarDay || (calendarDay && calendarDay.loading) && (
-            <div
-              key="loading"
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)"
-              }}
-            >
-              <CircularProgress size={16} sx={{
-                color: theme.palette.text.primary
+        {!calendarDay || (calendarDay && calendarDay.loading) && (
+          <div
+            key="loading"
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)"
+            }}
+          >
+            <CircularProgress size={16} sx={{
+              color: theme.palette.text.primary
 
-              }} />
-            </div>
-          )}
+            }} />
+          </div>
+        )}
         <div className='flex compact2' style={{
           position: 'absolute',
           top: `calc(0.1rem + calc(${calendarDayRendered.topOffset} * 1.525rem))`,
@@ -285,7 +278,7 @@ function DayInMonthView({
               // border: '1px solid',
               borderRadius: "0.15rem",
               borderColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
-              backgroundColor: date.isToday() ? theme.palette.primary.main : '#efefef',
+              backgroundColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
               color: date.isToday() ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary,
               overflow: 'visible',
               '& span': {
@@ -301,7 +294,7 @@ function DayInMonthView({
           }}>{date.format('D')}</Typography>
 
           </ButtonBase>
-          {(source instanceof Event && (isScheduled(source) && source.schedules)) && (
+          {(source instanceof Event && ((isScheduled(source) && !isNotScheduled(source)) && source.schedules)) && (
             <StackedScheduleBlock
               key={`${source.id()}`}
               column={index}
@@ -376,7 +369,7 @@ function DayInMonthView({
                       position: "absolute",
                       top: `calc(${i} * 1.525rem)`,
                       marginLeft: isLeftOffset ? "2rem" : "0.15rem",
-                      gutter: "-0.15rem",
+                      gutter: "-0.2rem",
                     }}
                   />
                 )

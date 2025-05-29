@@ -95,7 +95,12 @@ export class MemberFactory {
             },
         })
             .then(res => {
-                Object.assign(that.metadata, res.data.results);
+
+                const cleaned = res.data.results;
+                if ('data' in res.data.results) {
+                    cleaned.data = JSON.parse(res.data.results.data);
+                }
+                Object.assign(that.metadata, cleaned);
                 that.metadata.isFetched = true;
             })
             .catch(error => {

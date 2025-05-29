@@ -214,19 +214,19 @@ export default function AuthProvider({
         Session.verify(base_path ? {
           value: base_path,
         } : null)
-        .then((res: boolean) => {
-          if (!res) {
-            // router.push('/me')
-          }
-          console.log({
-            message: "Case 2",
-            res
+          .then((res: boolean) => {
+            if (!res) {
+              // router.push('/me')
+            }
+            console.log({
+              message: "Case 2",
+              res
+            })
+            return;
           })
-          return;
-        })
-        .catch(err => {
-          // router.push('/me')
-        })
+          .catch(err => {
+            // router.push('/me')
+          })
 
       } else {
         if (router.pathname.startsWith('/dashboard')) return;
@@ -328,33 +328,35 @@ export default function AuthProvider({
             font-family: ${sora.style.fontFamily};
           }
         `}</style>
-      <ThemeProvider theme={Base.theme}>
-        <NextNProgress color={Base.theme.palette.primary.main}
-          height={2}
-        />
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-          autoScroll={false}
-        >
-          <AppLayout
-            Session={Session as any}
-            Base={Base}
-            Module={Module}
-            module={module as any}
-            setModule={setModule}
+      <ThemeProvider theme={Session.theme}>
+        <ThemeProvider theme={module ? Module.theme : Base.theme}>
+          <NextNProgress color={Base.theme.palette.primary.main}
+            height={2}
+          />
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            autoScroll={false}
           >
-            <Component
-              {...pageProps}
-              setModule={setModule}
-              module={module}
-              Session={Session}
+            <AppLayout
+              Session={Session as any}
               Base={Base}
               Module={Module}
-            />
-          </AppLayout>
-        </DndContext>
+              module={module as any}
+              setModule={setModule}
+            >
+              <Component
+                {...pageProps}
+                setModule={setModule}
+                module={module}
+                Session={Session}
+                Base={Base}
+                Module={Module}
+              />
+            </AppLayout>
+          </DndContext>
+        </ThemeProvider>
       </ThemeProvider>
     </>
   );

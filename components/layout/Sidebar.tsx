@@ -1,7 +1,7 @@
 "use client"
 import { UseSession } from "@/lib/global/useSession";
 import { Event, Member } from "@/schema";
-import { Drawer, Button, Typography, useMediaQuery, useTheme, ButtonBase, lighten, Popover } from "@mui/material";
+import { Drawer, Button, Typography, useMediaQuery, useTheme, ButtonBase, lighten, Popover, alpha } from "@mui/material";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { UseBase } from "@/lib/global/useBase";
 import { useRouter } from "next/router";
@@ -214,7 +214,7 @@ export default function Sidebar({
             backgroundColor: theme.palette.background.paper,
             color: theme.palette.text.primary,
             zIndex: 5,
-            borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+            borderRight: `0.1rem solid ${theme.palette.divider}`,
           },
         }}
       >
@@ -225,7 +225,7 @@ export default function Sidebar({
           className="flex center between"
           style={{
             height: "3.5rem",
-            borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+            borderBottom: `0.1rem solid ${theme.palette.divider}`,
             padding: "0 0.5rem 0 1rem"
           }}>
           <div className="flex fit" style={{
@@ -273,20 +273,22 @@ export default function Sidebar({
           <div className="flex center middle">
             {router.asPath.startsWith('/me') ? (
               <StyledWeekPicker
-                mode="dark"
+                mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
                 Calendar={Session.Calendar}
                 value={Session.Calendar.frameDate}
               />
             ) : (
               <StyledWeekPicker
-                mode="dark"
+                mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
                 Calendar={module && Module ? Module.Calendar : Session.base && Base ? Base.Calendar : Session.Calendar}
                 value={module && Module ? Module.Calendar.frameDate : Session.base && Base ? Base.Calendar.frameDate : Session.Calendar.frameDate}
               />
             )}
           </div>
           <div className="column" style={{
-            padding: "1rem"
+            padding: "1rem 0.5rem",
+            maxHeight: "calc(100% - 23rem)",
+            overflowY: 'scroll'
           }}>
 
             {module && setModule && (
@@ -294,7 +296,7 @@ export default function Sidebar({
                 key={'back'}
                 className="flex left compact"
                 sx={{
-                  padding: "0.25rem 0.5rem",
+                  padding: "0.25rem 0.25rem",
                   borderRadius: "0.25rem",
                 }}
                 onClick={() => {
@@ -327,6 +329,7 @@ export default function Sidebar({
 
                   title={"New Calendar"}
                   onClick={() => {
+                    
                     Controller?.Creator.startCreator(Type.Event, Mode.Create, new Event({
                       date: null,
                       start_time: null,
@@ -353,10 +356,10 @@ export default function Sidebar({
                       key={item.id()}
                       className="column snug"
                       sx={{
-                        padding: module && module.id() === item.id() ? "0.5rem" : "0.25rem 0.5rem",
+                        padding: module && module.id() === item.id() ? "0.5rem 0.75rem" : "0.25rem 0.5rem",
                         margin: module && module.id() === item.id() ? '0.5rem 0 !important' : '0',
                         borderRadius: "0.25rem",
-                        backgroundColor: module && module.id() === item.id() ? item.theme_color ? lighten(item.theme_color, 0.75) : 'transparent' : 'transparent'
+                        backgroundColor: module && module.id() === item.id() ? item.theme_color ? alpha(item.theme_color, 0.25) : 'transparent' : 'transparent'
                       }}
                       onClick={() => {
                         const pathParts = router.pathname.split('/');
@@ -451,7 +454,7 @@ export default function Sidebar({
               padding: "1rem"
             }}>
 
-            {Session.base && (
+            {/* {Session.base && (
 
               <Button
                 disableRipple
@@ -469,7 +472,7 @@ export default function Sidebar({
               >
                 More Integrations
               </Button>
-            )}
+            )} */}
             <Button
               startIcon={<AddOutlined />}
               fullWidth

@@ -81,9 +81,9 @@ export class Profile implements Member {
   }
 
   // TODO
-  copy = (): ProfileData => {
+  copy = (): Profile => {
 
-    return this.eject()
+    return new Profile(this.eject())
   }
 
   eject = (): ProfileData => {

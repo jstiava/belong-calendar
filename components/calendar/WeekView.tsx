@@ -171,14 +171,14 @@ const WeekView = ({
           top: 0,
           backgroundColor: theme.palette.background.paper,
           zIndex: 5,
-          borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+          borderBottom: `0.1rem solid ${theme.palette.divider}`,
           height: "2.5rem"
         }}>
 
           <div className="flex center middle" style={{
             width: "5rem",
             padding: "0.25rem",
-            borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+            borderRight: `0.1rem solid ${theme.palette.divider}`,
           }}>
             <Typography variant='h6' sx={{
               fontSize: "0.75rem",
@@ -216,7 +216,7 @@ const WeekView = ({
                       // border: '1px solid',
                       borderRadius: "0.15rem",
                       borderColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
-                      backgroundColor: date.isToday() ? theme.palette.primary.main : '#efefef',
+                      backgroundColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
                       color: date.isToday() ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary,
                       overflow: 'visible',
                       '& span': {
@@ -247,7 +247,7 @@ const WeekView = ({
         <div className="flex left snug top">
           <div className="column snug" style={{
             width: "5rem",
-            borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+            borderRight: `0.1rem solid ${theme.palette.divider}`,
           }}>
             <TimeLegendColumn
               key="timeLegendColumn"

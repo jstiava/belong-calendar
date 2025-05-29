@@ -16,7 +16,7 @@ export default function Divider({
         <div style={{
             height: sx.height ? sx.height : vertical ? "100%" : "0.1rem",
             width: sx.width ? sx.width : vertical ? "0.1rem" : "100%",
-            backgroundColor: DIVIDER_NO_ALPHA_COLOR
+            backgroundColor: theme.palette.divider
         }}></div>
     )
 }

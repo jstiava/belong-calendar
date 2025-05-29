@@ -69,7 +69,7 @@ export type EventData = {
 
   startDateTime?: string;
   endDateTime?: string;
-  
+
   metadata?: EventMetadata;
   reservations?: ReservationData[] | null;
 
@@ -869,7 +869,7 @@ export class Event implements Member {
           continue;
         }
         try {
-          this.junctions.set(j.to.uuid === this.uuid ? j.from.uuid : j.to.uuid, j)
+          this.junctions.set(j.to.uuid === this.uuid ? `${j.from.uuid}_${j.directionality}` : `${j.to.uuid}_${j.directionality}`, j)
         }
         catch (err) {
           console.log({

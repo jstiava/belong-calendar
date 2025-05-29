@@ -19,7 +19,8 @@ import {
   KeyOutlined,
   VpnKeyOutlined,
   Star,
-  MoreVertOutlined
+  MoreVertOutlined,
+  TableViewOutlined
 } from '@mui/icons-material';
 import {
   Avatar,
@@ -49,8 +50,9 @@ import StyledIconButton from '../StyledIconButton';
 import StyledToggleButtonGroup from '../StyledToggleButtonGroup';
 import router, { useRouter } from 'next/router';
 import ItemStub from '../ItemStub';
-import { Member } from '@/schema';
+import { Member, Event } from '@/schema';
 import { UseBase } from '@/lib/global/useBase';
+import { isMoment } from '@/lib/CalendarDays';
 const MEDIA_BASE_URI = "https://mozi-belong-media-public-demo.s3.us-east-2.amazonaws.com";
 
 
@@ -75,6 +77,8 @@ export default function Header({
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down('sm'));
 
+  const item = module ? module : (Session.base ? Session.base : Session.session ? Session.session : null);
+
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [view, setView] = useState<string | null>(null);
 
@@ -84,7 +88,7 @@ export default function Header({
   const pushNewView = (tab: string) => {
 
     let theView = undefined;
-    if (['month', 'week', 'day'].some(x => x === tab)) {
+    if (['month', 'week', 'day', 'data'].some(x => x === tab)) {
       theView = tab;
       tab = 'calendar';
     }
@@ -101,7 +105,7 @@ export default function Header({
 
     const isSession = router.asPath.startsWith('/me');
 
-    router.push({
+    router.replace({
       pathname: `${isSession ? `/me/` : `/be/${theModule ? `${String(theModule)}/` : Session.base?.id()}/`}${tab}`,
       query: { ...rest, view: theView }
     })
@@ -130,7 +134,7 @@ export default function Header({
   }, [router])
 
 
-  if (!Session.session) {
+  if (!Session.session || !item) {
     return <></>;
   }
 
@@ -141,11 +145,9 @@ export default function Header({
         className="flex center between"
         style={{
           height: "3.5rem",
-          borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
-          borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+          borderBottom: `0.1rem solid ${theme.palette.divider}`,
+          borderRight: `0.1rem solid ${theme.palette.divider}`,
           padding: isSm ? "0 0.5rem" : "0 1rem",
-          backgroundColor: '#ffffff',
-
         }}>
         <div className="flex fit">
           {!Session.Preferences.isSidebarDocked && (
@@ -217,6 +219,17 @@ export default function Header({
                     </ListItemIcon>
                     Day
                   </MenuItem>
+                  <MenuItem
+                    value="data"
+                    onClick={() => {
+                      pushNewView('data')
+                    }}
+                  >
+                    <ListItemIcon>
+                      <TableViewOutlined fontSize="small" />
+                    </ListItemIcon>
+                    Data
+                  </MenuItem>
                 </Select>
               </FormControl>
             </div>
@@ -230,13 +243,17 @@ export default function Header({
               <GridView fontSize="small" />
               Dashboard
             </ToggleButton>
-            <ToggleButton
-              value={'calendar'}
-              onClick={() => pushNewView('month')}
-            >
-              <CalendarMonthOutlined fontSize="small" />
-              Calendar
-            </ToggleButton>
+
+            {!(item instanceof Event && isMoment(item)) && (
+
+              <ToggleButton
+                value={'calendar'}
+                onClick={() => pushNewView('month')}
+              >
+                <CalendarMonthOutlined fontSize="small" />
+                Calendar
+              </ToggleButton>
+            )}
 
             {view === 'integrations' && (
               <ToggleButton
@@ -248,34 +265,39 @@ export default function Header({
               </ToggleButton>
             )}
 
-            {view === 'iam' && (
-              <ToggleButton
-                value={'iam'}
-              //  onClick={() => pushNewView('month')}
-              >
-                <PeopleOutline fontSize="small" />
-                IAM
-              </ToggleButton>
-            )}
 
-            {view === 'settings' && (
-              <ToggleButton
-                value={'settings'}
-              //  onClick={() => pushNewView('month')}
-              >
-                <SettingsOutlined fontSize="small" />
-                Settings
-              </ToggleButton>
-            )}
+            {!router.asPath.startsWith('/me') && (
+              <>
+                {view === 'iam' && (
+                  <ToggleButton
+                    value={'iam'}
+                  //  onClick={() => pushNewView('month')}
+                  >
+                    <PeopleOutline fontSize="small" />
+                    IAM
+                  </ToggleButton>
+                )}
 
-             {view === 'apps' && (
-              <ToggleButton
-                value={'apps'}
-              //  onClick={() => pushNewView('month')}
-              >
-                <DeployedCodeIcon fontSize="small" />
-                Apps
-              </ToggleButton>
+                {view === 'settings' && (
+                  <ToggleButton
+                    value={'settings'}
+                  //  onClick={() => pushNewView('month')}
+                  >
+                    <SettingsOutlined fontSize="small" />
+                    Settings
+                  </ToggleButton>
+                )}
+
+                {view === 'apps' && (
+                  <ToggleButton
+                    value={'apps'}
+                  //  onClick={() => pushNewView('month')}
+                  >
+                    <DeployedCodeIcon fontSize="small" />
+                    Apps
+                  </ToggleButton>
+                )}
+              </>
             )}
 
             <Popover
@@ -306,23 +328,29 @@ export default function Header({
             >
               <div className="column snug">
                 {/* <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('integrations')}><ElectricalServicesOutlined fontSize="small" /><Typography>Integrations</Typography></MenuItem> */}
-                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('ian')}><PeopleOutline fontSize="small" /><Typography>IAM</Typography></MenuItem>
+
+
+                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('iam')}><PeopleOutline fontSize="small" /><Typography>IAM</Typography></MenuItem>
+                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('locations')}><LocationOnOutlined fontSize="small" /><Typography>Locations</Typography></MenuItem>
                 <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('settings')}><SettingsOutlined fontSize="small" /><Typography>Settings</Typography></MenuItem>
                 <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('apps')}><DeployedCodeIcon fontSize="small" /><Typography>Apps</Typography></MenuItem>
               </div>
             </Popover>
 
-            <StyledIconButton
-              title="More"
-              onClick={(e : any) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const target = e.currentTarget || e.target;
-                setAnchorEl(target)
-              }}
-            >
-              <MoreVertOutlined fontSize="small" />
-            </StyledIconButton>
+            {!router.asPath.startsWith('/me') && (
+
+              <StyledIconButton
+                title="More"
+                onClick={(e: any) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const target = e.currentTarget || e.target;
+                  setAnchorEl(target)
+                }}
+              >
+                <MoreVertOutlined fontSize="small" />
+              </StyledIconButton>
+            )}
 
             {/* <ToggleButton
               value="table"
@@ -366,18 +394,19 @@ export default function Header({
               )
             }}
           /> */}
-          <IconButton>
-            {(module ? Module?.IAM.members?.find(x => x.id() === Session.session?.id()) : Base?.IAM.members?.find(x => x.id() === Session.session?.id())) ? (
-              <Star sx={{
-                fontSize: '1.5rem'
-              }} />
-            ) : (
-              <StarOutline sx={{
-                fontSize: '1.5rem'
-              }} />
-            )}
-
-          </IconButton>
+          {!router.pathname.startsWith('/me') && (
+            <IconButton>
+              {(module ? Module?.IAM.members?.find(x => x.id() === Session.session?.id()) : Base?.IAM.members?.find(x => x.id() === Session.session?.id())) ? (
+                <Star sx={{
+                  fontSize: '1.5rem'
+                }} />
+              ) : (
+                <StarOutline sx={{
+                  fontSize: '1.5rem'
+                }} />
+              )}
+            </IconButton>
+          )}
           {Session.session ? (
             <Avatar
               onClick={() => setIsRightSidebarOpen(true)}

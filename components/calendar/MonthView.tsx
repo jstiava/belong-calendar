@@ -194,13 +194,13 @@ const MonthView = ({
           top: 0,
           backgroundColor: theme.palette.background.paper,
           zIndex: 5,
-          borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`
+          borderBottom: `0.1rem solid ${theme.palette.divider}`
         }}>
 
           <div className="flex center middle" style={{
             width: "5rem",
             padding: "0.25rem",
-            borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+            borderRight: `0.1rem solid ${theme.palette.divider}`,
           }}>
             <Typography variant='h6' sx={{
                fontSize: "0.75rem",
@@ -247,7 +247,7 @@ const MonthView = ({
 
           <div className="column snug" style={{
             width: "5rem",
-            borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+            borderRight: `0.1rem solid ${theme.palette.divider}`,
             height:"calc(100vh - 3rem)",
           }}>
             {[1, 2, 3, 4, 5].map(week => (
@@ -256,7 +256,7 @@ const MonthView = ({
                 style={{
                   height: "calc(100% / 5)",
                   width: "100%",
-                  borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+                  borderBottom: `0.1rem solid ${theme.palette.divider}`,
                 }}
               ></div>
             ))}
@@ -300,7 +300,7 @@ const MonthView = ({
                         style={{
                           width: "calc(100% - 0.1rem)",
                           height: "100%",
-                          borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+                          borderBottom: `0.1rem solid ${theme.palette.divider}`,
                         }}
                         date={date}
                         handleCreate={handleCreate}

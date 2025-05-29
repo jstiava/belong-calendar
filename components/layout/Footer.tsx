@@ -69,9 +69,8 @@ const Footer = ({
           position: 'fixed',
           bottom: 0,
           height: "2.5rem",
-          borderTop: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
-          borderBottom: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
-          backgroundColor: 'white',
+          borderTop: `0.1rem solid ${theme.palette.divider}`,
+          borderBottom: `0.1rem solid ${theme.palette.divider}`,
           padding: "0 1rem",
           width: !Session.Preferences.isSidebarDocked ? "100%" : `calc(100% - ${SIDEBAR_WIDTH} - 0.1rem)`,
         }}>

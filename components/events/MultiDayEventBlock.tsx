@@ -124,7 +124,7 @@ export const MultiDayEventBlock = ({
     if (!handleView) {
       return;
     }
-    
+
     handleView(Type.Event, event, {
       e,
       date,
@@ -143,7 +143,7 @@ export const MultiDayEventBlock = ({
     <>
 
       <ButtonBase
-      disableRipple
+        disableRipple
         data-type="eventButton"
         ref={eventRef}
         // onMouseDown={onMouseDown}
@@ -163,8 +163,8 @@ export const MultiDayEventBlock = ({
           fontFamily: 'inherit',
           overflow: 'hidden',
           borderRadius: '0.25rem',
-          backgroundColor: isMember ? event.theme_color ? alpha(event.theme_color, 0.65) : theme.palette.background.paper : theme.palette.background.paper,
-          color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.text.primary : theme.palette.text.primary,
+          backgroundColor: isMember ? event.theme_color ? alpha(event.theme_color, 0.65) : theme.palette.primary.main : theme.palette.primary.main,
+          color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText : theme.palette.primary.contrastText,
           border: '3px solid transparent',
           padding: '0 0.25rem',
           height: "1.75rem",
@@ -188,8 +188,8 @@ export const MultiDayEventBlock = ({
           <div className="flex compact2">
             <CalendarMonthOutlined sx={{
               fontSize: '0.875rem'
-            }}/>
-            
+            }} />
+
             <Typography sx={{
               fontSize: '0.75rem',
               lineHeight: '115%'

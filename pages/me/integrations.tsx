@@ -140,6 +140,18 @@ export const IntegrationTemplates = [
         theme_color: '#e4060f',
         query: {},
     },
+    {
+        name: "Connect to Zoom",
+        slug: 'zoom',
+        url: "https://zoom.us/oauth/authorize",
+        type: "OAuth2",
+        subtitle: "Integrate with your online meetings.",
+        theme_color: '#0E71EB',
+        query: {
+            client_id: "I0jlI0knRtWNV5Lf8boCxA",
+            response_type: "code"
+        },
+    },
 ]
 
 const MainBasePage = (props: AppPageProps) => {

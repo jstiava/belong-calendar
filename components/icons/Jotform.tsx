@@ -15,7 +15,7 @@ function JotformIcon(props: any) {
             backgroundSize: 'contain',
             backgroundPosition: "center",
             backgroundRepeat: 'no-repeat',
-            filter: fill === theme.palette.text.primary ? 'invert(1)' : 'unset'
+            filter: fill != '#fff' ? 'invert(1)' : 'unset'
         }}></div>
     );
 }

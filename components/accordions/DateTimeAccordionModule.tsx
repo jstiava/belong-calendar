@@ -67,7 +67,7 @@ export default function DateTimeAccordionModule({
         }}>
           {schedule && (
             <HoursMinimap
-              mode="dark"
+              mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
               schedule={schedule}
               onChange={(newSch) => setSchedule(newSch)}
             />
@@ -179,11 +179,11 @@ export default function DateTimeAccordionModule({
                 <StyledDatePicker
                   value={item.date ? dayjs(String(item.date)) : null}
                   onChange={(date) => handleChange("date", date)}
-                  mode={'dark'}
+                  mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
                   label={'Date'}
                   key="event_startDate"
                   sx={{
-                    width: '11rem'
+                    width: '13rem'
                   }}
                 />
 
@@ -191,7 +191,7 @@ export default function DateTimeAccordionModule({
                   <StyledDatePicker
                     value={item.end_date ? dayjs(String(item.end_date)) : null}
                     onChange={(date) => handleChange("end_date", date)}
-                    mode={'dark'}
+                    mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
                     label={'Date'}
                     key="event_endDate"
                     sx={{
@@ -203,7 +203,7 @@ export default function DateTimeAccordionModule({
                     <StyledTimePicker
                       // debug
                       format='h:mm A'
-                      mode={'dark'}
+                      mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
                       label={'Start'}
                       value={item.start_time ? Events.dayjs(item.date || dayjs().yyyymmdd(), new Chronos(Number(item.start_time))) : null}
                       onChange={(date) => {
@@ -229,7 +229,7 @@ export default function DateTimeAccordionModule({
                     <StyledTimePicker
                       // debug
                       format='h:mm A'
-                      mode={'dark'}
+                      mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
                       label={'End'}
                       value={item.end_time ? Events.dayjs(Number(item.end_time) < Number(item.start_time) ? Number(item.date) + 1 : item.date || dayjs().yyyymmdd(), new Chronos(Number(item.end_time))) : null}
                       onChange={(date) => handleChange("end_time", date?.toLocalChronos().getHMN())}
@@ -407,7 +407,7 @@ export default function DateTimeAccordionModule({
             }}>
             {schedule && (
               <HoursMinimap
-                mode="dark"
+                mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
                 schedule={schedule}
                 onChange={(newSch) => setSchedule(newSch)}
               />

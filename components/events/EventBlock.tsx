@@ -2,7 +2,7 @@ import { Expand, OpenInFull, LocationOnOutlined, VerifiedOutlined, EditOutlined,
 import { useTheme, ButtonBase, Zoom, Fab, Typography, Popover, Tabs, Tab, Button, getContrastRatio, darken, alpha } from '@mui/material';
 import { MouseEvent, useState, useRef, useEffect, CSSProperties } from 'react';
 import Chronos from '@/lib/utils/chronos';
-import { Event, Events, JunctionStatus, Member } from '@/schema';
+import { Event, Events, Junction, JunctionStatus, Member, typeToDirectionality } from '@/schema';
 import { Type, Mode, adjustForContrast } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
 import dayjs, { Dayjs } from 'dayjs';
@@ -72,7 +72,7 @@ export const CalendarEventBox = ({
     if (!source) {
       return;
     }
-    const member = event.junctions.get(source.id());
+    const member = event.junctions.get(`${source.id()}_${typeToDirectionality(event.type, source.type === Type.Event)}`);
     if (!member) return;
     if (member.status === JunctionStatus.Accepted) {
       setIsMember(true);

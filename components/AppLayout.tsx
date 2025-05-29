@@ -178,9 +178,7 @@ export default function AppLayout(props: {
                         style={{
                             padding: "3.5rem 0 2.5rem 0",
                             height: "100vh",
-                            // height: "calc(100vh - 6.6rem)",
                             zIndex: 0,
-                            // backgroundColor: 'lightGrey',
                         }}>
                         <div className="column" style={{
                             position: 'relative',

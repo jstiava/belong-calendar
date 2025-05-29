@@ -94,6 +94,30 @@ export interface UseSession {
   reload: () => any;
 }
 
+export interface UseSession_SessionOnly {
+  Calendar: UseCalendar;
+  Events: UseEvents;
+  session: Profile | null;
+  base: Member | null;
+  changeBase: (base: Member | null) => Promise<boolean>;
+  bases: Member[] | null;
+  verify: (target?: {
+    value: string,
+    type?: Type | null
+  } | null) => Promise<boolean>;
+  login: (loginCred: any) => Promise<boolean>;
+  logout: () => void;
+  notifications: any[] | null;
+  Preferences: UsePreferences;
+  isRightSidebarOpen: boolean;
+  setIsRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
+  swap: (newSession: Profile) => void;
+  search: (query: string) => Member[];
+  addNewBase: (newBase: GroupData) => Promise<void>;
+  setBase: Dispatch<SetStateAction<Member | null>>;
+  [key: string]: any
+}
+
 export default function useSession(): UseSession {
   const router = useRouter();
   // const Socket = useSocket();
@@ -138,6 +162,7 @@ export default function useSession(): UseSession {
     ...theme,
     palette: {
       ...theme.palette,
+      divider: '#e0e0e0',
       mode: 'light',
       primary: {
         main: session?.theme_color ? session?.theme_color : "#ffffff",
@@ -153,8 +178,8 @@ export default function useSession(): UseSession {
     },
   };
 
-  lightTheme = createTheme(lightTheme, {
-    components: {
+  const getComponents = () => {
+    return {
       MuiTab: {
         styleOverrides: {
           root: {
@@ -176,14 +201,14 @@ export default function useSession(): UseSession {
                   color: lightTheme.palette.primary.main
                 }
               },
-              {
-                props: { color: "primary", variant: "contained" },
-                style: {
-                  '&:hover': {
-                    backgroundColor: session?.theme_color ? lighten(session?.theme_color, 0.4) : "#ffffff"
-                  },
-                }
-              },
+              // {
+              //   props: { color: "primary", variant: "contained" },
+              //   style: {
+              //     '&:hover': {
+              //       backgroundColor: session?.theme_color ? lighten(session?.theme_color, 0.4) : "#ffffff"
+              //     },
+              //   }
+              // },
               {
                 props: { variant: 'light' },
                 style: {
@@ -198,16 +223,18 @@ export default function useSession(): UseSession {
           }
         },
       }
-    },
+    }
+  }
+
+  lightTheme = createTheme(lightTheme, {
+    components: getComponents(),
   });
 
-  let darkTheme: Theme = {
-    ...theme,
+  let darkTheme: Theme = createTheme({
     palette: {
-      ...theme.palette,
+      divider: '#1c1c1c',
       mode: 'dark',
       primary: {
-        ...theme.palette.primary,
         main: session?.theme_color ? session.theme_color : "#ffffff",
         light: session?.theme_color ? lighten(session?.theme_color, 0.9) : "#ffffff",
         dark: session?.theme_color ? darken(session?.theme_color, 0.1) : "#ffffff",
@@ -218,7 +245,13 @@ export default function useSession(): UseSession {
         contrastText: "#ffffff",
       },
     },
-  };
+    typography: theme.typography,
+    breakpoints: theme.breakpoints
+  });
+
+  darkTheme = createTheme(darkTheme, {
+    components: getComponents(),
+  });
 
   const debug = () => {
     console.log({
@@ -228,12 +261,12 @@ export default function useSession(): UseSession {
     })
   }
 
-  const add = (type: Type, item: MemberData) => {
+  const add = (type: Type, item: MemberData, sharing?: any, actions?: any) => {
     switch (type) {
       case Type.Event:
-        return Events.add(item);
-      case Type.Location:
-        return null;
+        return Events.add(item, sharing, actions);
+      // case Type.Location:
+      //   return Locations.add(item);
     }
   }
 
@@ -247,9 +280,7 @@ export default function useSession(): UseSession {
     }
   }
 
-  const Creator = useCreator(session, {
-    theme, Calendar, Events, add, update
-  });
+
 
   const swap = (newSession: Profile) => {
     if (session && (session.id() === newSession.id())) {
@@ -447,6 +478,29 @@ export default function useSession(): UseSession {
     const results = basesSearch.search(query);
     return results.map(x => x.item);
   }
+
+  const Creator = useCreator(session, {
+    theme: Preferences.mode === "light" ? lightTheme : darkTheme, Calendar, Events, add, update
+  }, {
+    Calendar,
+    Events,
+    session,
+    base,
+    changeBase,
+    bases,
+    verify,
+    login,
+    logout,
+    notifications,
+    Preferences,
+    isRightSidebarOpen,
+    setIsRightSidebarOpen,
+    swap,
+    search,
+    addNewBase,
+    setBase,
+    reload
+  });
 
   return useMemo(() => {
     return {

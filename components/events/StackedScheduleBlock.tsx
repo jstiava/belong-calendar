@@ -128,11 +128,15 @@ export const StackedScheduleBlock = ({
     setIsHovered(prev => !prev);
   };
 
+  if (isOpenDetailed && !isOpenDetailed.hours) {
+    return null;
+  }
+
   try {
     return (
       <>
         <ButtonBase
-          className="eventButton flex compact2"
+          className="eventButton flex compact2 top"
           data-type="eventButton"
           ref={eventRef}
           onMouseDown={onMouseDown}
@@ -183,8 +187,14 @@ export const StackedScheduleBlock = ({
                   fontSize: "0.75rem",
                   width: "100%",
                   textAlign: 'left',
-                  lineHeight: '115%'
-                }}>{isOpenDetailed ? isOpenDetailed.isOpen ? isOpenDetailed.schedule ? isOpenDetailed.schedule.as_text : 'Open' : isOpenDetailed.schedule ? isOpenDetailed.schedule.as_text : 'Closed' : 'Error'}</Typography>
+                  lineHeight: '115%',
+                  whiteSpace: "normal",
+                  overflow: "clip",
+                  textOverflow: "ellipsis",
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 2,
+                }}>{isOpenDetailed ? isOpenDetailed.isOpen ? isOpenDetailed.hours ? isOpenDetailed.hours.as_text : 'Open' : isOpenDetailed.hours.as_text ? isOpenDetailed.hours.as_text : 'Closed' : 'Error'}</Typography>
             ) : (
               <Typography sx={{
                 fontSize: "0.75rem",

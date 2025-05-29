@@ -14,6 +14,7 @@ import JotformForm from '@/components/icons/JotformForm';
 import { Event } from '@/schema';
 import { DIVIDER_NO_ALPHA_COLOR } from '@/components/Divider';
 import GoogleCalendarIcon from '@/components/icons/GoogleCalendarIcon';
+import { isNotScheduled } from '@/lib/CalendarDays';
 
 
 
@@ -85,7 +86,7 @@ const MainBasePage = (props: AppPageProps) => {
                 <div className="column left" style={{
                     width: '100%',
                     padding: '2rem',
-                    border: `1px solid ${DIVIDER_NO_ALPHA_COLOR}`,
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: '0.25rem',
                     maxWidth: "40rem",
                 }}>
@@ -179,11 +180,46 @@ const MainBasePage = (props: AppPageProps) => {
                 </div>
             )}
             <div className="column">
+
+                <Typography variant="h3" component="h1" sx={{
+                    fontSize: "2rem"
+                }}><span dangerouslySetInnerHTML={{ __html: item.name }} /></Typography>
+
+                {item instanceof Event && !isNotScheduled(item) && (
+                   <div className="column left">
+                    <Typography>{item.isOpen() ? "Open" : "Closed"}</Typography>
+                     <Typography sx={{
+                        whiteSpace: 'pre-wrap'
+                    }}>
+                        {JSON.stringify(item.schedules)}
+                    </Typography>
+                   </div>
+                )}
+
                 <Typography sx={{
                     whiteSpace: 'pre-wrap'
                 }}>
                     {JSON.stringify(item)}
                 </Typography>
+
+                {item.metadata && (
+                    <>
+                        {item.metadata.data && Object.entries(item.metadata.data).map(([key, value]) => {
+
+                            if (!value || typeof value != 'string') {
+                                return null;
+                            }
+
+                            return (
+
+                                <div key={key} className="flex between">
+                                    <Typography>{key}</Typography>
+                                    <Typography>{value}</Typography>
+                                </div>
+                            )
+                        })}
+                    </>
+                )}
             </div>
         </div>
     );

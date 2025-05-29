@@ -116,6 +116,15 @@ export class JunctionBuilder {
     return this;
   }
 
+   fromParentToChild() {
+    if (!this.parent || !this.child) {
+      throw Error("Must first set parent and child.")
+    }
+    this.isReversed = false;
+    this.directionality = typeToDirectionality(this.parent.type);
+    return this;
+  }
+
   fromChildToParent() {
     if (!this.parent || !this.child) {
       throw Error("Must first set parent and child.")

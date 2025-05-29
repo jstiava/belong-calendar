@@ -30,7 +30,7 @@ export function isNotScheduled(event: Event): event is Event & { date: Dayjs, st
     return dayjs.isDayjs(event.date) && event.start_time instanceof Chronos;
 }
 
-export function isScheduled(event: Event): event is Event & { schedules: Schedule[], date: null, start_time: null, end_date: null, end_time: null} {
+export function isScheduled(event: Event): event is Event & { schedules: Schedule[]} {
     return 'schedules' in event && event.schedules != null;
 }
 

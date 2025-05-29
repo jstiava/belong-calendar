@@ -12,7 +12,7 @@ import { Type, Mode } from '@/types/globals';
 import { Member, MemberFactory, Schedule } from "@/schema";
 import { TransitionGroup } from 'react-transition-group';
 import { useSnackbar } from 'notistack';
-import { UseSession } from './useSession';
+import { UseSession, UseSession_SessionOnly } from './useSession';
 import { CreatePanel } from '../useCreatePanel';
 
 export const CreatorModules: Record<Type | string, any> = {
@@ -85,7 +85,7 @@ export interface CreatePanelProps {
   item: any;
   source: Member;
   Base: UseBaseCore;
-  Session?: UseSession,
+  Session?: UseSession_SessionOnly,
   Parent?: UseBaseCore;
   removePanel: (uuid: string) => void;
   [key: string]: any;
@@ -115,8 +115,9 @@ export interface CreatorPanel {
 type StartCreatorProps = {
   callback?: (item: any, sharing?: any[], actions?: any[]) => any
   doNotPrepJunctions?: boolean;
+  isRightClick?: boolean;
   variables?: any[];
-  [key : string]: any;
+  [key: string]: any;
 };
 
 
@@ -128,7 +129,13 @@ export interface UseCreator {
   startCreator: StartCreator;
 }
 
-export default function useCreator(source: Member | null, Base: UseBaseCore, Session?: UseSession, Parent?: UseBaseCore, parent?: Member | null): UseCreator {
+export default function useCreator(
+  source: Member | null,
+  Base: UseBaseCore,
+  Session?: UseSession_SessionOnly,
+  Parent?: UseBaseCore,
+  parent?: Member | null
+): UseCreator {
 
   const theme = Base.theme;
   const isMed = useMediaQuery(theme.breakpoints.down('md'));

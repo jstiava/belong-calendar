@@ -43,7 +43,6 @@ export interface UseBase {
 
 export default function useBase(source: Member | null, Session: UseSession, setSource: Dispatch<SetStateAction<Member | null>>, expanded: boolean = false, Base?: UseBase, parent?: Member | null): UseBase {
 
-  const theme = useTheme();
   const [loading, setLoading] = useState<boolean>(false);
   const Calendar = useCalendar();
   const Events = useEvents(source, Calendar, expanded);
@@ -111,149 +110,33 @@ export default function useBase(source: Member | null, Session: UseSession, setS
   }
 
 
-  let lightTheme: Theme = {
-    ...theme,
+  let theTheme: Theme = {
+    ...Session.theme,
     palette: {
-      ...theme.palette,
-      mode: 'light',
+      ...Session.theme.palette,
       primary: {
         main: source?.theme_color ? source?.theme_color : "#ffffff",
         light: source?.theme_color ? lighten(source?.theme_color, 0.9) : "#ffffff",
         dark: source?.theme_color ? darken(source?.theme_color, 0.1) : "#ffffff",
-        contrastText: source?.theme_color ? theme.palette.getContrastText(source?.theme_color) : "#000000"
+        contrastText: source?.theme_color ? Session.theme.palette.getContrastText(source?.theme_color) : "#000000"
       },
       secondary: {
-        ...theme.palette.secondary,
+        ...Session.theme.palette.secondary,
         main: "#000000",
         contrastText: "#ffffff",
       }
     },
   };
-
-  lightTheme = createTheme(lightTheme, {
-    components: {
-      MuiTab: {
-        styleOverrides: {
-          root: {
-            width: "fit-content",
-            textTransform: "capitalize",
-            padding: "0.25rem 1rem"
-          }
-        }
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            textTransform: 'capitalize',
-            variants: [
-              {
-                props: { variant: "flipped" },
-                style: {
-                  backgroundColor: lightTheme.palette.primary.contrastText,
-                  color: lightTheme.palette.primary.main
-                }
-              },
-              {
-                props: { color: "primary", variant: "contained" },
-                style: {
-                  '&:hover': {
-                    backgroundColor: source?.theme_color ? lighten(source?.theme_color, 0.4) : "#ffffff"
-                  },
-                }
-              },
-              {
-                props: { variant: 'light' },
-                style: {
-                  '&:hover': {
-                    backgroundColor: source?.theme_color ? darken(source?.theme_color, 0.2) : "#ffffff"
-                  },
-                  backgroundColor: source?.theme_color ? darken(source?.theme_color, 0.1) : "#ffffff",
-                  color: "#ffffff"
-                }
-              }
-            ]
-          }
-        },
-      }
-    },
-  });
-
-  let darkTheme: Theme = {
-    ...theme,
-    palette: {
-      ...theme.palette,
-      mode: 'dark',
-      primary: {
-        ...theme.palette.primary,
-        main: source?.theme_color ? source.theme_color : "#ffffff",
-        light: source?.theme_color ? lighten(source?.theme_color, 0.9) : "#ffffff",
-        dark: source?.theme_color ? darken(source?.theme_color, 0.1) : "#ffffff",
-      },
-      secondary: {
-        ...theme.palette.secondary,
-        main: "#000000",
-        contrastText: "#ffffff",
-      }
-    },
-  };
-
-  darkTheme = createTheme(darkTheme, {
-    components: {
-      MuiTab: {
-        styleOverrides: {
-          root: {
-            width: "fit-content",
-            textTransform: "capitalize",
-            padding: "0.25rem 1rem"
-          }
-        }
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            textTransform: 'capitalize',
-            variants: [
-              {
-                props: { variant: "flipped" },
-                style: {
-                  backgroundColor: darkTheme.palette.primary.contrastText,
-                  color: darkTheme.palette.primary.main
-                }
-              },
-              {
-                props: { color: "primary", variant: "contained" },
-                style: {
-                  '&:hover': {
-                    backgroundColor: source?.theme_color ? lighten(source?.theme_color, 0.4) : "#ffffff",
-                  },
-                }
-              },
-              {
-                props: { variant: 'light' },
-                style: {
-                  '&:hover': {
-                    backgroundColor: source?.theme_color ? darken(source?.theme_color, 0.2) : "#ffffff"
-                  },
-                  backgroundColor: source?.theme_color ? darken(source?.theme_color, 0.1) : "#ffffff",
-                  color: "#ffffff"
-                }
-              }
-            ]
-          }
-        },
-      }
-    },
-  })
 
   const Creator = useCreator(source, {
-    theme: Session.Preferences.mode === "light" ? lightTheme : darkTheme, Calendar, Events, Locations, add, update
+    theme: theTheme, Calendar, Events, Locations, add, update
   }, Session, Base, parent);
 
   const Viewer = useViewEvent(
     source,
     Events,
     Creator.startCreator,
-    theme
+    Session.theme
   );
 
   // const Viewer = useView(source, { theme: Session.Preferences.mode === "light" ? lightTheme : darkTheme, Calendar, Events, Locations, loading }, Creator.startCreator);
@@ -268,7 +151,7 @@ export default function useBase(source: Member | null, Session: UseSession, setS
 
   return useMemo(() => {
     return {
-      theme: Session.Preferences.mode === "light" ? lightTheme : darkTheme,
+      theme: theTheme,
       Calendar,
       Events,
       Locations,
@@ -282,6 +165,6 @@ export default function useBase(source: Member | null, Session: UseSession, setS
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, Calendar, Events, Locations, Session.Preferences.mode, lightTheme, darkTheme, Creator, Viewer, IAM]);
+  }, [theTheme, source, Calendar, Events, Locations, Session.Preferences.mode, Creator, Viewer, IAM]);
 }
 

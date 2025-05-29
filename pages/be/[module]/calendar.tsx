@@ -7,6 +7,7 @@ import WeekView from '@/components/calendar/WeekView';
 import { MouseEvent, SetStateAction, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { Event } from '@/schema';
+import DataView from '@/components/calendar/DataView';
 
 const CalendarPage = (props: AppPageProps) => {
     const router = useRouter();
@@ -127,14 +128,14 @@ const CalendarPage = (props: AppPageProps) => {
         return <></>
     }
 
-    if (router.query.view === 'month') {
+    if (router.query.view === 'data') {
         return (
-            <MonthView
+            <DataView
                 Preferences={Session.Preferences}
                 source={item}
                 Calendar={Controller.Calendar}
                 handleCreate={Controller.Creator.startCreator}
-                handleView={null}
+                handleView={Controller.Viewer.handleOpenEventPopover}
                 days={Controller.Events.days}
                 Events={Controller.Events}
                 selected={null}
@@ -143,7 +144,29 @@ const CalendarPage = (props: AppPageProps) => {
                 }}
                 handleSelect={function (e: MouseEvent, event: Event): void {
                     throw new Error('Function not implemented.');
-                }} />
+                }}
+            />
+        )
+    }
+
+    if (router.query.view === 'month') {
+        return (
+            <MonthView
+                Preferences={Session.Preferences}
+                source={item}
+                Calendar={Controller.Calendar}
+                handleCreate={Controller.Creator.startCreator}
+                handleView={Controller.Viewer.handleOpenEventPopover}
+                days={Controller.Events.days}
+                Events={Controller.Events}
+                selected={null}
+                setSelected={function (value: SetStateAction<Event[] | null>): void {
+                    throw new Error('Function not implemented.');
+                }}
+                handleSelect={function (e: MouseEvent, event: Event): void {
+                    throw new Error('Function not implemented.');
+                }}
+            />
         )
     }
 

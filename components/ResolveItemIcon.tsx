@@ -9,6 +9,7 @@ import { Type } from "@/types/globals"
 import StripeIcon from "./icons/StripeIcon"
 import ClickupIcon from "./icons/Clickup"
 import CanvasIcon from "./icons/CanvasIcon"
+import ZoomIcon from "./icons/ZoomIcon"
 
 export default function ResolveItemIcon({
     item,
@@ -46,6 +47,9 @@ export default function ResolveItemIcon({
         }
         else if (item.integration === 'canvas') {
             return <CanvasIcon sx={sx} />
+        }
+         else if (item.integration === 'zoom') {
+            return <ZoomIcon sx={sx} />
         }
     }
 
