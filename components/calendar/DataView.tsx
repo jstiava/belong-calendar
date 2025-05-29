@@ -91,7 +91,7 @@ const DataView = ({
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
   const [previewed, setPreviewed] = useState<Member | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(true);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [peekDate, setPeekDate] = useState<Dayjs | null>(dayjs());
   const [weekOfPeekDate, setWeekOfPeekDate] = useState<Dayjs[] | null>(dayjs().startOf('week').getFrame(7));
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
