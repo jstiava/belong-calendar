@@ -528,7 +528,7 @@ export class Event implements Member {
         end_time: serial.end_time ? String(serial.end_time.getHMN().toFixed(3)) : null,
         date: serial.date ? Number(serial.date.yyyymmdd()) : null,
         end_date: serial.end_date ? Number(serial.end_date.yyyymmdd()) : null,
-        junctions: this.junctions ? Array.from(this.junctions.values().map(j => j.eject())) : [],
+        junctions: this.junctions ? Object.values(this.junctions).map(j => j.eject()) : [],
         attendees: this.attendees ? this.attendees.map((a) => a.eject()) : null,
         children: this.children ? reduced ? this.children.map(s => s.uuid) : this.children.map((s) => s.eject(localize)) : null,
         schedules: serial.schedules ? serial.schedules.map((s: Schedule) => s.eject()) : null,

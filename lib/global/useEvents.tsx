@@ -1,7 +1,7 @@
 "use client"
 import { useSnackbar } from 'notistack';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
-import { Event, EventData, Member, Events, Junction, JunctionStatus, MemberFactory } from '@/schema';
+import { Event, EventData, Member, Events, Junction, JunctionStatus, MemberFactory, typeToDirectionality } from '@/schema';
 import { Type } from "@/types/globals"
 import { Dayjs } from 'dayjs';
 import { UseBase } from './useBase';
@@ -365,13 +365,11 @@ export default function useEvents(
 
         const eventObjects = res.events.map((e) => {
           const newEvent = new Event(e).localize();
-          const member = newEvent.junctions.get(source.id());
           return newEvent;
         }).sort(Events.sortByTime);
 
         for (const event of eventObjects) {
           try {
-            const member = event.junctions.get(source.id());
             theCalDays.add(event);
             eventsArray.push(event);
           }
