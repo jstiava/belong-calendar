@@ -99,7 +99,7 @@ const DataView = ({
   );
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
-  const [previewed, setPreviewed] = useState<Member | null>(Events.events[0]);
+  const [previewed, setPreviewed] = useState<Member | null>(Events.events && Events.events.length > 0 ? Events.events[0] : null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(true);
   const [peekDate, setPeekDate] = useState<Dayjs | null>(dayjs());
   const [weekOfPeekDate, setWeekOfPeekDate] = useState<Dayjs[] | null>(dayjs().startOf('week').getFrame(7));
@@ -530,13 +530,13 @@ const DataView = ({
         />
       </div>
 
-      <DataViewPreview
+      {source && <DataViewPreview
         source={source}
         previewed={previewed}
         handleCreate={handleCreate}
         isPreviewOpen={isPreviewOpen}
         setIsPreviewOpen={setIsPreviewOpen}
-      />
+      />}
 
 
     </div>
@@ -559,6 +559,9 @@ const DataViewPreview = ({
 
   const theme = useTheme();
   const router = useRouter();
+
+  const hasDataStore =
+    typeof (previewed as any).data_store === 'object' && (previewed as any).data_store !== null;
 
 
   if (!previewed) {
@@ -586,9 +589,9 @@ const DataViewPreview = ({
         {previewed && (
           <>
 
-            {previewed.cover_img && (
+            {'cover_img' in previewed && (previewed.cover_img) && (
               <BackgroundImage
-                url={`${MEDIA_BASE_URI}/${previewed.cover_img.path}`}
+                url={`${MEDIA_BASE_URI}/${(previewed.cover_img as any).path}`}
                 width={"100%"}
                 height="6rem"
                 style={{
@@ -671,19 +674,14 @@ const DataViewPreview = ({
                     </div>
                   </>
                 )}
-                {previewed.data_store && (
+                {hasDataStore && (
                   <div className="column compact">
-                    {Object.entries(previewed.data_store).map(([key, value]) => {
-
-                      return (
-                        <div className="flex between" key={key}>
-                          <Typography sx={{
-                            fontWeight: 700
-                          }}>{key}</Typography>
-                          <Typography>{value}</Typography>
-                        </div>
-                      )
-                    })}
+                    {Object.entries((previewed as any).data_store).map(([key, value]) => (
+                      <div className="flex between" key={key}>
+                        <Typography sx={{ fontWeight: 700 }}>{key}</Typography>
+                        <Typography>{String(value)}</Typography>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -724,7 +722,7 @@ const DataViewPreview = ({
                   variant='text'
                   size="large"
                   onClick={e => {
-                    window.open(previewed.link, '_blank')
+                    window.open(String(previewed.link), '_blank')
                   }}
                 >Open Link</Button>
               )}

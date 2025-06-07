@@ -73,7 +73,7 @@ function DayHeader({
   swap: any
 }) {
   const theme = useTheme();
-  const calDayRef = useRef<HTMLAnchorElement | null>(null);
+  const calDayRef = useRef<any | null>(null);
   const isPast = dayjs().isAfter(date, 'D');
 
 

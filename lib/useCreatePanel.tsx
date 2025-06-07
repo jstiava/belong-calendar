@@ -144,8 +144,8 @@ export default function useCreatePanel(
       const junction: Junction = j;
 
 
-      if (junction.external_child_events) {
-        for (const event of Object.values(junction.external_child_events)) {
+      if ((junction as any).external_child_events) {
+        for (const event of Object.values((junction as any).external_child_events)) {
           console.log(event);
           pendingActions.push(event);
         }

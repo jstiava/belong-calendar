@@ -268,6 +268,7 @@ const WeekView = ({
                     handleDayTimeClick={handleDayTimeClick}
                     swap={Events.swap}
                     source={source}
+                    Calendar={Calendar}
                   // replace={Events.update}
                   />
 
