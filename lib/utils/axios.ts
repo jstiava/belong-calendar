@@ -4,6 +4,7 @@ import axios from 'axios';
 
 const axiosInstance = axios.create({
   baseURL:
+    // process.env.NODE_ENV === 'production' ? String(process.env.NEXT_PUBLIC_BACKEND_URL_PROD) : 'http://192.168.1.92:3000/',
     process.env.NODE_ENV === 'production' ? String(process.env.NEXT_PUBLIC_BACKEND_URL_PROD) : 'http://localhost:3000/',
     // String(process.env.NEXT_PUBLIC_BACKEND_URL_PROD),
   timeout: 5000,
@@ -76,15 +77,6 @@ export enum API {
   REGISTER_PROFILE = 'api/v1/people/register',
   // profile
   SEARCH_PROFILES = 'api/v1/profile/search',
-  // series
-  GET_EVENTS_AND_SERIES = 'api/v1/series',
-  GET_SERIES = 'api/v1/series',
-  DELETE_SERIES = 'api/v1/series',
-  POST_SERIES = 'api/v1/series/create',
-  SEARCH_SERIES = 'api/v1/series/search',
-  SERIES_METADATA = 'api/v1/series/metadata',
-  UPDATE_SERIES = 'api/v1/series',
-  // session
   LOGIN = 'api/login',
   VERIFY_SESSION_TOKEN = '/api/v1/session/me',
   // certificates

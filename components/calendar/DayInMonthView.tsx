@@ -6,6 +6,7 @@ import {
   ButtonBase,
   Popover,
   CircularProgress,
+  useMediaQuery,
 } from '@mui/material';
 import React, {
   useState,
@@ -21,11 +22,12 @@ import { StartViewer } from '@/lib/global/useView';
 import { UseCalendar } from '@/lib/useCalendar';
 import { MultiDayEventBlock } from '../events/MultiDayEventBlock';
 import CalendarDayRendered from '@/lib/CalendarDayRendered';
-import { isMoment, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
+import { isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
 import CalendarDay from '@/lib/CalendarDay';
 import { StackedEventBlock } from '../events/StackedEventBlock';
 import { StackedMomentBlock } from '../events/StackedMomentBlock';
 import { StackedScheduleBlock } from '../events/StackedScheduleBlock';
+import { StackedSingleDayBlock } from '../events/StackedSingleDayBlock';
 
 
 function DayInMonthView({
@@ -77,6 +79,8 @@ function DayInMonthView({
   const isPast = dayjs().isAfter(date, 'D');
 
 
+
+  const isSm = useMediaQuery(theme.breakpoints.down('sm'));
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -95,7 +99,7 @@ function DayInMonthView({
 
     return () => observer.disconnect();
 
-  }, []);
+  }, [calDayRef.current]);
 
 
 
@@ -222,7 +226,15 @@ function DayInMonthView({
           margin: 0,
           height: "100%",
           // border: `0.05px solid ${theme.palette.divider}`,
-          backgroundColor: (source instanceof Event && (source.date && source.end_date)) ? (date.isAfter(source.date.add(-1, 'day'), 'd') && date.isBefore(source.end_date.add(1, 'day'), 'date')) ? 'transparent' : theme.palette.divider : 'transparent',
+          backgroundColor: (() => {
+            if (!(source instanceof Event)) return 'transparent';
+            if (!source.date || !source.end_date) return 'transparent';
+
+            const isWithinRange = date.isAfter(source.date.add(-1, 'day'), 'day') &&
+              date.isBefore(source.end_date.add(1, 'day'), 'day');
+
+            return isWithinRange ? 'transparent' : theme.palette.mode === 'dark' ? '#000' : 'whitesmoke';
+          })(),
           // opacity: isPast ? 0.5 : 1,
           ...style,
         }}
@@ -264,18 +276,16 @@ function DayInMonthView({
         )}
         <div className='flex compact2' style={{
           position: 'absolute',
-          top: `calc(0.1rem + calc(${calendarDayRendered.topOffset} * 1.525rem))`,
+          top: isSm ? "0" : `calc(0rem + calc(${calendarDayRendered.topOffset} * 1.525rem))`,
           left: "0",
           width: "100%"
         }}>
           <ButtonBase
             sx={{
               fontWeight: 700,
-              width: '1.75rem',
+              width: isSm ? "1.25rem" : '1.5rem',
+              height: isSm ? "1.25rem" : '1.5rem',
               textAlign: "center",
-              margin: "0 0.15rem",
-              height: "1.75rem",
-              // border: '1px solid',
               borderRadius: "0.15rem",
               borderColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
               backgroundColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
@@ -289,7 +299,7 @@ function DayInMonthView({
               Calendar.gotoStartOfWeek(date);
             }}
           ><Typography sx={{
-            fontSize: "0.85rem",
+            fontSize: isSm ? "0.65rem" : "0.85rem",
             fontWeight: 800
           }}>{date.format('D')}</Typography>
 
@@ -320,7 +330,7 @@ function DayInMonthView({
           style={{
             position: 'relative',
             height: "100%",
-            padding: "0.1rem 0",
+            padding: "0 0",
             width: "100%"
           }}
         >
@@ -332,7 +342,7 @@ function DayInMonthView({
               height: '100%',
               paddingLeft: "0rem",
               paddingRight: "0rem",
-              paddingTop: `calc(0.05rem + (${calendarDayRendered.stack.length} * 1.5rem))`,
+              paddingTop: `calc(0rem + (${calendarDayRendered.stack.length} * 1.5rem))`,
             }}>
 
             {/* {!reducedAllDayStack || reducedAllDayStack.length === 0 && (
@@ -368,8 +378,8 @@ function DayInMonthView({
                     style={{
                       position: "absolute",
                       top: `calc(${i} * 1.525rem)`,
-                      marginLeft: isLeftOffset ? "2rem" : "0.15rem",
-                      gutter: "-0.2rem",
+                      marginLeft: isLeftOffset ? "1.5rem" : "0rem",
+                      gutter: "0.5rem",
                     }}
                   />
                 )
@@ -432,6 +442,25 @@ function DayInMonthView({
                           handleSelect={handleSelect}
                           handleDragStart={handleDragStart}
                           isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                          swap={swap}
+                        />
+                      )
+                    }
+
+                    if (isAllSingleDay(event)) {
+                      return (
+                        <StackedSingleDayBlock
+                          key={`${event.id()}`}
+                          column={index}
+                          referenceTime={6}
+                          event={event}
+                          standardHeight={standardHeight}
+                          handleView={handleView}
+                          handleCreate={handleCreate}
+                          handleSelect={handleSelect}
+                          handleDragStart={handleDragStart}
+                          isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                          source={source}
                           swap={swap}
                         />
                       )

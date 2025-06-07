@@ -104,16 +104,26 @@ const CalendarPage = (props: AppPageProps) => {
 
 
     useEffect(() => {
+        if (!router.query.view) {
+            const tab = 'calendar';
+            router.replace({
+                pathname: `${`/me/`}${tab}`,
+                query: { ...router.query, view: 'month' }
+            })
+            return;
+        }
+
         if (router.query.view) {
             const view = router.query.view;
+
             if (view === 'month') {
-                Session.Calendar.goToStartOfMonth(dayjs())
+                Session.Calendar.goToStartOfMonth(dayjs().tz('America/Chicago'))
             }
             else if (view === 'week') {
-                Session.Calendar.gotoStartOfWeek(dayjs());
+                Session.Calendar.gotoStartOfWeek(dayjs().tz('America/Chicago'));
             }
             else if (view == 'day') {
-                Session.Calendar.gotoDate(dayjs());
+                Session.Calendar.gotoDate(dayjs().tz('America/Chicago'));
             }
         }
 
@@ -128,7 +138,7 @@ const CalendarPage = (props: AppPageProps) => {
     if (router.query.view === 'data') {
         return (
             <DataView
-                 Preferences={Session.Preferences}
+                Preferences={Session.Preferences}
                 source={Session.session}
                 Calendar={Session.Calendar}
                 handleCreate={Session.Creator.startCreator}
@@ -177,7 +187,7 @@ const CalendarPage = (props: AppPageProps) => {
                 source={Session.session}
                 Calendar={Session.Calendar}
                 handleCreate={Session.Creator.startCreator}
-                handleView={null}
+                handleView={Session.Viewer.handleOpenEventPopover}
                 days={Session.Events.days}
                 Events={Session.Events} selected={null} setSelected={function (value: SetStateAction<Event[] | null>): void {
                     throw new Error('Function not implemented.');

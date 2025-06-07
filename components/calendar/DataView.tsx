@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, CloseOutlined, EditOutlined } from '@mui/ico
 import {
   Avatar,
   Button,
+  ButtonBase,
   Checkbox,
   Chip,
   createTheme,
@@ -28,7 +29,7 @@ import { useSwipeable } from 'react-swipeable';
 import DayInMonthView from './DayInMonthView';
 import useViewEvent from '@/lib/global/useViewEvent';
 import Divider, { DIVIDER_NO_ALPHA_COLOR } from '../Divider';
-import { DataGrid, GridColDef, GridRenderCellParams, useGridApiRef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRenderCellParams, useGridApiContext, useGridApiRef, GRID_CHECKBOX_SELECTION_COL_DEF } from '@mui/x-data-grid';
 import { IAM } from 'aws-sdk';
 import StyledIconButton from '../StyledIconButton';
 import MonthView from './MonthView';
@@ -38,13 +39,21 @@ import { MEDIA_BASE_URI } from '@/lib/useComplexFileDrop';
 import Image from 'next/image';
 import BackgroundImage from '../Image';
 import { isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
+import { useRouter } from 'next/router';
 
-const CustomCheckbox = (props: any) => (
-  <Checkbox
-    {...props}
-    size="small"
-  />
-);
+const CustomCheckbox = (props: any) => {
+
+  const apiRef = useGridApiContext();
+  const isSelected = props.value;
+
+  return (
+    <div
+      {...props}
+      onClick={undefined}
+    // size="small"
+    />
+  )
+};
 
 const PREVIEW_SIZE = '30rem';
 
@@ -90,8 +99,8 @@ const DataView = ({
   );
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
-  const [previewed, setPreviewed] = useState<Member | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewed, setPreviewed] = useState<Member | null>(Events.events[0]);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(true);
   const [peekDate, setPeekDate] = useState<Dayjs | null>(dayjs());
   const [weekOfPeekDate, setWeekOfPeekDate] = useState<Dayjs[] | null>(dayjs().startOf('week').getFrame(7));
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
@@ -156,13 +165,26 @@ const DataView = ({
 
   const columns: GridColDef[] = [
     {
+      ...GRID_CHECKBOX_SELECTION_COL_DEF,
+      width: 50,
+      renderCell: (params) => {
+        return (
+          <div style={{
+            width: "100%",
+            height: '100%'
+          }}
+            onClick={e => {
+              const isSelected = apiRef.current.getSelectedRows().has(params.id);
+              apiRef.current.selectRow(params.id, !isSelected);
+            }}
+          ></div>
+        )
+      }
+    },
+    {
       field: 'name',
       headerName: 'Name',
       width: 300,
-      // sortComparator: nameAlphaComparator,
-      valueGetter: (value, row) => {
-        return row;
-      },
       renderCell: (params: GridRenderCellParams<Member, any>) => {
         const prefix = params.row instanceof Group ? 'be' : params.row instanceof Event ? 'event' : null;
         return (
@@ -209,6 +231,23 @@ const DataView = ({
         );
       },
     },
+    {
+      field: 'date',
+      headerName: 'Start',
+      width: 200,
+      renderCell: (params: GridRenderCellParams<Member, Dayjs>) => {
+
+        if (!params.value) {
+          return null;
+        }
+
+        if (params.row instanceof Event && !params.row.start_time) {
+          return params.value.format("MMM DD, YYYY")
+        }
+
+        return params.value.format("MMM DD, YYYY - h:mm A")
+      }
+    },
     ...Calendar.days.map((date) => ({
       field: String(date.yyyymmdd()),
       headerName: date.format("ddd, MMM DD"),
@@ -234,6 +273,23 @@ const DataView = ({
         </div>
       ),
       valueGetter: (value: any, row: Event) => {
+
+        if (isMoment(row)) {
+
+          if (row.date.isSame(date, 'd')) {
+            return {
+              type: 'moment',
+              date: row.date,
+              start_time: row.start_time
+            }
+          }
+
+          return {
+            type: 'moment',
+            date: null,
+            start_time: null
+          }
+        }
 
         if (isMoment(row) || isSingleTimeEvent(row)) {
           return {
@@ -269,6 +325,34 @@ const DataView = ({
           return null;
         }
 
+        if (params.value.type === 'moment') {
+
+          if (params.value.start_time) {
+            return (
+              <div className="flex left middle" style={{
+                width: '100%',
+                height: '100%'
+              }}>
+                <span style={{
+                  width: "100%",
+                  height: 'fit-content',
+                  textAlign: 'left',
+                  margin: "auto 0",
+                  lineHeight: '115%',
+                  whiteSpace: "normal",
+                  overflow: "clip",
+                  textOverflow: "ellipsis",
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 2,
+                }}>{params.value.start_time.print(true)}</span>
+              </div>
+            )
+          }
+
+          return null;
+        }
+
         if (params.value.type === 'multi_day') {
           return null;
         }
@@ -279,10 +363,19 @@ const DataView = ({
           }
 
           return (
-            <div className="flex left middle" style={{
-              width: '100%',
-              height: '100%'
-            }}>
+            <ButtonBase className="flex left middle"
+              onContextMenu={e => {
+                e.preventDefault();
+                handleView(Type.Event, params.row, {
+                  e,
+                  isRightClick: true,
+                  date
+                })
+              }}
+              style={{
+                width: '100%',
+                height: '100%'
+              }}>
               <span style={{
                 width: "100%",
                 height: 'fit-content',
@@ -296,7 +389,7 @@ const DataView = ({
                 WebkitBoxOrient: "vertical",
                 WebkitLineClamp: 2,
               }}>{params.value.hours.as_text}</span>
-            </div>
+            </ButtonBase>
           )
         }
 
@@ -411,7 +504,7 @@ const DataView = ({
           pageSizeOptions={[50, 100]}
           checkboxSelection
           slots={{
-            baseCheckbox: CustomCheckbox,
+            // baseCheckbox: CustomCheckbox,
             noRowsOverlay: CustomNoRowsOverlay,
           }}
           slotProps={{
@@ -438,6 +531,7 @@ const DataView = ({
       </div>
 
       <DataViewPreview
+        source={source}
         previewed={previewed}
         handleCreate={handleCreate}
         isPreviewOpen={isPreviewOpen}
@@ -453,15 +547,18 @@ export default DataView;
 
 
 const DataViewPreview = ({
-  previewed, handleCreate, isPreviewOpen, setIsPreviewOpen
+  previewed, handleCreate, isPreviewOpen, setIsPreviewOpen,
+  source
 }: {
   previewed: Member | null,
   handleCreate: any,
   isPreviewOpen: boolean,
-  setIsPreviewOpen: any
+  setIsPreviewOpen: any,
+  source: Member
 }) => {
 
   const theme = useTheme();
+  const router = useRouter();
 
 
   if (!previewed) {
@@ -481,7 +578,7 @@ const DataViewPreview = ({
     })}>
       <div className="column top" style={{
         position: 'relative',
-        margin: '1.5rem',
+
         width: PREVIEW_SIZE,
         height: 'calc(100% - 2rem)',
         display: isPreviewOpen ? 'flex' : 'none'
@@ -489,8 +586,22 @@ const DataViewPreview = ({
         {previewed && (
           <>
 
+            {previewed.cover_img && (
+              <BackgroundImage
+                url={`${MEDIA_BASE_URI}/${previewed.cover_img.path}`}
+                width={"100%"}
+                height="6rem"
+                style={{
+                  width: "100%",
+                  height: "30vh",
+                  backgroundPosition: 'center',
+                  backgroundSize: 'cover',
+                  backgroundRepeat: 'no-repeat'
+                }} />
+            )}
             <div className="column compact" style={{
-              position: 'relative'
+              position: 'relative',
+              margin: '1.5rem',
             }}>
               <div className="column compact">
                 {previewed.icon_img && (
@@ -518,11 +629,64 @@ const DataViewPreview = ({
                     backgroundRepeat: 'no-repeat'
                   }} />
               ) : (
-                <Typography variant="h4">{previewed.name}</Typography>
+                <Typography variant="h4"><span dangerouslySetInnerHTML={{ __html: previewed.name }} /></Typography>
               )}
               <Typography sx={{
                 textTransform: 'capitalize'
               }}>{previewed.type}</Typography>
+
+
+              <div className="column left">
+                <div className="flex between">
+                  <Typography sx={{
+                    fontWeight: 700
+                  }}>Unique ID</Typography>
+                  <Typography>{previewed.uuid}</Typography>
+                </div>
+                {previewed instanceof Event && (
+                  <>
+                    <div className="flex between">
+                      <Typography sx={{
+                        fontWeight: 700
+                      }}>Date</Typography>
+                      {previewed.date && <Typography>{previewed.date.format("ddd, MMM DD, YYYY")}</Typography>}
+                    </div>
+                    <div className="flex between">
+                      <Typography sx={{
+                        fontWeight: 700
+                      }}>Start Time</Typography>
+                      {previewed.start_time && <Typography>{previewed.start_time.print()}</Typography>}
+                    </div>
+                    <div className="flex between">
+                      <Typography sx={{
+                        fontWeight: 700
+                      }}>End Date</Typography>
+                      {previewed.end_date && <Typography>{previewed.end_date.format("ddd, MMM DD, YYYY")}</Typography>}
+                    </div>
+                    <div className="flex between">
+                      <Typography sx={{
+                        fontWeight: 700
+                      }}>End Time</Typography>
+                      {previewed.end_time && <Typography>{previewed.end_time.print()}</Typography>}
+                    </div>
+                  </>
+                )}
+                {previewed.data_store && (
+                  <div className="column compact">
+                    {Object.entries(previewed.data_store).map(([key, value]) => {
+
+                      return (
+                        <div className="flex between" key={key}>
+                          <Typography sx={{
+                            fontWeight: 700
+                          }}>{key}</Typography>
+                          <Typography>{value}</Typography>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
 
               <div className="flex compact2 right" style={{
                 position: 'absolute',
@@ -552,7 +716,35 @@ const DataViewPreview = ({
               position: 'absolute',
               bottom: "1rem",
               width: '100%',
+              padding: "1.5rem"
             }}>
+              {previewed instanceof Event && previewed.link && (
+                <Button
+                  fullWidth
+                  variant='text'
+                  size="large"
+                  onClick={e => {
+                    window.open(previewed.link, '_blank')
+                  }}
+                >Open Link</Button>
+              )}
+              <Button
+                fullWidth
+                variant='contained'
+                size="large"
+                onClick={e => {
+                  const pathParts = router.pathname.split('/');
+                  const currentTab = pathParts[3];
+                  const { base, module, ...rest } = router.query;
+                  router.push({
+                    pathname: `${router.asPath.startsWith('/me') ? '/me/' : '/be/'}${previewed.id()}${currentTab ? `/${currentTab}` : ``}`,
+                    query: {
+                      ...rest,
+                      base: source?.id()
+                    }
+                  })
+                }}
+              >Open In Full</Button>
               <Button
                 fullWidth
                 variant='contained'

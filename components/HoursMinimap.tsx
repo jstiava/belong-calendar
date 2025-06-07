@@ -104,7 +104,12 @@ function HoursBox({
         return 0;
     }
 
-    const onMouseDown = (e : any, handle : string) => {
+    const onTouchMove = (e: TouchEvent) => {
+        const touch = e.touches[0];
+        onMouseMove(touch)
+    }
+
+    const onMouseDown = (e: any, handle: string) => {
 
         if (!boxRef.current) {
             return;
@@ -119,9 +124,13 @@ function HoursBox({
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('touchmove', onTouchMove);
+        document.addEventListener('touchend', onMouseUp);
+
     };
 
-    const onMouseMove = (e : any) => {
+
+    const onMouseMove = (e: any) => {
         if (!isDraggingRef.current || !boxRef.current || !labelsRef.current) return;
 
         if (isDraggingTop.current) {
@@ -170,6 +179,8 @@ function HoursBox({
         setIsDragging(false)
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onMouseUp);
 
         if (!labelsRef.current) {
             return;
@@ -226,7 +237,7 @@ function HoursBox({
             {isDragging && labelsRef.current && (
                 <>
                     <Popper
-                    disablePortal
+                        disablePortal
                         open={true}
                         anchorEl={boxRef.current}
                         placement="top"
@@ -244,7 +255,7 @@ function HoursBox({
                         }}>{labelsRef.current.start.print()}</Typography>
                     </Popper>
                     <Popper
-                    disablePortal
+                        disablePortal
                         open={true}
                         anchorEl={boxRef.current}
                         placement="bottom"
@@ -290,6 +301,10 @@ function HoursBox({
                 )}
                 <div
                     onMouseDown={(e) => onMouseDown(e, 'top')}
+                    onTouchStart={(e) => {
+                        const touch = e.touches[0];
+                        onMouseDown(touch, 'top')
+                    }}
                     className="flex center middle snug"
                     style={{
                         position: "absolute",
@@ -310,6 +325,10 @@ function HoursBox({
                 </div>
                 <div
                     onMouseDown={(e) => onMouseDown(e, 'bottom')}
+                    onTouchStart={(e) => {
+                        const touch = e.touches[0];
+                        onMouseDown(touch, 'bottom')
+                    }}
                     className="flex center middle snug"
                     style={{
                         position: "absolute",
@@ -545,6 +564,21 @@ export default function HoursMinimap({
             <div className="column" style={{
                 padding: '1rem 0'
             }}>
+
+                <TextField
+                    onChange={(e) => {
+                        if (onChange) {
+                            const copy = schedule.eject();
+                            copy.name = e.target.value;
+                            onChange(new Schedule(copy))
+                        }
+                    }}
+                    fullWidth
+                    label="Name"
+                    value={schedule.name}
+                    variant="standard"
+                    size="small"
+                />
                 <div className="flex compact">
                     <StyledDatePicker
                         value={schedule.start_date}
@@ -555,7 +589,7 @@ export default function HoursMinimap({
                                 onChange(new Schedule(copy))
                             }
                         }}
-                        mode={'dark'}
+                        mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
                         label={'Date'}
                         key="event_startDate"
                     />
@@ -568,10 +602,10 @@ export default function HoursMinimap({
                                 onChange(new Schedule(copy))
                             }
                         }}
-                        mode={'dark'}
+                        mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
                         label={'End Date'}
                         key="event_endDate"
-                        
+
                     />
                 </div>
                 <div className="flex top compact">

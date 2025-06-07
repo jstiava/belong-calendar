@@ -459,7 +459,15 @@ export class Hours {
     return value;
   }
 
-  isOpenWithContext(hour: Chronos): { isOpen: boolean, context: string } {
+  isOpenWithContext(hour?: Chronos): { isOpen: boolean, context: string } {
+
+    if (!hour) {
+      return {
+        isOpen: true,
+        context: this.as_text
+      }
+    }
+    
     if (hour.isBefore(this.min)) {
       return {
         isOpen: false,

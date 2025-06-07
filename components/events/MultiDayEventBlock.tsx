@@ -57,21 +57,29 @@ export const MultiDayEventBlock = ({
 
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
+  const [width, setWidth] = useState<string | null>(null);
+
   const formatWidth = () => {
     if (!DayInMonthRef.current) return;
 
     const offsetWidth = DayInMonthRef.current.offsetWidth;
 
-    const length = event.end_date.diff(date, "d");
+    const length = event.end_date.diff(date, "day");
     const toEndOfWeek = 6 - column;
 
     if (toEndOfWeek === 0) {
       return `calc(${offsetWidth}px - 0.5rem)`;
     }
 
+    if (length === 0) {
+      return `calc(${offsetWidth}px - calc(${style.marginLeft} - calc(${style.gutter} * -0.25)))`
+    }
+
     if (length < toEndOfWeek) {
       return `calc( calc(${offsetWidth}px * ${length + 1}) - ${style.marginLeft} + calc(${style.gutter}))`;
     }
+
+    return `calc( calc(${offsetWidth}px * ${toEndOfWeek + 1}) - ${style.marginLeft})`;
 
     return `calc(calc(2.5px * ${toEndOfWeek}) + (${offsetWidth}px * ${toEndOfWeek + 1}) - ${style.marginLeft} + calc(${style.gutter} * 8))`;
   };
@@ -101,6 +109,26 @@ export const MultiDayEventBlock = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source]);
 
+  useEffect(() => {
+
+    const handleResize = () => {
+      const newWidth = formatWidth();
+      if (newWidth) {
+        setWidth(newWidth);
+      }
+    };
+
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+
+  }, [DayInMonthRef]);
+
   const handleClick = (e: MouseEvent) => {
     e.stopPropagation();
     console.log(e)
@@ -114,7 +142,7 @@ export const MultiDayEventBlock = ({
       return;
     }
 
-    handleView(Type.Event, event, { e });
+    handleView(Type.Event, event, { e, date });
   };
 
   const handleRightClick = (e: any) => {
@@ -141,7 +169,6 @@ export const MultiDayEventBlock = ({
 
   return (
     <>
-
       <ButtonBase
         disableRipple
         data-type="eventButton"
@@ -158,19 +185,19 @@ export const MultiDayEventBlock = ({
           alignItems: "center",
           zIndex: 2,
           left: 0,
-          width: formatWidth(),
+          width,
           textAlign: 'left',
           fontFamily: 'inherit',
           overflow: 'hidden',
           borderRadius: '0.25rem',
-          backgroundColor: isMember ? event.theme_color ? alpha(event.theme_color, 0.65) : theme.palette.primary.main : theme.palette.primary.main,
-          color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText : theme.palette.primary.contrastText,
+          backgroundColor: isMember ? event.theme_color ? alpha(event.theme_color, 0.65) : theme.palette.primary.main : event.theme_color,
+          color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText : event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText,
           border: '3px solid transparent',
           padding: '0 0.25rem',
-          height: "1.75rem",
-          boxShadow: isHovered
-            ? 'rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;'
-            : 'rgba(0, 0, 0, 0.05) 0px 3px 6px, rgba(0, 0, 0, 0.1) 0px 3px 6px;',
+          height: "1.5rem",
+          // boxShadow: isHovered
+          //   ? 'rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;'
+          //   : 'rgba(0, 0, 0, 0.05) 0px 3px 6px, rgba(0, 0, 0, 0.1) 0px 3px 6px;',
           transition: '0.2s ease-in-out',
           ...style
         }}

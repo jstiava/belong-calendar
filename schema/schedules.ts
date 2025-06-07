@@ -449,7 +449,7 @@ export class Schedule implements Member {
         return hoursOfDay.to_string();
     }
 
-    isOpenWithContext(day: string | number = dayjs().day(), time: Chronos = new Chronos()): { isOpen: boolean, context: string } {
+    isOpenWithContext(day: string | number = dayjs().day(), time?: Chronos): { isOpen: boolean, context: string } {
         let pointer = null;
 
         if (typeof day === "string") {
@@ -466,7 +466,7 @@ export class Schedule implements Member {
             };
         }
         // Evaluate prev date overlap
-        if (time.getAMP() === 'AM') {
+        if (time && time.getAMP() === 'AM') {
             const yesturdayPointer = pointer === 0 ? 7 : pointer - 1;
             const hoursOfYesturdayPointer = this.days[yesturdayPointer];
             if (hoursOfYesturdayPointer > 1) {

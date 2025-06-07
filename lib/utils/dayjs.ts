@@ -14,6 +14,7 @@ dayjs.extend(timezone);
 dayjs.extend(isoWeek);
 dayjs.extend(isBetween);
 dayjs.extend(advancedFormat);
+dayjs.tz.setDefault('America/Chicago');
 
 
 declare module 'dayjs' {
@@ -129,8 +130,8 @@ dayjs.prototype.asNumber = function () {
 }
 
 dayjs.prototype.toChronos = function () {
-  const hour = this.utc().hour();
-  const minute = this.utc().minute();
+  const hour = this.hour();
+  const minute = this.minute();
   return new Chronos(hour + minute / 60);
 }
 
@@ -237,6 +238,8 @@ dayjs.prototype.duration = function (other: Dayjs | null | undefined, condesced 
 
   return result;
 }
+
+
 
 
 export default dayjs;

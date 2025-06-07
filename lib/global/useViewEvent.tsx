@@ -48,6 +48,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MEDIA_BASE_URI } from '../useComplexFileDrop';
 import { BackgroundImageGallery, PortraitImage } from '@/components/Image';
 import { isSingleTimeEvent } from '../CalendarDays';
+import HoursMinimap from '@/components/HoursMinimap';
 
 
 export default function useViewEvent(
@@ -64,8 +65,12 @@ export default function useViewEvent(
   const [isRightClick, setIsRightClick] = useState(false);
   const [isOpenDetailed, setIsOpenDetailed] = useState<{ date: Dayjs, hours: Hours | boolean | null, schedule: Schedule | null, isOpen: boolean, context: string, regular: Schedule | null, lateNight: boolean } | null>(null);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [scheduleAnchorEl, setScheduleAnchorEl] = useState<HTMLButtonElement | null>(null);
   const isDialogOpen = Boolean(anchorEl);
+  const isScheduleOpen = Boolean(scheduleAnchorEl);
   const [member, setMember] = useState<any>(null);
+
+  const [schedule, setSchedule] = useState<any | null>(null);
 
   const [quickScheduleTools, setQuickScheduleTools] = useState<null | {
     active: Schedule | null,
@@ -77,7 +82,7 @@ export default function useViewEvent(
 
   const isSM = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const getCloseEarlySuggestedValue = (selected : any) => {
+  const getCloseEarlySuggestedValue = (selected: any) => {
     try {
       const hours = selected.active.getHours(selected.date.day(), new Chronos(12));
       if (typeof hours === 'boolean') {
@@ -90,7 +95,7 @@ export default function useViewEvent(
     }
   }
 
-  const setDayToRegularHours = async (e : any, s: {
+  const setDayToRegularHours = async (e: any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
@@ -148,7 +153,7 @@ export default function useViewEvent(
     return;
   }
 
-  const addSchedule = async (e : any, s: {
+  const addSchedule = async (e: any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
@@ -167,23 +172,20 @@ export default function useViewEvent(
 
     await MemberFactory.login(theEvent, source);
 
-    startCreator(Type.Schedule, Mode.Create, new Schedule({
+    const target = e.currentTarget || e.target;
+    setScheduleAnchorEl(target)
+    setSchedule(new Schedule({
       ...s.active ? s.active.eject() : {},
       uuid: String(uuidv4()),
       name: "New Schedule",
       start_date: s.date.yyyymmdd(),
       end_date: s.date.yyyymmdd(),
       schedule_type: ScheduleType.Special,
-    }), {
-      callback: (sch: ScheduleData) => {
-        const newObject = new Schedule(sch, true);
-        theEvent.pushSchedule(newObject);
-        Events.update(theEvent.eject());
-      }
     })
+    );
   }
 
-  const editSchedule = async (e : any, s: {
+  const editSchedule = async (e: any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
@@ -214,7 +216,7 @@ export default function useViewEvent(
     return;
   }
 
-  const commitCloseEarly = async (e : any, s: {
+  const commitCloseEarly = async (e: any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
@@ -277,7 +279,7 @@ export default function useViewEvent(
     return;
   }
 
-  const commitCloseAllDay = async (e : any, s: {
+  const commitCloseAllDay = async (e: any, s: {
     active: Schedule | null,
     schedules: Schedule[],
     date: Dayjs,
@@ -333,8 +335,10 @@ export default function useViewEvent(
     setAnchorEl(null);
     document.body.removeEventListener('wheel', handleCloseEvent);
     document.body.removeEventListener('touchstart', handleCloseEvent, false);
+    setScheduleAnchorEl(null);
     return;
   };
+
 
   useEffect(() => {
     const handleKeyDown = (e: any) => {
@@ -372,332 +376,281 @@ export default function useViewEvent(
     return;
   };
 
-
-  const tempTheme: Theme = createTheme({
-    ...theme,
-    palette: {
-      ...theme.palette,
-      primary: {
-        ...theme.palette.primary,
-        main: event && event.theme_color ? getContrastRatio(event.theme_color, theme.palette.background.paper) > 4.5 ? event.theme_color : adjustForContrast(event.theme_color, 0.8, true) : theme.palette.text.primary,
-        light: event && event.theme_color ? lighten(event.theme_color, 0.9) : theme.palette.primary.light,
-        dark: event && event.theme_color ? darken(event.theme_color, 0.1) : theme.palette.primary.dark,
-        contrastText: event && event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText
-      },
-    },
-    components: {
-      ...theme.components,
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            textTransform: 'capitalize',
-            variants: [
-              {
-                props: { variant: "flipped" },
-                style: {
-                  '&:hover': {
-                    backgroundColor: event && event.theme_color ? darken(theme.palette.getContrastText(event.theme_color), 0.1) : "unset",
-                  },
-                  backgroundColor: event && event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText,
-                  color: event && event.theme_color || theme.palette.primary.main,
-                  '&[disabled]': {
-                    backgroundColor: theme.palette.action.disabledBackground,
-                    color: theme.palette.action.disabled,
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.disabledBackground
-                    },
-                  },
-                }
-              },
-              {
-                props: { variant: "outlined_flipped" },
-                style: {
-                  border: "1px solid",
-                  borderColor: event && event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText,
-                  color: event && event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.main,
-                }
-              },
-            ]
-          }
-        },
-      }
-    }
-  })
-
-  const warningColor = event && event.theme_color ? getContrastRatio("#FFD700", event.theme_color) > 4.5 ? "#FFD700" : tempTheme.palette.primary.contrastText : tempTheme.palette.primary.contrastText;
+  const warningColor = event && event.theme_color ? getContrastRatio("#FFD700", event.theme_color) > 4.5 ? "#FFD700" : theme.palette.primary.contrastText : theme.palette.primary.contrastText;
 
   const EventDialog = (
     <>
-      <ThemeProvider theme={tempTheme}>
-        <Box className="column snug" sx={{ padding: 0, cursor: "pointer" }}
-          onClick={(e) => {
-            e.preventDefault();
-            handleCloseEvent();
-            event && router.push(`/event/${event.id()}?base=${router.query.base}`);
-          }}>
+      <Box className="column snug" sx={{ padding: 0, cursor: "pointer" }}
+        onClick={(e) => {
+          e.preventDefault();
+          handleCloseEvent();
+          event && router.push(`/event/${event.id()}?base=${router.query.base}`);
+        }}>
 
-          {event && event.cover_img && (
-            <div className="flex snug"
-              style={{
-                position: "relative",
-                height: "10rem",
-                backgroundColor: '#ffffff25'
-              }}
-            >
-              {event.icon_img ? (
+        {event && event.cover_img && (
+          <div className="flex snug"
+            style={{
+              position: "relative",
+              height: "10rem",
+              backgroundColor: '#ffffff25'
+            }}
+          >
+            {event.icon_img ? (
+              <PortraitImage
+                path={`${MEDIA_BASE_URI}/${event.icon_img.path}`}
+                diameter="4rem"
+                style={{
+                  position: "absolute",
+                  right: "1rem",
+                  bottom: "-2rem",
+                  backgroundColor: event.theme_color || "black",
+                  zIndex: 5
+                }}
+              />
+            ) : (
+              <></>
+              // <EventOutlined fontSize='large' sx={{ marginTop: "0.2rem" }} />
+            )}
+            <BackgroundImageGallery
+              base={`${MEDIA_BASE_URI}`}
+              keys={event.cover_img ? [event.getCoverImageLink() || ''] : event.metadata.files || []}
+              width="100%"
+              height="10rem"
+            />
+          </div>
+        )}
+        <div className="column" style={{
+          padding: "1.5rem"
+        }}>
+
+          <div className="column snug">
+
+
+            <div className="flex between">
+
+              <div style={{ display: 'inline' }}>
+                <Link variant="h5" component="h2"
+                  className="hover-underline"
+                  sx={{
+                    display: 'inline',
+                    backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${theme.palette.primary.contrastText}, ${theme.palette.primary.contrastText})`,
+                    textDecoration: `none`,
+                    backgroundSize: `100% 0.15rem, 0 0.15rem`,
+                    backgroundPosition: `100% 100%,0 100%`,
+                    backgroundRepeat: `no-repeat`,
+                    transition: `background-size .3s`,
+                    color: 'inherit',
+                    cursor: "pointer",
+                    whiteSpace: "pre-wrap",
+                    fontWeight: 700,
+                    textAlign: 'left',
+                    lineHeight: '115%',
+                    fontSize: "1.25rem"
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCloseEvent();
+                    const currentQuery = router.query;
+
+                    const pathParts = router.pathname.split('/');
+                    const currentTab = pathParts[3];
+                    const { base, module, ...rest } = router.query;
+                    if (event) {
+                      router.push({
+                        pathname: `${router.asPath.startsWith('/me') ? '/me/' : '/be/'}${event.id()}${currentTab ? `/${currentTab}` : ``}`,
+                        query: {
+                          ...rest,
+                          base: source?.id()
+                        }
+                      })
+                    }
+                  }}>
+
+                  {event && <span dangerouslySetInnerHTML={{ __html: event.name }} />}
+                </Link>
+              </div>
+              {event && (event.icon_img && !event.cover_img) ? (
                 <PortraitImage
                   path={`${MEDIA_BASE_URI}/${event.icon_img.path}`}
                   diameter="4rem"
                   style={{
-                    position: "absolute",
-                    right: "1rem",
-                    bottom: "-2rem",
                     backgroundColor: event.theme_color || "black",
                     zIndex: 5
                   }}
                 />
               ) : (
                 <></>
-                // <EventOutlined fontSize='large' sx={{ marginTop: "0.2rem" }} />
               )}
-              <BackgroundImageGallery
-                base={`${MEDIA_BASE_URI}`}
-                keys={event.cover_img ? [event.getCoverImageLink() || ''] : event.metadata.files || []}
-                width="100%"
-                height="10rem"
-              />
             </div>
-          )}
-          <div className="column" style={{
-            padding: "1.5rem"
-          }}>
-
-            <div className="column snug">
-
-
-              <div className="flex between">
-
-                <div style={{ display: 'inline' }}>
-                  <Link variant="h5" component="h2"
-                    className="hover-underline"
-                    sx={{
-                      display: 'inline',
-                      backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${tempTheme.palette.primary.contrastText}, ${tempTheme.palette.primary.contrastText})`,
-                      textDecoration: `none`,
-                      backgroundSize: `100% 0.15rem, 0 0.15rem`,
-                      backgroundPosition: `100% 100%,0 100%`,
-                      backgroundRepeat: `no-repeat`,
-                      transition: `background-size .3s`,
-                      color: 'inherit',
-                      cursor: "pointer",
-                      whiteSpace: "pre-wrap",
-                      fontWeight: 700,
-                      textAlign: 'left',
-                      lineHeight: '115%',
-                      fontSize: "1.25rem"
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCloseEvent();
-                      const currentQuery = router.query;
-
-                      const pathParts = router.pathname.split('/');
-                      const currentTab = pathParts[3];
-                      const { base, module, ...rest } = router.query;
-                      if (event) {
-                        router.push({
-                          pathname: `${router.asPath.startsWith('/me') ? '/me/' : '/be/'}${event.id()}${currentTab ? `/${currentTab}` : ``}`,
-                          query: {
-                            ...rest,
-                            base: source?.id()
-                          }
-                        })
-                      }
-                    }}>
-                      
-                    {event && <span dangerouslySetInnerHTML={{ __html: event.name }} />}
-                  </Link>
+            {event && event.subtitle && <Typography variant="caption">{event.subtitle}</Typography>}
+          </div>
+          {event && (
+            <div className="column">
+              {event.date && event.end_date && (
+                <div className="column compact">
+                  <div className="flex compact">
+                    <CalendarMonthOutlined fontSize="small" />
+                    <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.date.to(event.end_date)}</Typography>
+                  </div>
                 </div>
-                {event && (event.icon_img && !event.cover_img) ? (
-                  <PortraitImage
-                    path={`${MEDIA_BASE_URI}/${event.icon_img.path}`}
-                    diameter="4rem"
-                    style={{
-                      backgroundColor: event.theme_color || "black",
-                      zIndex: 5
-                    }}
-                  />
-                ) : (
-                  <></>
-                )}
-              </div>
-              {event && event.subtitle && <Typography variant="caption">{event.subtitle}</Typography>}
-            </div>
-            {event && (
-              <div className="column">
-                {event.date && event.end_date && (
-                  <div className="column compact">
-                    <div className="flex compact">
+              )}
+
+              {isOpenDetailed && isOpenDetailed.schedule && (
+
+                <>
+                  {isOpenDetailed.schedule.getActiveDaysPerWeek() > 3 ? (
+
+                    <>
+                      <div className="column compact" style={{ width: "100%", color: isOpenDetailed.schedule.isNotRegular() ? warningColor : 'inherit' }}>
+                        <div className="flex compact" style={{ color: isOpenDetailed.schedule.isNotRegular() ? warningColor : 'inherit' }}>
+                          <ScheduleOutlined fontSize="small" />
+                          <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{isOpenDetailed.date.format("ddd")} <span style={{ opacity: 0.75 }}>&middot; {isOpenDetailed.hours && isOpenDetailed.hours instanceof Hours ? isOpenDetailed.hours.as_text : isOpenDetailed.hours ? "Open" : "Closed"}{isOpenDetailed.schedule.isNotRegular() && <> &middot; {isOpenDetailed.schedule.name}</>}</span></Typography>
+                        </div>
+                      </div>
+                    </>
+
+                  ) : (
+                    <div className="div flex compact">
+                      <ScheduleOutlined fontSize="small" />
+                      <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{isOpenDetailed.schedule.as_text} </Typography>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {event && isSingleTimeEvent(event) && (
+                <div className="column compact">
+                  <div className="flex">
+                    <div className="flex compact fit">
                       <CalendarMonthOutlined fontSize="small" />
                       <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.date.to(event.end_date)}</Typography>
                     </div>
-                  </div>
-                )}
-
-                {isOpenDetailed && isOpenDetailed.schedule && (
-
-                  <>
-                    {isOpenDetailed.schedule.getActiveDaysPerWeek() > 3 ? (
-
-                      <>
-                        <div className="column compact" style={{ width: "100%", color: isOpenDetailed.schedule.isNotRegular() ? warningColor : 'inherit' }}>
-                          <div className="flex compact" style={{ color: isOpenDetailed.schedule.isNotRegular() ? warningColor : 'inherit' }}>
-                            <ScheduleOutlined fontSize="small" />
-                            <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{isOpenDetailed.date.format("ddd")} <span style={{ opacity: 0.75 }}>&middot; {isOpenDetailed.hours && isOpenDetailed.hours instanceof Hours ? isOpenDetailed.hours.as_text : isOpenDetailed.hours ? "Open" : "Closed"}{isOpenDetailed.schedule.isNotRegular() && <> &middot; {isOpenDetailed.schedule.name}</>}</span></Typography>
-                          </div>
-                        </div>
-                      </>
-
-                    ) : (
-                      <div className="div flex compact">
-                        <ScheduleOutlined fontSize="small" />
-                        <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{isOpenDetailed.schedule.as_text} </Typography>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {event && isSingleTimeEvent(event) && (
-                  <div className="column compact">
-                    <div className="flex">
-                      <div className="flex compact fit">
-                        <CalendarMonthOutlined fontSize="small" />
-                        <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.date.to(event.end_date)}</Typography>
-                      </div>
-                      <div className="flex compact fit">
-                        <ScheduleOutlined fontSize="small" />
-                        <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.start_time.to(event.end_time)}</Typography>
-                      </div>
+                    <div className="flex compact fit">
+                      <ScheduleOutlined fontSize="small" />
+                      <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.start_time.to(event.end_time)}</Typography>
                     </div>
                   </div>
-                )}
-
-
-
-                {event.location_name ? (
-                  <>
-                    <div className="column compact">
-                      <div className="flex between">
-                        <div className="flex compact top">
-                          <LocationOnOutlined fontSize="small" />
-                          <div className="column snug">
-                            <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.location_name}</Typography>
-                            <Typography sx={{ fontWeight: "normal", fontSize: "0.85rem" }}>{event.location_address}</Typography>
-                          </div>
-                        </div>
-                        <IconButton sx={{ color: "inherit" }} onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(`https://www.google.com/maps/place/?q=place_id:${event.location_place_id}`, "_blank")
-                        }}>
-                          <LinkOutlined />
-                        </IconButton>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-
-                  </>
-                )}
-              </div>
-            )}
-
-            {(event && event.children) && event.children.some(e => e.link) && (
-              (() => {
-                const theLink = event.children.find(e => e.link != null);
-
-                if (!theLink || !theLink.link) {
-                  return null;
-                }
-
-                return (
-                  <Button
-                    variant={'flipped'}
-                    size="large"
-                    sx={{
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      height: "2.75rem"
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(String(theLink.link), '_blank')
-                    }}
-                  >
-                    {theLink.name}
-                  </Button>
-                )
-              })()
-            )}
-            <div
-              className="flex between"
-              style={{
-                padding: "0.5rem 0",
-              }}>
-              {source && (
-                <>
-                  <Button
-                    size='small'
-                    sx={{ padding: "0", fontSize: "0.9375rem", color: 'inherit' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditEventRequest()
-                    }}
-                    startIcon={<EditOutlined />}
-                  >
-                    Edit
-                  </Button>
-
-                  <Button
-                    size='small'
-                    sx={{ padding: "0", fontSize: "0.9375rem", color: 'inherit' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsRightClick(true);
-                    }}
-                    startIcon={<MoreOutlined />}
-                  >
-                    More
-                  </Button>
-                </>
-              )}
-              {(event && source) && event.junctions.has(source.id()) && event.junctions.get(source.id())?.status != JunctionStatus.Accepted && (
-                <div className="column compact" style={{ margin: "0.5rem 0" }}>
-                  <Button size="small" variant="flipped" onClick={async (e) => {
-                    e.stopPropagation();
-                    event.updateHost(source, {
-                      status: JunctionStatus.Accepted
-                    })
-                      .then(newEvent => {
-                        setEvent(newEvent);
-                        Events.swap(newEvent);
-                      })
-                      .catch(() => {
-                        return;
-                      })
-                  }}>Accept</Button>
                 </div>
               )}
+
+
+
+              {event.location_name ? (
+                <>
+                  <div className="column compact">
+                    <div className="flex between">
+                      <div className="flex compact top">
+                        <LocationOnOutlined fontSize="small" />
+                        <div className="column snug">
+                          <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.location_name}</Typography>
+                          <Typography sx={{ fontWeight: "normal", fontSize: "0.85rem" }}>{event.location_address}</Typography>
+                        </div>
+                      </div>
+                      <IconButton sx={{ color: "inherit" }} onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`https://www.google.com/maps/place/?q=place_id:${event.location_place_id}`, "_blank")
+                      }}>
+                        <LinkOutlined />
+                      </IconButton>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+
+                </>
+              )}
             </div>
+          )}
+
+          {(event && event.children) && event.children.some(e => e.link) && (
+            (() => {
+              const theLink = event.children.find(e => e.link != null);
+
+              if (!theLink || !theLink.link) {
+                return null;
+              }
+
+              return (
+                <Button
+                  variant={'flipped'}
+                  size="large"
+                  sx={{
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    height: "2.75rem"
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(String(theLink.link), '_blank')
+                  }}
+                >
+                  {theLink.name}
+                </Button>
+              )
+            })()
+          )}
+          <div
+            className="flex between"
+            style={{
+              padding: "0.5rem 0",
+            }}>
+            {source && (
+              <>
+                <Button
+                  size='small'
+                  sx={{ padding: "0", fontSize: "0.9375rem", color: 'inherit' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditEventRequest()
+                  }}
+                  startIcon={<EditOutlined />}
+                >
+                  Edit
+                </Button>
+
+                <Button
+                  size='small'
+                  sx={{ padding: "0", fontSize: "0.9375rem", color: 'inherit' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsRightClick(true);
+                  }}
+                  startIcon={<MoreOutlined />}
+                >
+                  More
+                </Button>
+              </>
+            )}
+            {(event && source) && event.junctions.has(source.id()) && event.junctions.get(source.id())?.status != JunctionStatus.Accepted && (
+              <div className="column compact" style={{ margin: "0.5rem 0" }}>
+                <Button size="small" variant="flipped" onClick={async (e) => {
+                  e.stopPropagation();
+                  event.updateHost(source, {
+                    status: JunctionStatus.Accepted
+                  })
+                    .then(newEvent => {
+                      setEvent(newEvent);
+                      Events.swap(newEvent);
+                    })
+                    .catch(() => {
+                      return;
+                    })
+                }}>Accept</Button>
+              </div>
+            )}
           </div>
-        </Box>
-      </ThemeProvider>
+        </div>
+      </Box>
     </>
   );
 
   const EventContextMenu = (
-    <ThemeProvider theme={tempTheme}>
-      <div className="column snug">
+
+    <>
+      <div className="column snug" style={{
+        color: theme.palette.text.primary
+      }}>
 
         <Button
           onClick={async () => {
@@ -745,7 +698,7 @@ export default function useViewEvent(
                     })
                   handleCloseEvent();
                 }}
-                sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }} variant="text" startIcon={<VisibilityOutlined />}>Show on Calendar</Button>
+                sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem", color: theme.palette.text.primary }} variant="text" startIcon={<VisibilityOutlined />}>Show on Calendar</Button>
             )}
           </>
         )}
@@ -757,17 +710,20 @@ export default function useViewEvent(
               handleCloseEvent();
               setDayToRegularHours(e, quickScheduleTools);
             }}
-            sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }} variant="text" startIcon={<UpdateOutlined />}>Set to Regular Hours</Button>
+            sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem", color: theme.palette.text.primary }} variant="text" startIcon={<UpdateOutlined />}>Set to Regular Hours</Button>
         )}
 
         {event && quickScheduleTools && !event.date && (
 
-          <Button
-            onClick={async (e) => {
-              handleCloseEvent();
-              addSchedule(e, quickScheduleTools);
-            }}
-            sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }} variant="text" startIcon={<AddOutlined />}>Add Schedule</Button>
+          <>
+
+            <Button
+              onClick={async (e) => {
+                // handleCloseEvent();
+                addSchedule(e, quickScheduleTools);
+              }}
+              sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem", color: theme.palette.text.primary }} variant="text" startIcon={<AddOutlined />}>Add Schedule</Button>
+          </>
         )}
 
         {quickScheduleTools && quickScheduleTools.active && (
@@ -777,7 +733,7 @@ export default function useViewEvent(
               handleCloseEvent();
               editSchedule(e, quickScheduleTools);
             }}
-            sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }} variant="text" startIcon={<EditOutlined />}>Edit "{quickScheduleTools.active.name}"</Button>
+            sx={{ color: theme.palette.text.primary, justifyContent: "flex-start", padding: "0.5rem 1rem" }} variant="text" startIcon={<EditOutlined />}>Edit "{quickScheduleTools.active.name}"</Button>
         )}
 
         {quickScheduleTools && quickScheduleTools.active && quickScheduleTools.date && quickScheduleTools.closeEarly && (
@@ -828,7 +784,7 @@ export default function useViewEvent(
               handleCloseEvent();
               await commitCloseAllDay(e, quickScheduleTools)
             }}
-            sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }}
+            sx={{ color: theme.palette.text.primary, justifyContent: "flex-start", padding: "0.5rem 1rem" }}
             startIcon={<CloseOutlined />}>Close All Day</Button>
         )}
 
@@ -853,7 +809,7 @@ export default function useViewEvent(
               event
             })
           }}
-          sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }}
+          sx={{ color: theme.palette.text.primary, justifyContent: "flex-start", padding: "0.5rem 1rem" }}
           startIcon={<BugReportOutlined />}>Debug</Button>
 
 
@@ -867,11 +823,61 @@ export default function useViewEvent(
               });
               window.open(`/be/${event.id()}`)
             }}
-            sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }}
+            sx={{ color: theme.palette.text.primary, justifyContent: "flex-start", padding: "0.5rem 1rem" }}
             startIcon={<OpenInNew />}>Switch</Button>
         )}
+        <Popover
+          anchorEl={scheduleAnchorEl}
+          open={isScheduleOpen}
+          // placement='left-start'
+          onClose={(e: any) => {
+            e.stopPropagation();
+            // handleCloseEvent();
+            setScheduleAnchorEl(null)
+          }}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+        >
+          <div className="column compact"
+            style={{
+              width: "29rem",
+              padding: '1rem 2rem'
+            }}>
+
+            <div className="flex">
+              {schedule && (
+                <HoursMinimap
+                  mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
+                  schedule={schedule}
+                  onChange={(newSch) => setSchedule(newSch)}
+                />
+              )}
+            </div>
+             <div className="flex">
+               <Button onClick={e => {
+                setSchedule(null);
+              }}>Cancel</Button>
+              <Button onClick={e => {
+
+                if (!event) {
+                  return;
+                }
+                const newObject = new Schedule(schedule, true);
+                event.pushSchedule(newObject);
+                Events.update(event.eject());
+              }} variant="contained">Save</Button>
+             </div>
+          </div>
+        </Popover>
       </div>
-    </ThemeProvider>
+
+    </>
   )
 
   const EventPopover = (
@@ -891,7 +897,7 @@ export default function useViewEvent(
             '& .MuiDrawer-paper': {
               width: '100vw',
               boxShadow: 1,
-              backgroundColor: isRightClick ? theme.palette.background.paper : tempTheme.palette.primary.main || lighten(theme.palette.background.paper, 0.05),
+              backgroundColor: isRightClick ? theme.palette.background.paper : theme.palette.primary.main || lighten(theme.palette.background.paper, 0.05),
               color: isRightClick ? theme.palette.text.primary : event?.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText,
             },
           }}
@@ -918,7 +924,7 @@ export default function useViewEvent(
           // disableScrollLock={true}
           // popperOptions='top-end'
           sx={{
-            zIndex: 4000,
+            // zIndex: 4000,
             // top: 0,
             boxShadow: 14,
             '& .MuiPopover-paper': {

@@ -57,7 +57,15 @@ export class Group implements Member {
         if (!j) {
           continue;
         }
-        this.junctions.set(j.to.uuid === this.uuid ? j.from.uuid : j.to.uuid, j)
+        try {
+          this.junctions.set(j.to.uuid === this.uuid ? `${j.from.uuid}_${j.directionality}` : `${j.to.uuid}_${j.directionality}`, j)
+        }
+        catch (err) {
+          console.log({
+            err,
+            j
+          })
+        }
       }
     }
 

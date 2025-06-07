@@ -20,7 +20,7 @@ import Chronos from '@/lib/utils/chronos';
 import dayjs from '@/lib/utils/dayjs';
 import { Event, Member } from '@/schema';
 import { Mode, Type } from '@/types/globals';
-import { AddOutlined, ContentPasteOutlined, CopyAllOutlined, PlayArrow } from '@mui/icons-material';
+import { AddOutlined, BugReportOutlined, ContentPasteOutlined, CopyAllOutlined, PlayArrow } from '@mui/icons-material';
 import { StartViewer } from '@/lib/global/useView';
 import { Hours } from '@/lib/utils/medici';
 import { MomentBlock } from '../events/MomentBlock';
@@ -55,7 +55,7 @@ const Now = ({ standardHeight, startCreator }: { standardHeight: number, startCr
     setInterval(update, 10000);
     update();
 
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -143,7 +143,7 @@ const CalendarDayTimeSlot = ({
 
   const theme = useTheme();
 
-  const color = time % 1 == 0 ? theme.palette.text.secondary : theme.palette.action.disabled;
+  const color = time % 1 == 0 ? theme.palette.action.disabled : theme.palette.divider;
   return (
     <>
       <div
@@ -236,46 +236,10 @@ function DayView({
   useEffect(() => {
     if (calendarDay && date) {
 
-      const theCalendarDayRendered = new CalendarDayRendered(date.yyyymmdd(), calendarDay);
-      const theNextCalendarDayRendered = new CalendarDayRendered(date.add(1, 'd').yyyymmdd(), nextCalendarDay || undefined);
-
-      let result = [];
-      const theEvents: Event[] = [];
-      const startOffset: Event[] = [];
-      for (const event of theCalendarDayRendered.chaos.flat()) {
-        if (!event.start_time || !event.date) {
-          continue;
-        }
-        theEvents.push(event);
-      }
-
-      for (const event of theCalendarDayRendered.aside) {
-        theEvents.push(event);
-      }
-      // setEvents(theEvents);
-
-
-      for (const item of theCalendarDayRendered.stack) {
-        if (!(item instanceof Event)) {
-          continue;
-        }
-        if (!item.date) {
-          result.push(item);
-          continue;
-        }
-        if (!item.date.isSame(date, 'd') && index != 0) {
-          // startOffset.push(null);
-          continue;
-        }
-        if (index === 0) {
-          result.push(item);
-          continue;
-        }
-        result.push(item);
-      }
-
-
-      setCalendarDayRendered(theCalendarDayRendered)
+      const theCalendarDayRendered = new CalendarDayRendered(calendarDay.date.yyyymmdd(), calendarDay);
+      const theNextCalendarDayRendered = nextCalendarDay ? new CalendarDayRendered(nextCalendarDay.date.yyyymmdd(), nextCalendarDay) : null;
+      setCalendarDayRendered(theCalendarDayRendered);
+      setNextCalendarDayRendered(theNextCalendarDayRendered);
       // setReducedAllDayStack([...startOffset, ...result]);
     }
 
@@ -309,13 +273,20 @@ function DayView({
               handleClose();
             }}
             sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }} variant="text" startIcon={<ContentPasteOutlined />}>Paste</Button>
+          <Button
+            onClick={() => {
+              console.log({
+                calendarDayRendered,
+                nextCalendarDayRendered
+              })
+            }}
+            sx={{ justifyContent: "flex-start", padding: "0.5rem 1rem" }} variant="text" startIcon={<BugReportOutlined />}>Debug</Button>
         </div>
       </Popover>
       <div
         style={{
           userSelect: 'none',
           margin: 0,
-          borderRight: `1px solid ${theme.palette.divider}`,
           ...style
           // opacity: isPast ? 0.8 : 1,
         }}
@@ -344,6 +315,11 @@ function DayView({
 
             {calendarDayRendered &&
               calendarDayRendered.aside.map((event, index) => {
+
+                if (event.start_time && event.start_time.isBefore(new Chronos(6))) {
+                  return null;
+                }
+
                 if (isMoment(event)) {
                   return (
                     <MomentBlock
@@ -479,25 +455,25 @@ function DayView({
                 <Fragment key={`${date.yyyymmdd()}-nextDay-column-${index}}`}>
                   {column.map((event, index) => {
 
-                    if (!event.date) {
-                      return (
-                        <SourceScheduleBlock
-                          column={index}
-                          key={`${event.id()}`}
-                          referenceTime={6}
-                          date={date}
-                          event={event}
-                          standardHeight={standardHeight}
-                          handleView={handleView}
-                          handleCreate={handleCreate}
-                          handleSelect={handleSelect}
-                          handleDragStart={handleDragStart}
-                          source={source}
-                          swap={swap}
-                          replace={replace}
-                        />
-                      )
-                    }
+                    // if (!event.date) {
+                    //   return (
+                    //     <SourceScheduleBlock
+                    //       column={index}
+                    //       key={`${event.id()}`}
+                    //       referenceTime={6}
+                    //       date={date}
+                    //       event={event}
+                    //       standardHeight={standardHeight}
+                    //       handleView={handleView}
+                    //       handleCreate={handleCreate}
+                    //       handleSelect={handleSelect}
+                    //       handleDragStart={handleDragStart}
+                    //       source={source}
+                    //       swap={swap}
+                    //       replace={replace}
+                    //     />
+                    //   )
+                    // }
 
 
                     if (event.start_time && event.start_time.isBefore(new Chronos(6))) {
@@ -551,6 +527,74 @@ function DayView({
                   })}
                 </Fragment>
               ))}
+
+            {nextCalendarDayRendered &&
+              nextCalendarDayRendered.aside.map((event, index) => {
+
+                if (event.start_time && !event.start_time.isBefore(new Chronos(6))) {
+                  return null;
+                }
+
+                if (isMoment(event)) {
+                  return (
+                    <MomentBlock
+                      key={`${event.id()}`}
+                      column={index}
+                      referenceTime={6}
+                      event={event}
+                      standardHeight={standardHeight}
+                      handleView={handleView}
+                      handleCreate={handleCreate}
+                      handleSelect={handleSelect}
+                      handleDragStart={handleDragStart}
+                      isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                      swap={swap}
+                    />
+                  )
+                }
+
+                if (isSingleTimeEvent(event)) {
+                  return (
+                    <CalendarEventBox
+                      key={`${event.id()}`}
+                      column={index}
+                      referenceTime={6}
+                      event={event}
+                      standardHeight={standardHeight}
+                      handleView={handleView}
+                      handleCreate={handleCreate}
+                      handleSelect={handleSelect}
+                      handleDragStart={handleDragStart}
+                      isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                      source={source}
+                      swap={swap}
+                    />
+                  )
+
+                }
+
+                // if (!isNotScheduled(event)) {
+                //   return (
+                //     <SourceScheduleBlock
+                //       column={index}
+                //       key={`${event.id()}`}
+                //       referenceTime={6}
+                //       date={date}
+                //       event={event}
+                //       standardHeight={standardHeight}
+                //       handleView={handleView}
+                //       handleCreate={handleCreate}
+                //       handleSelect={handleSelect}
+                //       handleDragStart={handleDragStart}
+                //       source={source}
+                //       swap={swap}
+                //       replace={replace}
+                //     />
+                //   )
+                // }
+
+                return null;
+              })}
 
 
 

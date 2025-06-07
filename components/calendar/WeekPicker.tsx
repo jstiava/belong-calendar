@@ -9,11 +9,14 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateCalendar, DateCalendarProps, PickersCalendarHeader, PickersCalendarHeaderProps } from '@mui/x-date-pickers/DateCalendar';
 import { PickersDay, PickersDayProps } from '@mui/x-date-pickers/PickersDay';
 import { Dayjs } from 'dayjs';
-import { KeyboardArrowDownOutlined, KeyboardArrowLeft, KeyboardArrowRight, KeyboardArrowUpOutlined } from '@mui/icons-material';
+import { KeyboardArrowDownOutlined, KeyboardArrowLeft, KeyboardArrowRight, KeyboardArrowUpOutlined, SkipNextOutlined, SkipPreviousOutlined } from '@mui/icons-material';
 import { UseCalendar } from '@/lib/useCalendar';
+import { Member, Event } from '@/schema';
+import { isEventCalendar, isMultiDayEvent, isNotScheduled } from '@/lib/CalendarDays';
 
 interface CustomCalendarHeaderProps extends PickersCalendarHeaderProps<Dayjs> {
   Calendar: UseCalendar;
+  source: Member;
 }
 
 interface CustomPickerDayProps extends PickersDayProps<dayjs.Dayjs> {
@@ -29,7 +32,7 @@ const CustomCalendarHeaderRoot = styled('div')({
 });
 
 export function CustomCalendarHeader(props: CustomCalendarHeaderProps) {
-  const { currentMonth, onMonthChange } = props;
+  const { currentMonth, onMonthChange, source } = props;
   const theme = useTheme();
 
   const selectNextMonth = () => {
@@ -52,24 +55,60 @@ export function CustomCalendarHeader(props: CustomCalendarHeaderProps) {
       <CustomCalendarHeaderRoot>
         <div className="flex between" style={{ padding: "0 0.5rem" }}>
           <div className='flex compact2 fit'>
-            <IconButton onClick={() => selectPreviousMonth()} title="Previous month">
-              <KeyboardArrowLeft sx={{
-                color: 'var(--text-color)'
-              }} />
-            </IconButton>
+            <div className="flex fit snug">
+              {source instanceof Event && isMultiDayEvent(source) && (
+                <IconButton onClick={() => props.Calendar.goto(source.date)} title="Go to Start">
+                  <SkipPreviousOutlined sx={{
+                    color: 'var(--text-color)'
+                  }} />
+                </IconButton>
+              )}
+              <IconButton onClick={() => selectPreviousMonth()} title="Previous month">
+                <KeyboardArrowLeft sx={{
+                  color: 'var(--text-color)'
+                }} />
+              </IconButton>
+            </div>
             <Typography onClick={() => props.Calendar.goToStartOfMonth(currentMonth)} variant="h6" sx={{ color: 'var(--text-color)', cursor: "pointer" }}>{currentMonth.format('MMMM YYYY')}</Typography>
-            <IconButton onClick={() => selectNextMonth()} title="Next month">
-              <KeyboardArrowRight sx={{
-                color: 'var(--text-color)'
-              }} />
-            </IconButton>
+            <div className="flex fit snug">
+              <IconButton onClick={() => selectNextMonth()} title="Next month">
+                <KeyboardArrowRight sx={{
+                  color: 'var(--text-color)'
+                }} />
+              </IconButton>
+              {source instanceof Event && isMultiDayEvent(source) && (
+                <IconButton onClick={() => props.Calendar.goto(source.end_date)} title="Go to end">
+                  <SkipNextOutlined sx={{
+                    color: 'var(--text-color)'
+                  }} />
+                </IconButton>
+              )}
+            </div>
           </div>
-          <Button variant="contained" size="small" onClick={() => props.Calendar.gotoToday()} disabled={props.Calendar.isTodayPresent()}
-            sx={{
-              padding: "0.2rem 0rem",
-              fontSize: "0.875rem"
-            }}
+          {source instanceof Event && isMultiDayEvent(source) ? (
+            // <div className="flex compact fit">
+            //   <Button variant="contained" size="small" onClick={() => props.Calendar.goto(source.date)}
+            //     sx={{
+            //       padding: "0.2rem 0.45rem",
+            //       fontSize: "0.875rem"
+            //     }}
+            //   >{source.date.format("MM-DD-YYYY")}</Button>
+            //   <Button variant="contained" size="small" onClick={() => props.Calendar.goto(source.end_date)}
+            //     sx={{
+            //       padding: "0.2rem 0.45rem",
+            //       fontSize: "0.875rem"
+            //     }}
+            //   >{source.end_date.format("MM-DD-YYYY")}</Button>
+            // </div>
+            <></>
+          ) : (
+            <Button variant="contained" size="small" onClick={() => props.Calendar.gotoToday()} disabled={props.Calendar.isTodayPresent()}
+              sx={{
+                padding: "0.2rem 0rem",
+                fontSize: "0.875rem"
+              }}
             >Today</Button>
+          )}
         </div>
       </CustomCalendarHeaderRoot>
     );
@@ -87,6 +126,7 @@ export function CustomCalendarHeader(props: CustomCalendarHeaderProps) {
 interface StyledPickersDayProps extends PickersDayProps<Dayjs> {
   Calendar: UseCalendar,
   mode?: 'dark' | 'light',
+  source: Member;
 }
 
 
@@ -103,16 +143,28 @@ const StyledDay = styled((props: StyledPickersDayProps) => {
     />
   )
 
-})(({ theme, mode, day, Calendar, today, selected }) => {
+})(({ theme, mode, day, Calendar, today, selected, source }) => {
 
   const base = mode === 'light' ? '#ffffff' : '#000000';
   const isInView = day.isBefore(Calendar.days[0], 'd') || day.isAfter(Calendar.days[Calendar.days.length - 1], 'd') ? false : true;
+
+  const isOpen = source instanceof Event && (!isEventCalendar(source) && !isNotScheduled(source)) ? source.isOpenDetailed(day) : null;
+
+  const determineOpenness = () => {
+
+    if (isOpen?.isOpen) {
+      return true;
+    }
+
+    return false;
+  }
 
   return ({
     fontSize: "0.85rem",
     fontWeight: '700 !important',
     height: "2.25rem",
     width: "1.5rem",
+    opacity: isOpen ? determineOpenness() ? 1 : 0.25 : 1,
     padding: "0.25rem 0.9rem",
     margin: "0.05rem 0rem 0.05rem 0rem",
     color: `${base}`,
@@ -126,8 +178,8 @@ const StyledDay = styled((props: StyledPickersDayProps) => {
       }
     }),
     ...(today && {
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText,
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.primary.contrastText,
       '&:hover': {
         backgroundColor: `${theme.palette.primary.light} !important`,
       }
@@ -149,13 +201,14 @@ const StyledDay = styled((props: StyledPickersDayProps) => {
 
 interface StyledDateCalendarProps extends DateCalendarProps<Dayjs> {
   Calendar: UseCalendar,
+  source: Member,
   mode?: 'dark' | 'light'
 }
 
 const StyledWeekPicker = styled((props: StyledDateCalendarProps) => {
 
 
-  const { mode = 'light', Calendar, ...rest } = props;
+  const { mode = 'light', Calendar, source, ...rest } = props;
   const calendarRef = useRef<any>(null);
 
   if (!Calendar || !Calendar.days) {
@@ -176,10 +229,10 @@ const StyledWeekPicker = styled((props: StyledDateCalendarProps) => {
       }}
       slots={{
         day: props => (
-          <StyledDay {...props} Calendar={Calendar} mode={mode} />
+          <StyledDay {...props} Calendar={Calendar} mode={mode} source={source} />
         ),
         calendarHeader: props => (
-          <CustomCalendarHeader {...props} Calendar={Calendar} />
+          <CustomCalendarHeader {...props} Calendar={Calendar} source={source} />
         ),
       }}
     />

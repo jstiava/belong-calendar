@@ -1,8 +1,10 @@
+"use client"
 import { useEffect, useMemo, useState } from 'react';
 import dayjs from '@/lib/utils/dayjs';
 import { Dayjs } from 'dayjs';
 import axios, { API } from './utils/axios';
-import { Member } from '@/schema';
+import { Member, Event } from '@/schema';
+import { isMultiDayEvent } from './CalendarDays';
 
 export interface UseCalendar {
   frameDate: dayjs.Dayjs;
@@ -22,7 +24,7 @@ export interface UseCalendar {
 }
 
 export default function useCalendar() {
-  const [frameDate, setFrameDate] = useState<dayjs.Dayjs>(dayjs());
+  const [frameDate, setFrameDate] = useState<dayjs.Dayjs>(dayjs().tz('America/Chicago'));
   const [days, setDays] = useState<dayjs.Dayjs[]>([]);
   const [sequence, setSequence] = useState<number[] | null>(null);
   const [eventDays, setEventDays] = useState<any[]>([]);
@@ -30,7 +32,7 @@ export default function useCalendar() {
 
 
   useEffect(() => {
-    goToStartOfMonth(dayjs());
+    goToStartOfMonth(dayjs().tz('America/Chicago'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -41,10 +43,25 @@ export default function useCalendar() {
   const initSource = (theSource: Member | null) => {
     if (!theSource) return;
     setSource(theSource);
+
+    if (theSource instanceof Event) {
+
+      if (isMultiDayEvent(theSource)) {
+        const duration = theSource.end_date.diff(theSource.date, 'd');
+        if (duration < 8) {
+          gotoStartOfWeek(theSource.date);
+          return;
+        }
+        goToStartOfMonth(theSource.date);
+        return;
+      }
+    }
+
+    goToStartOfMonth(dayjs().tz('America/Chicago'));
   };
 
   const gotoToday = () => {
-    gotoStartOfWeek(dayjs());
+    gotoStartOfWeek(dayjs().tz('America/Chicago'));
   };
 
   const next = () => {
@@ -111,7 +128,8 @@ export default function useCalendar() {
   };
 
   const goToStartOfMonth = (date: dayjs.Dayjs = frameDate) => {
-    const newDate = date.startOf('month').startOf('week');
+    const localDate = dayjs(date).tz('America/Chicago');
+    const newDate = localDate.startOf('month').startOf('week');
     const daysInMonth = 7 * 5;
     const frame = newDate.getFrame(daysInMonth);
     setDays(frame)

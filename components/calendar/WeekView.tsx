@@ -23,6 +23,7 @@ import { UsePreferences } from '@/lib/global/usePreferences';
 import { useSwipeable } from 'react-swipeable';
 import { CalendarDays } from '@/lib/CalendarDays';
 import { DIVIDER_NO_ALPHA_COLOR } from '../Divider';
+import DayHeader from './DayHeader';
 
 interface WeekViewProps {
   selected: Event[] | null;
@@ -172,7 +173,8 @@ const WeekView = ({
           backgroundColor: theme.palette.background.paper,
           zIndex: 5,
           borderBottom: `0.1rem solid ${theme.palette.divider}`,
-          height: "2.5rem"
+          height: 'fit-content'
+          // height: "2.5rem"
         }}>
 
           <div className="flex center middle" style={{
@@ -186,58 +188,89 @@ const WeekView = ({
           </div>
 
           <div
-            className='flex snug'
+            className='flex snug top'
             style={{
               position: 'relative',
-              width: 'calc(100% - 5rem)'
+              width: 'calc(100% - 5rem)',
+              height: 'fit-content'
             }}
           >
             <Button
-              sx={{ position: "absolute", left: 0, color: theme.palette.text.primary }}
+              sx={{ position: "absolute", left: 0, top: "0.35rem", color: theme.palette.text.primary }}
               startIcon={<ChevronLeft />}
               onClick={() => Calendar.gotoStartOfWeek(Calendar.days[0].add(-1, 'day'))}></Button>
             <Button
-              sx={{ position: "absolute", right: 0, color: theme.palette.text.primary }}
+              sx={{ position: "absolute", right: 0, top: "0.35rem", color: theme.palette.text.primary }}
               endIcon={<ChevronRight />}
               onClick={() => Calendar.gotoStartOfWeek(Calendar.days[6].add(1, 'day'))}></Button>
             {Calendar.days.map(date => {
               return (
-                <div className="flex center middle compact"
-                  key={date.format("YYYYMMDD")}
-                >
-                  <ButtonBase
-                    sx={{
-                      display: 'flex',
-                      fontWeight: 700,
-                      width: '1.75rem',
+                <div className="column compact2 top" style={{
+                  width: "calc(100% / 7)",
+                  height: 'fit-content',
+                  padding: '0.5rem 0.25rem'
+                }} key={date.format("YYYYMMDD")}>
+
+
+                  <div className="flex center middle compact"
+
+                  >
+                    <ButtonBase
+                      sx={{
+                        display: 'flex',
+                        fontWeight: 700,
+                        width: '1.75rem',
+                        textAlign: "center",
+                        margin: "0 0.15rem",
+                        height: "1.75rem",
+                        // border: '1px solid',
+                        borderRadius: "0.15rem",
+                        borderColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
+                        backgroundColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
+                        color: date.isToday() ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary,
+                        overflow: 'visible',
+                        '& span': {
+                          padding: 0
+                        }
+                      }}
+                      onClick={(e) => {
+                        Calendar.gotoStartOfWeek(date);
+                      }}
+                    ><Typography sx={{
+                      fontSize: "0.85rem",
+                      fontWeight: 800
+                    }}>{date.format('D')}</Typography></ButtonBase>
+                    <Typography sx={{
+                      fontSize: "0.75rem",
+                      textTransform: 'uppercase',
                       textAlign: "center",
-                      margin: "0 0.15rem",
-                      height: "1.75rem",
-                      // border: '1px solid',
-                      borderRadius: "0.15rem",
-                      borderColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
-                      backgroundColor: date.isToday() ? theme.palette.primary.main : theme.palette.divider,
-                      color: date.isToday() ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary,
-                      overflow: 'visible',
-                      '& span': {
-                        padding: 0
-                      }
-                    }}
-                    onClick={(e) => {
-                      Calendar.gotoStartOfWeek(date);
-                    }}
-                  ><Typography sx={{
-                    fontSize: "0.85rem",
-                    fontWeight: 800
-                  }}>{date.format('D')}</Typography></ButtonBase>
-                  <Typography sx={{
-                    fontSize: "0.75rem",
-                    textTransform: 'uppercase',
-                    textAlign: "center",
-                    color: darken(theme.palette.text.primary, 0.2),
-                    letterSpacing: "0.1rem",
-                    fontWeight: 800
-                  }}>{daysOfWeek[date.day()]}</Typography>
+                      color: darken(theme.palette.text.primary, 0.2),
+                      letterSpacing: "0.1rem",
+                      fontWeight: 800
+                    }}>{daysOfWeek[date.day()]}</Typography>
+                  </div>
+
+
+                  <DayHeader
+                    index={date.day()}
+                    key={`${source ? source.id() : 'no_source_week_view'}-${date.format('YYYYMMDD')}-weekView`}
+                    date={date}
+                    // sequence={sequence}
+                    handleCreate={handleCreate}
+                    calendarDay={days.getOrCreate(date.yyyymmdd())}
+                    // nextCalendarDay={days.getOrCreate(date.add(1, 'day').yyyymmdd())}
+                    standardHeight={standardHeight}
+                    handleDragStart={handleDragStart}
+                    handleMouseMove={handleMouseMove}
+                    handleView={handleView}
+                    selected={selected}
+                    handleSelect={handleSelect}
+                    handleDayTimeClick={handleDayTimeClick}
+                    swap={Events.swap}
+                    source={source}
+                  // replace={Events.update}
+                  />
+
                 </div>
               )
             })}
@@ -265,14 +298,15 @@ const WeekView = ({
             width: `calc(100% - 5rem)`,
           }}>
             {/* {RenderedBlock} */}
-            {Calendar.days.map(date => {
+            {Calendar.days.map((date, index) => {
               return (
                 <DayView
                   index={date.day()}
                   key={`${source ? source.id() : 'no_source_week_view'}-${date.format('YYYYMMDD')}-weekView`}
                   style={{
                     width: "calc(100% / 7)",
-                    margin: 0
+                    margin: 0,
+                    borderRight: index === Calendar.days.length - 1 ? 'unset' : `0.05rem solid ${theme.palette.divider}`
                   }}
                   date={date}
                   sequence={sequence}

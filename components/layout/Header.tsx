@@ -20,7 +20,10 @@ import {
   VpnKeyOutlined,
   Star,
   MoreVertOutlined,
-  TableViewOutlined
+  TableViewOutlined,
+  MapOutlined,
+  PivotTableChartOutlined,
+  TimelineOutlined
 } from '@mui/icons-material';
 import {
   Avatar,
@@ -53,6 +56,7 @@ import ItemStub from '../ItemStub';
 import { Member, Event } from '@/schema';
 import { UseBase } from '@/lib/global/useBase';
 import { isMoment } from '@/lib/CalendarDays';
+import StyledWeekPicker from '../calendar/WeekPicker';
 const MEDIA_BASE_URI = "https://mozi-belong-media-public-demo.s3.us-east-2.amazonaws.com";
 
 
@@ -77,18 +81,63 @@ export default function Header({
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const item = module ? module : (Session.base ? Session.base : Session.session ? Session.session : null);
+  const item = router.asPath.startsWith('/me') ? Session.session : module ? module : (Session.base ? Session.base : Session.session ? Session.session : null);
+  const Controller = router.asPath.startsWith('/me') ? Session : module ? Module : Session.base ? Base : Session;
 
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [view, setView] = useState<string | null>(null);
 
   const [anchorEl, setAnchorEl] = useState<any | null>(null);
   const isPopoverOpen = Boolean(anchorEl);
 
+  const pushNewFormat = (tab: string) => {
+
+    const theModule = router.query.module;
+    if (router.query.module) {
+      delete router.query.module;
+    }
+    const { base, ...rest } = router.query;
+
+    if (theModule && base) {
+      rest.base = base;
+    }
+
+    const isSession = router.asPath.startsWith('/me');
+
+    router.replace({
+      pathname: `${isSession ? `/me/` : `/be/${theModule ? `${String(theModule)}/` : Session.base?.id()}/data`}`,
+      query: { ...rest, format: tab }
+    })
+  }
+
   const pushNewView = (tab: string) => {
 
     let theView = undefined;
-    if (['month', 'week', 'day', 'data'].some(x => x === tab)) {
+
+    if (Controller) {
+      if (tab === 'month') {
+        theView = 'month'
+        Controller.Calendar.goToStartOfMonth();
+      }
+      else if (tab === 'week') {
+        theView = 'week'
+        Controller.Calendar.gotoStartOfWeek();
+      }
+    }
+
+    if (tab === 'calendar' && Controller) {
+      if (Controller?.Calendar.days.length === 1) {
+        theView = 'day'
+      }
+      else if (Controller?.Calendar.days.length < 8) {
+        theView = 'week'
+      }
+      else {
+        theView = 'month'
+      }
+    }
+    else if (['month', 'week', 'day'].some(x => x === tab)) {
       theView = tab;
       tab = 'calendar';
     }
@@ -134,7 +183,7 @@ export default function Header({
   }, [router])
 
 
-  if (!Session.session || !item) {
+  if (!Session.session || !item || !Controller) {
     return <></>;
   }
 
@@ -149,7 +198,7 @@ export default function Header({
           borderRight: `0.1rem solid ${theme.palette.divider}`,
           padding: isSm ? "0 0.5rem" : "0 1rem",
         }}>
-        <div className="flex fit">
+        <div className={isSm ? "flex fit compact2" : "flex fit"}>
           {!Session.Preferences.isSidebarDocked && (
             <StyledIconButton
               title="Open Sidebar"
@@ -157,202 +206,279 @@ export default function Header({
               <MenuOutlined />
             </StyledIconButton>
           )}
-          <Typography variant="h6" sx={{ color: theme.palette.text.primary }}>{Session.Calendar.days[6]?.format("MMMM YYYY") || "All Events"}</Typography>
-          {view === 'calendar' && (
-            <div className="flex fit">
-              <FormControl sx={{
-                width: 120
-              }}>
-                <InputLabel id="demo-simple-select-label">View</InputLabel>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={router.query.view}
-                  label="View"
-                  size="small"
-                  sx={{
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    '& .MuiSelect-select': {
-                      display: 'flex',
-                      alignItems: 'center',
 
-                    },
-                    '& .MuiListItemIcon-root': {
-                      minWidth: "unset",
-                      marginRight: "0.25rem"
-                    },
-                  }}
-                // onChange={handleChange}
-                >
-                  <MenuItem
-                    value="month"
-                    onClick={() => {
-                      pushNewView('month')
-                    }}
-                  >
-                    <ListItemIcon>
-                      <CalendarMonthOutlined fontSize="small" />
-                    </ListItemIcon>
-                    Month
-                  </MenuItem>
-                  <MenuItem
-                    value="week"
-                    onClick={() => {
-                      pushNewView('week')
-                    }}
-                  >
-                    <ListItemIcon>
-                      <CalendarViewWeekOutlined fontSize="small" />
-                    </ListItemIcon>
-                    Week
-                  </MenuItem>
-                  <MenuItem
-                    value="day"
-                    onClick={() => {
-                      pushNewView('day')
-                    }}
-                  >
-                    <ListItemIcon>
-                      <CalendarViewDayOutlined fontSize="small" />
-                    </ListItemIcon>
-                    Day
-                  </MenuItem>
-                  <MenuItem
-                    value="data"
-                    onClick={() => {
-                      pushNewView('data')
-                    }}
-                  >
-                    <ListItemIcon>
-                      <TableViewOutlined fontSize="small" />
-                    </ListItemIcon>
-                    Data
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </div>
+          {Controller && (
+            <ButtonBase className='flex compact middle fit' sx={{
+              padding: "0.5rem 0.75rem",
+              borderRadius: '0.25rem'
+            }} onClick={() => {
+              setIsCalendarOpen(true)
+            }}>
+              <CalendarMonthOutlined />
+              <Typography variant="h6" sx={{ color: theme.palette.text.primary }}>{Controller.Calendar.days[6]?.format("MMMM YYYY") || "All Events"}</Typography>
+            </ButtonBase>
           )}
 
-          <StyledToggleButtonGroup value={view} size='small' isMini={false}>
-            <ToggleButton
-              value="dashboard"
-              onClick={() => pushNewView('')}
-            >
-              <GridView fontSize="small" />
-              Dashboard
-            </ToggleButton>
+          {!isSm && (
+            <>
 
-            {!(item instanceof Event && isMoment(item)) && (
+              {['calendar', 'month', 'week', 'day', 'data'].some(x => x === view) && (
+                <div className="flex fit">
+                  <FormControl sx={{
+                    width: 120
+                  }}>
+                    <InputLabel id="demo-simple-select-label">View</InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={router.query.view}
+                      label="View"
+                      size="small"
+                      sx={{
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        '& .MuiSelect-select': {
+                          display: 'flex',
+                          alignItems: 'center',
 
-              <ToggleButton
-                value={'calendar'}
-                onClick={() => pushNewView('month')}
-              >
-                <CalendarMonthOutlined fontSize="small" />
-                Calendar
-              </ToggleButton>
-            )}
+                        },
+                        '& .MuiListItemIcon-root': {
+                          minWidth: "unset",
+                          marginRight: "0.25rem"
+                        },
+                      }}
+                    // onChange={handleChange}
+                    >
+                      <MenuItem
+                        value="month"
+                        onClick={() => {
+                          pushNewView('month')
+                        }}
+                      >
+                        <ListItemIcon>
+                          <CalendarMonthOutlined fontSize="small" />
+                        </ListItemIcon>
+                        Month
+                      </MenuItem>
+                      <MenuItem
+                        value="week"
+                        onClick={() => {
+                          pushNewView('week')
+                        }}
+                      >
+                        <ListItemIcon>
+                          <CalendarViewWeekOutlined fontSize="small" />
+                        </ListItemIcon>
+                        Week
+                      </MenuItem>
+                      <MenuItem
+                        value="day"
+                        onClick={() => {
+                          pushNewView('day')
+                        }}
+                      >
+                        <ListItemIcon>
+                          <CalendarViewDayOutlined fontSize="small" />
+                        </ListItemIcon>
+                        Day
+                      </MenuItem>
+                      <MenuItem
+                        value="data"
+                        onClick={() => {
+                          pushNewView('data')
+                        }}
+                      >
+                        <ListItemIcon>
+                          <TableViewOutlined fontSize="small" />
+                        </ListItemIcon>
+                        Data
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+              )}
 
-            {view === 'integrations' && (
-              <ToggleButton
-                value="integrations"
-              //  onClick={() => pushNewView('integrations')}
-              >
-                <ElectricalServicesOutlined fontSize="small" />
-                Integrations
-              </ToggleButton>
-            )}
+              {view === 'data' && (
+                <div className="flex fit">
+                  <FormControl sx={{
+                    width: 120
+                  }}>
+                    <InputLabel id="demo-simple-select-label">Format</InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={router.query.format}
+                      label="Format"
+                      size="small"
+                      sx={{
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        '& .MuiSelect-select': {
+                          display: 'flex',
+                          alignItems: 'center',
 
+                        },
+                        '& .MuiListItemIcon-root': {
+                          minWidth: "unset",
+                          marginRight: "0.25rem"
+                        },
+                      }}
+                    // onChange={handleChange}
+                    >
+                      <MenuItem
+                        value="timeline"
+                        onClick={() => {
+                          pushNewFormat('timeline')
+                        }}
+                      >
+                        <ListItemIcon>
+                          <TableViewOutlined fontSize="small" />
+                        </ListItemIcon>
+                        Timeline
+                      </MenuItem>
 
-            {!router.asPath.startsWith('/me') && (
-              <>
-                {view === 'iam' && (
+                    </Select>
+                  </FormControl>
+                </div>
+              )}
+
+              <StyledToggleButtonGroup value={view} size='small' isMini={false}>
+                <ToggleButton
+                  value="dashboard"
+                  onClick={() => pushNewView('')}
+                >
+                  <GridView fontSize="small" />
+                  Dashboard
+                </ToggleButton>
+
+                {!(item instanceof Event && isMoment(item)) && (
+
                   <ToggleButton
-                    value={'iam'}
-                  //  onClick={() => pushNewView('month')}
+                    value={'calendar'}
+                    onClick={() => pushNewView('calendar')}
                   >
-                    <PeopleOutline fontSize="small" />
-                    IAM
+                    <CalendarMonthOutlined fontSize="small" />
+                    Calendar
                   </ToggleButton>
                 )}
 
-                {view === 'settings' && (
+                <ToggleButton
+                  value={'data'}
+                  onClick={() => pushNewView('data')}
+                >
+                  <PivotTableChartOutlined fontSize="small" />
+                  Data
+                </ToggleButton>
+
+                <ToggleButton
+                  value={'maps'}
+                  onClick={() => pushNewView('maps')}
+                >
+                  <MapOutlined fontSize="small" />
+                  Maps
+                </ToggleButton>
+
+                {view === 'integrations' && (
                   <ToggleButton
-                    value={'settings'}
-                  //  onClick={() => pushNewView('month')}
+                    value="integrations"
+                  //  onClick={() => pushNewView('integrations')}
                   >
-                    <SettingsOutlined fontSize="small" />
-                    Settings
+                    <ElectricalServicesOutlined fontSize="small" />
+                    Integrations
                   </ToggleButton>
                 )}
 
-                {view === 'apps' && (
-                  <ToggleButton
-                    value={'apps'}
-                  //  onClick={() => pushNewView('month')}
-                  >
-                    <DeployedCodeIcon fontSize="small" />
-                    Apps
-                  </ToggleButton>
+
+                {!router.asPath.startsWith('/me') && (
+                  <>
+                    {view === 'iam' && (
+                      <ToggleButton
+                        value={'iam'}
+                      //  onClick={() => pushNewView('month')}
+                      >
+                        <PeopleOutline fontSize="small" />
+                        IAM
+                      </ToggleButton>
+                    )}
+
+                    {view === 'settings' && (
+                      <ToggleButton
+                        value={'settings'}
+                      //  onClick={() => pushNewView('month')}
+                      >
+                        <SettingsOutlined fontSize="small" />
+                        Settings
+                      </ToggleButton>
+                    )}
+
+                    {view === 'apps' && (
+                      <ToggleButton
+                        value={'apps'}
+                      //  onClick={() => pushNewView('month')}
+                      >
+                        <DeployedCodeIcon fontSize="small" />
+                        Apps
+                      </ToggleButton>
+                    )}
+                  </>
                 )}
-              </>
-            )}
 
-            <Popover
-              anchorEl={anchorEl}
-              open={isPopoverOpen}
-              onClick={(e) => {
-                setAnchorEl(null);
-              }}
-              onClose={(e: any) => {
-                e.stopPropagation();
-                setAnchorEl(null)
-              }}
-              slots={{
-                transition: Fade,
-              }}
-              slotProps={{
-                paper: {
-                  sx: {
-                    maxWidth: "100vw",
-                    width: "10rem"
-                  }
-                },
-                transition: {
-                  timeout: 300,
-                },
-              }}
+                <Popover
+                  anchorEl={anchorEl}
+                  open={isPopoverOpen}
+                  onClick={(e) => {
+                    setAnchorEl(null);
+                  }}
+                  onClose={(e: any) => {
+                    e.stopPropagation();
+                    setAnchorEl(null)
+                  }}
+                  slots={{
+                    transition: Fade,
+                  }}
+                  slotProps={{
+                    paper: {
+                      sx: {
+                        maxWidth: "100vw",
+                        width: "10rem"
+                      }
+                    },
+                    transition: {
+                      timeout: 300,
+                    },
+                  }}
 
-            >
-              <div className="column snug">
-                {/* <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('integrations')}><ElectricalServicesOutlined fontSize="small" /><Typography>Integrations</Typography></MenuItem> */}
+                >
+                  <div className="column snug">
+                    {/* <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('integrations')}><ElectricalServicesOutlined fontSize="small" /><Typography>Integrations</Typography></MenuItem> */}
 
 
-                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('iam')}><PeopleOutline fontSize="small" /><Typography>IAM</Typography></MenuItem>
-                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('locations')}><LocationOnOutlined fontSize="small" /><Typography>Locations</Typography></MenuItem>
-                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('settings')}><SettingsOutlined fontSize="small" /><Typography>Settings</Typography></MenuItem>
-                <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('apps')}><DeployedCodeIcon fontSize="small" /><Typography>Apps</Typography></MenuItem>
-              </div>
-            </Popover>
+                    <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('iam')}><PeopleOutline fontSize="small" /><Typography>IAM</Typography></MenuItem>
+                    <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('locations')}><LocationOnOutlined fontSize="small" /><Typography>Locations</Typography></MenuItem>
+                    <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('settings')}><SettingsOutlined fontSize="small" /><Typography>Settings</Typography></MenuItem>
+                    <MenuItem className='flex compact' disableRipple onClick={e => pushNewView('apps')}><DeployedCodeIcon fontSize="small" /><Typography>Apps</Typography></MenuItem>
+                  </div>
+                </Popover>
 
-            {!router.asPath.startsWith('/me') && (
+                {!router.asPath.startsWith('/me') && (
 
-              <StyledIconButton
-                title="More"
-                onClick={(e: any) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const target = e.currentTarget || e.target;
-                  setAnchorEl(target)
-                }}
-              >
-                <MoreVertOutlined fontSize="small" />
-              </StyledIconButton>
-            )}
+                  <StyledIconButton
+                    title="More"
+                    onClick={(e: any) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const target = e.currentTarget || e.target;
+                      setAnchorEl(target)
+                    }}
+                  >
+                    <MoreVertOutlined fontSize="small" />
+                  </StyledIconButton>
+                )}
 
-            {/* <ToggleButton
+
+                {/* <ToggleButton
               value="table"
               onClick={() => pushNewView('locations')}
             >
@@ -360,7 +486,7 @@ export default function Header({
               Locations
             </ToggleButton> */}
 
-            {/* <ToggleButton
+                {/* <ToggleButton
               value="crm"
               onClick={() => pushNewView('crm')}
             >
@@ -379,7 +505,9 @@ export default function Header({
 
 
 
-          </StyledToggleButtonGroup>
+              </StyledToggleButtonGroup>
+            </>
+          )}
         </div>
         <div className="flex compact fit">
           {/* <TextField
@@ -430,6 +558,49 @@ export default function Header({
           )}
         </div>
       </header>
+
+      {isSm && (
+
+        <Drawer
+          anchor='top'
+          open={isCalendarOpen}
+          // onClick={() => setIsCalendarOpen(false)}
+          onClose={() => setIsCalendarOpen(prev => !prev)}
+          sx={{
+            '& .MuiDrawer-paper': {
+              display: 'flex',
+              flexDirection: 'column',
+              // position: 'fixed',
+              width: "100%",
+              padding: "2rem 1rem",
+              height: "fit-content",
+              // overflow: "hidden",
+              backgroundColor: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+              // zIndex: 5,
+              // borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+            },
+          }}
+        >
+          <div className="flex center middle">
+            {router.asPath.startsWith('/me') ? (
+              <StyledWeekPicker
+                mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
+                Calendar={Session.Calendar}
+                value={Session.Calendar.frameDate}
+                source={item}
+              />
+            ) : (
+              <StyledWeekPicker
+                mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
+                Calendar={Controller.Calendar}
+                value={Controller.Calendar.frameDate}
+                source={item}
+              />
+            )}
+          </div>
+        </Drawer>
+      )}
 
       <Drawer
         // hideBackdrop

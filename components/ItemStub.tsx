@@ -3,7 +3,7 @@ import { Event, Group, Member, Profile } from "@/schema"
 import { CalendarMonthOutlined, WorkspacesOutlined, LocationOnOutlined, PersonOutline, Google, ScheduleOutlined, TodayOutlined } from "@mui/icons-material";
 import { Avatar, AvatarGroup, ButtonBase, CircularProgress, Skeleton, SxProps, Typography, useTheme } from "@mui/material"
 import ResolveItemIcon from "./ResolveItemIcon";
-import { isAllSingleDay, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from "@/lib/CalendarDays";
+import { isAllSingleDay, isEventCalendar, isMoment, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from "@/lib/CalendarDays";
 
 
 function ResolveItemSubtitle({
@@ -38,6 +38,20 @@ function ResolveItemSubtitle({
                         }}
                     />
                     <Typography sx={sx}>{item.subtitle}</Typography>
+                </div>
+            )
+        }
+
+        if (isMoment(item)) {
+            return (
+                <div className="flex compact2 center left">
+                    <TodayOutlined
+                        sx={{
+                            fontSize: "0.875rem",
+                            color: theme.palette.text.primary
+                        }}
+                    />
+                    <Typography sx={sx}>{item.date.format("MMM DD, YYYY")} - {item.start_time.print(true)}</Typography>
                 </div>
             )
         }
@@ -82,6 +96,20 @@ function ResolveItemSubtitle({
                         }}
                     />
                     <Typography sx={sx}>{item.date.to(item.end_date)}</Typography>
+                </div>
+            )
+        }
+
+        if (isEventCalendar(item)) {
+            return (
+                <div className="flex compact2 center left">
+                    <CalendarMonthOutlined
+                        sx={{
+                            fontSize: "0.875rem",
+                            color: theme.palette.text.primary
+                        }}
+                    />
+                    <Typography sx={sx}>Calendar</Typography>
                 </div>
             )
         }

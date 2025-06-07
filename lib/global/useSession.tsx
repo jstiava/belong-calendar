@@ -1,16 +1,18 @@
 "use client"
 import { useRouter } from 'next/router';
 import { enqueueSnackbar } from 'notistack';
-import { Dispatch, SetStateAction, useMemo, useState } from 'react';
-import { Group, Member, MemberData, Profile, MemberFactory, GroupData, Pointer } from '@/schema';
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
+import { Group, Member, MemberData, Profile, MemberFactory, GroupData, Event } from '@/schema';
 import useCalendar, { UseCalendar } from '../useCalendar';
 import { Type, UseSocket } from '@/types/globals';
 import useEvents, { UseEvents } from './useEvents';
 import Fuse from 'fuse.js';
 import axios, { API } from '../utils/axios';
 import useCreator, { UseCreator } from './useCreate';
-import { createTheme, lighten, Theme, useTheme, darken } from '@mui/material';
+import { createTheme, lighten, Theme, useTheme, darken, getContrastRatio } from '@mui/material';
 import usePreferences, { UsePreferences } from './usePreferences';
+import { invertGrayscaleHex } from './useBase';
+import useViewEvent from './useViewEvent';
 
 type HSV = { h: number; s: number; v: number };
 
@@ -91,6 +93,7 @@ export interface UseSession {
   setBase: Dispatch<SetStateAction<Member | null>>;
   Creator: UseCreator;
   debug: () => any;
+  Viewer: ReturnType<typeof useViewEvent>,
   reload: () => any;
 }
 
@@ -232,7 +235,7 @@ export default function useSession(): UseSession {
 
   let darkTheme: Theme = createTheme({
     palette: {
-      divider: '#1c1c1c',
+      divider: '#262626',
       mode: 'dark',
       primary: {
         main: session?.theme_color ? session.theme_color : "#ffffff",
@@ -365,7 +368,11 @@ export default function useSession(): UseSession {
         const profile = new Profile(res.data.profile);
         handleSession(profile);
         const myBases: MemberData[] = res.data.items.map((item: MemberData) => {
-          return MemberFactory.create(item.type, item);
+          const built = MemberFactory.create(item.type, item);
+          if (built instanceof Event) {
+            return built.localize();
+          }
+          return built;
         });
 
         const basesSorted = myBases.sort((a, b) => {
@@ -436,8 +443,13 @@ export default function useSession(): UseSession {
         if (!bases || bases.length === 0) {
 
           const myBases: MemberData[] = res.data.items.map((item: MemberData) => {
-            return MemberFactory.create(item.type, item);
+            const built = MemberFactory.create(item.type, item);
+            if (built instanceof Event) {
+              return built.localize();
+            }
+            return built;
           });
+
 
           myBases.sort((a, b) => {
             const hsvA = hexToHSV(a.theme_color ? a.theme_color : profile.theme_color);
@@ -502,6 +514,13 @@ export default function useSession(): UseSession {
     reload
   });
 
+   const Viewer = useViewEvent(
+    session,
+    Events,
+    Creator.startCreator,
+    Preferences.mode === "light" ? lightTheme : darkTheme,
+  );
+
   return useMemo(() => {
     return {
       theme: Preferences.mode === "light" ? lightTheme : darkTheme,
@@ -526,6 +545,7 @@ export default function useSession(): UseSession {
       setBase,
       Creator,
       debug,
+       Viewer,
       reload
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

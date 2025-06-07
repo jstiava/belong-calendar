@@ -20,7 +20,7 @@ import {
   Popover,
 } from "@mui/material";
 import React, { useState, useEffect, useRef, useCallback, memo, ChangeEvent, Fragment } from "react";
-import { EventData, ImageDisplayType, Junction, JunctionBuilder, Event, Member, MemberData, MemberFactory, Schedule } from "@/schema";
+import { EventData, ImageDisplayType, Junction, JunctionBuilder, Event, Member, MemberData, MemberFactory, Schedule, JunctionData } from "@/schema";
 import { AddOutlined, ArrowBack, CalendarMonthOutlined, ChangeHistoryOutlined, CloseOutlined, EditCalendar, FirstPage, FirstPageOutlined, LastPageOutlined, LinkOutlined, MarkunreadMailboxOutlined, PhotoLibraryOutlined, SaveOutlined, SendOutlined, TextFieldsOutlined } from "@mui/icons-material";
 import { enqueueSnackbar } from "notistack";
 import { CreatePanelProps, CreatorModules, CreatorPanelMobileStyles, CreatorPanelProps, CreatorPanelStyles, SharedCreatorPanelStyles, StartCreator, UseCreateForm } from "./global/useCreate";
@@ -102,25 +102,27 @@ export default function useCreatePanel(
   }
 
 
-  const registerJunction = (value: Member) => {
+  const registerJunction = (value: any) => {
 
 
     if (value.integration && item.integration) {
 
       const integration = IntegrationTemplates.find(x => x.slug === value.integration);
-      if (integration && integration.types) {
 
+      if (integration && integration.types) {
         const key = item.integration as keyof typeof integration.types;
         const types = integration.types[key] ?? null;
+
         if (types) {
           const events = types['events'];
+
           if (events) {
             registerActions(events.map((x: any) => ({
-              ...x,
               integration: value.integration,
               source: value.id(),
               template: {},
               status: 'action_required',
+              ...x,
             })));
           }
         }
@@ -131,6 +133,35 @@ export default function useCreatePanel(
       return [...prev, value];
     });
 
+  }
+
+
+  const registerExistingJunction = (value: MemberData) => {
+
+
+    const pendingActions = [];
+    for (const j of value.junctions) {
+      const junction: Junction = j;
+
+
+      if (junction.external_child_events) {
+        for (const event of Object.values(junction.external_child_events)) {
+          console.log(event);
+          pendingActions.push(event);
+        }
+      }
+    }
+
+    const built = MemberFactory.create(value.type, value);
+    if (built instanceof Event) {
+      built.localize();
+    }
+
+    registerActions(pendingActions);
+
+    setJunctions(prev => {
+      return [...prev, built];
+    });
   }
 
   const updateAction = (value: any) => {
@@ -184,29 +215,51 @@ export default function useCreatePanel(
 
     try {
 
-      const startJunction = new JunctionBuilder()
-        .from(Junction.toPointer(source)).to({
-          type: item.type,
-          value: item.uuid
-        })
-        .allowAll()
-        .isPrivate()
-        .fromChildToParent()
-        .denyAll()
+      if (item.mode === Mode.Create) {
 
-      if (true) {
-        startJunction
-          .fromParentToChild()
-          .designate({
-            id: item.local_id,
-            type: `#jotform.form`
+
+        const startJunction = new JunctionBuilder()
+          .from(Junction.toPointer(source)).to({
+            type: item.type,
+            value: item.uuid
           })
+          .allowAll()
+          .isPrivate()
+          .fromChildToParent()
+          .denyAll()
+
+        if (item.integration) {
+          startJunction
+            .fromParentToChild()
+            .designate({
+              id: item.local_id,
+              type: item.integration
+            })
+        };
+
+        const copy = source.copy();
+        copy.junctions.set(source.id(), startJunction.build('hosts')[0]);
+
+        registerJunction(copy);
       }
+      else if (item.mode === Mode.Modify) {
 
-      const copy = source.copy();
-      copy.junctions.set(source.id(), startJunction.build('hosts')[0]);
+        console.log(item);
 
-      registerJunction(copy);
+        axios.get(API.GET_IAM, {
+          params: {
+            source: MemberFactory.getToken(item),
+          }
+        })
+          .then(res => {
+            for (const member of res.data.members as MemberData[]) {
+              registerExistingJunction(member);
+            }
+          })
+
+        return;
+
+      }
 
     }
     catch (err) {
@@ -685,7 +738,17 @@ export default function useCreatePanel(
                       const bases = Session.search(query);
                       const theEvents = Session.Events.search(query);
                       const eventsFromBase = Base ? Base.Events.search(query) : [];
-                      return [...bases, ...theEvents, ...eventsFromBase];
+                      console.log({
+                        bases,
+                        theEvents,
+                        eventsFromBase
+                      })
+
+                      const combined = [...bases, ...theEvents, ...eventsFromBase];
+                      const deduped = Array.from(
+                        new Map(combined.map(item => [item.id, item])).values()
+                      );
+                      return deduped;
                     }}
                     selected={locations}
                     setSelected={setLocations}
@@ -721,11 +784,11 @@ export default function useCreatePanel(
                           })
                           return;
                         },
-                        variables: variables.map((x: any) => ({
+                        variables: variables ? variables.map((x: any) => ({
                           label: x.text,
                           slug: x.name,
                           isCanBeNull: true
-                        })),
+                        })) : [],
                         doNotPrepJunctions: true
                       })
                       return;

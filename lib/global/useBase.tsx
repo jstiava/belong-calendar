@@ -17,6 +17,26 @@ import useIAM, { UseIAM } from './useIAM';
 import axiosInstance from '@/lib/utils/axios';
 
 
+export function invertGrayscaleHex(hex: string): string {
+  // Strip #
+  const color = hex.replace('#', '');
+
+  // Parse RGB
+  const r = parseInt(color.slice(0, 2), 16);
+  const g = parseInt(color.slice(2, 4), 16);
+  const b = parseInt(color.slice(4, 6), 16);
+
+  // Calculate brightness (grayscale assumption: R == G == B)
+  const avg = (r + g + b) / (3 * 255); // normalized: 0 (white) to 1 (black)
+
+  const invertedBrightness = 1 - avg; // flip it
+
+  const value = Math.round(invertedBrightness * 255);
+  const hexVal = value.toString(16).padStart(2, '0');
+
+  return `#${hexVal}${hexVal}${hexVal}`;
+}
+
 export interface UseBaseCore {
   theme: any,
   Calendar: UseCalendar,

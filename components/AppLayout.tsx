@@ -9,7 +9,7 @@ import { UseSession } from "@/lib/global/useSession";
 import { UseBase } from "@/lib/global/useBase";
 import { Member, MemberFactory, Profile } from "@/schema";
 import { useRouter } from "next/router";
-import { Typography, useTheme, CircularProgress } from "@mui/material";
+import { Typography, useTheme, CircularProgress, useMediaQuery } from "@mui/material";
 import useIAM from "@/lib/global/useIAM";
 import { useSnackbar } from "notistack";
 import Module from "module";
@@ -32,6 +32,8 @@ export default function AppLayout(props: {
     const Session = props.Session;
     const Base = props.Base;
     const Module = props.Module;
+
+    const isSm = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [cache, setCache] = useState<{
         session: string,
@@ -154,7 +156,7 @@ export default function AppLayout(props: {
                 <div className="column snug" style={{
                     marginLeft: !Session.Preferences.isSidebarDocked ? '0rem' : `calc(${SIDEBAR_WIDTH} - 0.1rem)`,
                     width: !Session.Preferences.isSidebarDocked ? "100%" : `calc(100% - ${SIDEBAR_WIDTH})`,
-                    borderRight: `0.1rem solid ${DIVIDER_NO_ALPHA_COLOR}`,
+                    borderRight: isSm ? '0' : `0.1rem solid ${theme.palette.divider}`,
                 }}>
                     <div
                         className="column snug"
@@ -176,7 +178,7 @@ export default function AppLayout(props: {
                     <div id="content"
                         className="column"
                         style={{
-                            padding: "3.5rem 0 2.5rem 0",
+                            padding: `3.5rem 0 ${isSm ? "0": "2.5rem"} 0`,
                             height: "100vh",
                             zIndex: 0,
                         }}>
@@ -189,16 +191,24 @@ export default function AppLayout(props: {
                             {props.children}
                         </div>
                     </div>
-                    <Footer
-                        Session={Session}
-                        Base={Base}
-                        Module={props.Module}
-                        module={props.module}
-                    />
+
+                    {isSm ? (
+                        <></>
+                    ) : (
+                        <Footer
+                            Session={Session}
+                            Base={Base}
+                            Module={props.Module}
+                            module={props.module}
+                        />
+                    )}
                 </div>
             </div>
 
             {Session.Creator.CreateForm}
+            <>
+            {Session.Viewer.EventPopover}
+            </>
             <>
                 {Base?.Creator.CreateForm}
             </>

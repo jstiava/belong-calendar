@@ -12,6 +12,7 @@ import { HostData, Junction, HostFactors } from './junctions';
 import { LocationData } from './locations';
 import { ProfileData, Profile } from './profiles';
 import { ScheduleData, Schedule } from './schedules';
+import { isAllSingleDay, isMultiDayEvent } from '@/lib/CalendarDays';
 
 export const hashObject = (obj: any): string => {
   return createHash('sha256')
@@ -55,7 +56,6 @@ export type EventData = {
   cover_img: ImageStub | null;
   icon_img: ImageStub | null;
   wordmark_img: ImageStub | null;
-  theme_color: string | null;
   search_vectors: string[] | null;
   link: string | null;
   event_type: string | null;
@@ -65,7 +65,12 @@ export type EventData = {
   quantity: number | null;
   subtitle: string | null;
   integration: string | null;
+  event_store: Object | null;
 
+  // colors
+  theme_color: string;
+  theme_color_onlight: string;
+  theme_color_ondark: string;
 
   startDateTime?: string;
   endDateTime?: string;
@@ -318,6 +323,10 @@ export class Events {
   }
 
   static dayjs(date: number, time: Chronos) {
+    return dayjs.utc(String(date)).set('hour', time.getHour()).set('minute', time.getMinute());
+  }
+
+  static local_dayjs(date: number, time: Chronos) {
     return dayjs(String(date)).set('hour', time.getHour()).set('minute', time.getMinute());
   }
 
@@ -576,24 +585,6 @@ export class Event implements Member {
     return Type.Event;
   }
 
-  updateMembership = async (source_id: string, theHostData: HostData) => {
-
-    await axios.patch(API.PATCH_HOST, {
-      source: this.getToken(),
-      host: theHostData,
-      uuid: theHostData.uuid
-    })
-      .then(res => {
-        this.junctions.delete(source_id);
-        this.junctions.set(source_id, new Junction(theHostData, Type.Event));
-        return true;
-      })
-      .catch(error => {
-        console.log(error);
-        return false;
-      });
-  }
-
   isOpen = (date: Dayjs = dayjs(), time: Chronos = dayjs().toLocalChronos()): boolean => {
     try {
 
@@ -629,7 +620,7 @@ export class Event implements Member {
     }
   }
 
-  isOpenDetailed = (date: Dayjs = dayjs(), time: Chronos = dayjs().toLocalChronos()): { date: Dayjs, hours: Hours | boolean | null, schedule: Schedule | null, isOpen: boolean, context: string, regular: Schedule | null, lateNight: boolean, metadata: string } | null => {
+  isOpenDetailed = (date: Dayjs = dayjs(), time?: Chronos): { date: Dayjs, hours: Hours | boolean | null, schedule: Schedule | null, isOpen: boolean, context: string, regular: Schedule | null, lateNight: boolean, metadata: string } | null => {
     const template = {
       date,
       hours: null,
@@ -673,7 +664,7 @@ export class Event implements Member {
         return null;
       }
 
-      if (time.getAMP() === 'AM') {
+      if (time && time.getAMP() === 'AM') {
         const yesturFrame = this.getSchedulesInFrame(date.add(-1, 'day'), time.add(24, false));
         if (yesturFrame && yesturFrame.length > 0 && yesturFrame[0].isOpen(date.add(-1, 'day').day(), time.add(24, false))) {
           const yesturContext = yesturFrame[0].isOpenWithContext(date.add(-1, 'day').day(), time.add(24, false));
@@ -813,16 +804,54 @@ export class Event implements Member {
 
   localize(globalize = false): Event {
     if (this.is_local === !globalize) {
+      console.log({
+        globalize,
+        message: "Early return"
+      })
       return this;
     }
 
     this.is_local = globalize ? false : true;
-    if (this.start_time) {
-      this.date = this.date ? this.date.add((globalize ? -1 : 1) * dayjs().getTimezoneOffsetInHours(), 'hours') : null;
-      this.end_date = this.end_date ? this.end_date.add((globalize ? -1 : 1) * dayjs().getTimezoneOffsetInHours(), 'hours') : null;
-      this.start_time = this.start_time ? this.start_time.add((globalize ? -1 : 1) * dayjs().getTimezoneOffsetInHours(), false) : null;
-      this.end_time = this.end_time ? this.end_time.add((globalize ? -1 : 1) * dayjs().getTimezoneOffsetInHours(), false) : null;
+
+    if (isMultiDayEvent(this) || isAllSingleDay(this)) {
+       this.date = globalize
+        ? dayjs(this.date).utc()
+        : dayjs(this.date).tz('America/Chicago', true);
+          this.end_date = globalize ? dayjs.utc(this.end_date) : dayjs.utc(this.end_date).tz('America/Chicago', true);
+      return this;
     }
+
+
+    const dateBeforeConversion = this.date;
+    if (this.date) {
+      this.date = globalize
+        ? dayjs(this.date).utc()
+        : dayjs(this.date).tz('America/Chicago');
+
+      if (this.end_date) {
+        this.end_date = globalize ? dayjs.utc(this.end_date) : dayjs.utc(this.end_date).tz('America/Chicago');
+      }
+    }
+
+    if (this.start_time) {
+
+      if (this.date) {
+        this.start_time = this.date.toChronos();
+      }
+
+      if (this.end_time) {
+        const end_hour = this.end_time.getHour();
+        const end_minute = this.end_time.getMinute();
+        if (this.date && dateBeforeConversion) {
+          const endDateWithTime = dateBeforeConversion.set('hour', end_hour).set('minute', end_minute);
+          const finalConverted = globalize
+            ? dayjs(endDateWithTime).utc()
+            : dayjs(endDateWithTime).tz('America/Chicago');
+          this.end_time = finalConverted.toChronos();
+        }
+      }
+    }
+
     this.junctions && this.junctions.forEach((r) => {
       if (r instanceof Event) {
         globalize ? r.globalize() : r.localize();
@@ -833,6 +862,16 @@ export class Event implements Member {
       globalize ? s.globalize() : s.localize();
     });
     return this;
+  }
+
+  when() {
+    console.log({
+      date: this.date && this.date.yyyymmdd(),
+      start_time: this.start_time && this.start_time.getHMN(),
+      end_date: this.end_date && this.end_date.yyyymmdd(),
+      end_time: this.end_time && this.end_time.getHMN(),
+      is_local: this.is_local
+    })
   }
 
   globalize(): Event {
@@ -880,8 +919,20 @@ export class Event implements Member {
       }
     }
 
-    this.date = event.date ? event.start_time ? Events.dayjs(event.date, new Chronos(Number(event.start_time))) : dayjs(String(event.date)) : null;
-    this.end_date = event.end_date ? dayjs(String(event.end_date)) : null;
+    this.is_local = 'is_local' in event ? event.is_local ? true : false : is_local;
+    if (event.date) {
+      this.date = this.is_local ? dayjs(String(event.date)).tz('America/Chicago') : dayjs.utc(String(event.date));
+
+      if (event.start_time) {
+        const start_time = new Chronos(Number(event.start_time));
+        this.date = this.date.set('hour', start_time.getHour()).set('minute', start_time.getMinute());
+      }
+    }
+
+    if (this.end_date) {
+      this.end_date = this.is_local ? dayjs(String(event.end_date)).tz('America/Chicago') : dayjs.utc(String(event.end_date));
+    }
+
     this.start_time = this.start_time ? new Chronos(Number(event.start_time), false) : null;
     this.end_time = this.end_time ? new Chronos(Number(event.end_time), false) : null;
     this.schedules = event.schedules && event.schedules[0] != null ? event.schedules.map((x: any) => {
@@ -896,15 +947,10 @@ export class Event implements Member {
       }
     }
 
-    if (this.end_time) {
-      this.end_date = null;
-    }
-
     this.children = event.children?.map((e: EventData) => new Event(e, is_local)) || null;
     this.token = event.token || null;
     this.metadata = event.metadata || {};
     this.isVisible = false;
-    this.is_local = is_local;
     this.collisions = 0;
     this.version = event.version || 0;
     return this;

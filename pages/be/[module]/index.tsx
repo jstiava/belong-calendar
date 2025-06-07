@@ -2,7 +2,7 @@
 import { AppPageProps, Mode, Type } from '@/types/globals';
 import { useRouter } from 'next/router';
 import { SessionProtectedAppPageProps } from '@/types/globals';
-import { Avatar, Button, ButtonBase, lighten, Typography, useTheme } from '@mui/material';
+import { Avatar, Button, ButtonBase, lighten, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { ChangeEvent, CSSProperties, useEffect, useState } from 'react';
 import axiosInstance from '@/lib/utils/axios';
@@ -22,6 +22,8 @@ const MainBasePage = (props: AppPageProps) => {
     const router = useRouter();
     const theme = useTheme();
     const { enqueueSnackbar } = useSnackbar();
+
+    const isSm = useMediaQuery(theme.breakpoints.down('sm'));
 
     const Session = props.Session;
     const item = props.module ? props.module : Session.base;
@@ -62,7 +64,7 @@ const MainBasePage = (props: AppPageProps) => {
         <div id="main"
             className="column relaxed left"
             style={{
-                padding: "2rem"
+                padding: isSm ? "1rem" : "2rem"
             }}>
             <div className="flex fit">
                 <Button
@@ -85,7 +87,7 @@ const MainBasePage = (props: AppPageProps) => {
             {actions && actions.length > 0 && (
                 <div className="column left" style={{
                     width: '100%',
-                    padding: '2rem',
+                    padding: isSm ? "1rem": '2rem',
                     border: `1px solid ${theme.palette.divider}`,
                     borderRadius: '0.25rem',
                     maxWidth: "40rem",
@@ -96,7 +98,7 @@ const MainBasePage = (props: AppPageProps) => {
                         }} />
                         <Typography variant="h6">Getting Started</Typography>
                     </div>
-                    <div className="flex top wrap">
+                    <div className={isSm ? "column compact": "flex top wrap"}>
                         {actions.map((action: any) => {
                             try {
                                 return (
@@ -106,11 +108,8 @@ const MainBasePage = (props: AppPageProps) => {
                                         className="flex"
                                         style={{
                                             position: 'relative',
-                                            width: "calc(50% - (2rem / 2))",
+                                            width: isSm ? "100%" : "calc(50% - (2rem / 2))",
                                             marginBottom: "1rem",
-                                            animation: `popIn 0.5s ease forwards`,
-                                            transform: "scale(0)",
-                                            opacity: 0,
                                             backgroundColor: `#09114110`,
                                             padding: "1.25rem 1.25rem",
                                             borderRadius: "0.25rem",

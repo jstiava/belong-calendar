@@ -185,7 +185,7 @@ const MonthView = ({
     <>
       <div
         className="column snug"
-        style={{ padding: "0 0" }}
+        style={{ padding: "0 0", height: '100%' }}
         ref={calendarRef}
         onMouseUp={handleMouseUp}
       >
@@ -241,14 +241,15 @@ const MonthView = ({
 
         <div className="flex left snug"
           style={{
-            width: "100%"
+            width: "100%",
+            height: "100%"
           }}
         >
 
           <div className="column snug" style={{
             width: "5rem",
             borderRight: `0.1rem solid ${theme.palette.divider}`,
-            height:"calc(100vh - 3rem)",
+            height:"100%",
           }}>
             {[1, 2, 3, 4, 5].map(week => (
               <div
@@ -266,6 +267,7 @@ const MonthView = ({
             display: "flex",
             alignItems: 'flex-start',
             width: `calc(100% - 5rem)`,
+            height: "100%",
             flexWrap: 'wrap'
           }}>
             <>
@@ -274,7 +276,7 @@ const MonthView = ({
                 width: `100%`,
                 flexWrap: "wrap",
                 // border: `0.05px solid ${theme.palette.divider}`, 
-                height: "calc(100vh - 3rem)"
+                height: "100%"
               }}>
                 {Calendar.days.map((date, index: number) => {
 

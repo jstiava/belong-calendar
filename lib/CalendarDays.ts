@@ -14,7 +14,7 @@ export function isMultiDayEvent(event: Event): event is Event & { date: Dayjs; e
     return dayjs.isDayjs(event.date) && dayjs.isDayjs(event.end_date);
 }
 
-export function isAllSingleDay(event: Event): event is Event & { date: Dayjs; end_date: Dayjs } {
+export function isAllSingleDay(event: Event): event is Event & { date: Dayjs; end_date: Dayjs, start_time: null, end_time: null } {
     return isMultiDayEvent(event) && (event.date.isSame(event.end_date));
 }
 
@@ -94,7 +94,7 @@ export class CalendarDays<T extends CalendarDay> {
 
         if (isMultiDayEvent(event)) {
 
-            for (let currDate = event.date.max(this.start); !currDate.isSame(event.end_date.min(this.end.add(1, 'day')), 'date'); currDate = currDate.add(1, 'day')) {
+            for (let currDate = event.date.max(this.start); !currDate.isSame(event.end_date.add(1, 'd').min(this.end.add(1, 'd')), 'd'); currDate = currDate.add(1, 'day')) {
                 const day = this.days.getOrCreate(currDate.yyyymmdd(), () => this.create(event.date.yyyymmdd()));
                 day.add(event.copy());
             }

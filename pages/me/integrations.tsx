@@ -148,9 +148,20 @@ export const IntegrationTemplates = [
         subtitle: "Integrate with your online meetings.",
         theme_color: '#0E71EB',
         query: {
-            client_id: "I0jlI0knRtWNV5Lf8boCxA",
-            response_type: "code"
+            client_id: "wG4mKL93TpWSnBbsMJesdw",
+            response_type: "code",
         },
+        types: {
+            '#zoom.meeting': {
+                events: [],
+                actions: [
+                    {
+                        slug: 'doCreateMeeting',
+                        name: "Create Meeting"
+                    }
+                ]
+            }
+        }
     },
 ]
 

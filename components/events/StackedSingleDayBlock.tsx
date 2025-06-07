@@ -1,14 +1,15 @@
-import { ScheduleOutlined } from '@mui/icons-material';
-import { useTheme, ButtonBase, Typography, alpha } from '@mui/material';
-import { MouseEvent, useState, useRef, useEffect } from 'react';
-import { Event, JunctionStatus, Member, Schedule } from '@/schema';
-import { Type } from '@/types/globals';
+import { Expand, OpenInFull, LocationOnOutlined, VerifiedOutlined, EditOutlined, AddOutlined, BugReportOutlined, DeleteOutline, HideImageOutlined, CalendarMonthOutlined } from '@mui/icons-material';
+import { useTheme, ButtonBase, Zoom, Fab, Typography, Popover, Tabs, Tab, Button, getContrastRatio, darken, alpha, Checkbox } from '@mui/material';
+import { MouseEvent, useState, useRef, useEffect, CSSProperties } from 'react';
+import Chronos from '@/lib/utils/chronos';
+import { Event, Events, JunctionStatus, Member } from '@/schema';
+import { Type, Mode, adjustForContrast } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 
 
-export const StackedScheduleBlock = ({
+export const StackedSingleDayBlock = ({
   column,
   event,
   referenceTime,
@@ -20,13 +21,14 @@ export const StackedScheduleBlock = ({
   isSelected,
   source,
   swap,
-  style = {},
-  date,
-  showHoursForDay = false
+  style = {}
 }: {
   column: number;
   event: Event & {
-    schedules: Schedule[]
+    date: Dayjs,
+    start_time: null,
+    end_date: Dayjs,
+    end_time: null
   };
   referenceTime: number;
   standardHeight: number;
@@ -37,9 +39,7 @@ export const StackedScheduleBlock = ({
   isSelected: boolean;
   source?: Member | null;
   swap: (newEvent: Event, oldEvent?: Event) => void;
-  style?: any,
-  date?: Dayjs,
-  showHoursForDay?: boolean
+  style?: any
 }) => {
   const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
@@ -53,25 +53,13 @@ export const StackedScheduleBlock = ({
 
   const open = Boolean(anchorEl);
   const id = open ? 'simple-popover' : undefined;
-  const start = event.start_time;
-  const end = event.end_time;
 
   const [isMember, setIsMember] = useState(false);
-  const [isOpenDetailed, setIsOpenDetailed] = useState<any | null>(null);
 
   useEffect(() => {
     if (!source) {
       return;
     }
-    const theIsOpenInfo = event.isOpenDetailed(date);
-    console.log({
-      message: "Stacked Schedule Block",
-      isOpen: theIsOpenInfo,
-      date: date?.yyyymmdd()
-    })
-    setIsOpenDetailed(theIsOpenInfo);
-
-
     const member = event.junctions.get(source.id());
     if (!member) return;
     if (member.status === JunctionStatus.Accepted) {
@@ -79,7 +67,7 @@ export const StackedScheduleBlock = ({
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, event]);
+  }, [source]);
 
   const [isHovered, setIsHovered] = useState(false);
 
@@ -95,7 +83,7 @@ export const StackedScheduleBlock = ({
       return;
     }
 
-    handleView(Type.Event, event, { e, date });
+    handleView(Type.Event, event, { e });
   };
 
   const handleRightClick = (e: any) => {
@@ -108,36 +96,29 @@ export const StackedScheduleBlock = ({
 
     handleView(Type.Event, event, {
       e,
-      isRightClick: true,
-      date
+      isRightClick: true
     })
 
   }
 
   const onMouseDown = (e: MouseEvent) => {
     console.log(event);
-    return;
-    // handleDragStart(e, {
-    //   uuid: event.uuid,
-    //   date: event.date,
-    //   time: event.start_time.getHMN(),
-    //   name: event.name
-    // });
+    handleDragStart(e, {
+      uuid: event.uuid,
+      date: event.date,
+      name: event.name
+    });
   }
 
   const handleHover = () => {
     setIsHovered(prev => !prev);
   };
 
-  if (isOpenDetailed && !isOpenDetailed.hours) {
-    return null;
-  }
-
   try {
     return (
       <>
         <ButtonBase
-          className="eventButton flex compact2 top"
+          className="eventButton column snug center between"
           data-type="eventButton"
           ref={eventRef}
           onMouseDown={onMouseDown}
@@ -168,42 +149,23 @@ export const StackedScheduleBlock = ({
             //   : 'rgba(0, 0, 0, 0.05) 0px 3px 6px, rgba(0, 0, 0, 0.1) 0px 3px 6px;',
             transition: '0.2s ease-in-out',
             // opacity: isPast ? 0.75 : 1,
-            width: `${style.width || '100%'} !important`,
-            marginLeft: style.marginLeft || 0
+            width: '100% !important',
+            marginLeft: 0
+            // marginLeft: style.marginLeft || 0
           }}
         >
-          <div className="flex fit">
-            {/* <Typography sx={{
-              fontSize: "0.75rem",
-            }}>{event.start_time.print(true)}</Typography> */}
-            <ScheduleOutlined sx={{
+          <div className="flex between">
+            <CalendarMonthOutlined sx={{
               fontSize: '0.875rem'
             }} />
           </div>
           <div className="flex left">
-            {showHoursForDay && isOpenDetailed ? (
-              <Typography
-                key={"hours_view"}
-                sx={{
-                  fontSize: "0.75rem",
-                  width: "100%",
-                  textAlign: 'left',
-                  lineHeight: '115%',
-                  whiteSpace: "normal",
-                  overflow: "clip",
-                  textOverflow: "ellipsis",
-                  display: "-webkit-box",
-                  WebkitBoxOrient: "vertical",
-                  WebkitLineClamp: 2,
-                }}>{isOpenDetailed ? isOpenDetailed.isOpen ? isOpenDetailed.hours ? isOpenDetailed.hours.as_text : 'Open' : isOpenDetailed.hours.as_text ? isOpenDetailed.hours.as_text : 'Closed' : 'Error'}</Typography>
-            ) : (
-              <Typography sx={{
-                fontSize: "0.75rem",
-                width: "100%",
-                textAlign: 'left',
-                lineHeight: '115%'
-              }}>{event.name}</Typography>
-            )}
+            <Typography sx={{
+              fontSize: "0.75rem",
+              width: "100%",
+              textAlign: 'left',
+              lineHeight: '115%'
+            }}>{event.name}</Typography>
           </div>
         </ButtonBase>
       </>

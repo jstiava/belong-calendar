@@ -418,6 +418,10 @@ export default function DateTimeAccordionModule({
                 onClick={() => {
                   setAnchorEl(null);
                   handleMultiChange({
+                    date: null,
+                    end_date: null,
+                    start_time: null,
+                    end_time: null,
                     schedules: [schedule]
                   })
                 }}

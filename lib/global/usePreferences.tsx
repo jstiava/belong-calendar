@@ -11,7 +11,7 @@ export interface UsePreferences {
 
 export default function usePreferences(): UsePreferences {
   const theme = useTheme();
-  const [mode, setMode] = useState('light');
+  const [mode, setMode] = useState('dark');
   const isLg = useMediaQuery(theme.breakpoints.down('lg'));
   const [isSidebarDocked, setIsSidebarDocked] = useState<boolean>(true);
 
@@ -29,7 +29,6 @@ export default function usePreferences(): UsePreferences {
       return prev === 'light' ? 'dark' : 'light'
     })
   }
-
 
   return {
     mode,

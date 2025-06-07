@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppBar, Toolbar, IconButton, Link, Avatar, AvatarGroup, Button, ButtonBase, Typography, useTheme, Popover, ToggleButton } from '@mui/material';
 import { UseSession } from '@/lib/global/useSession';
-import { CopyAllOutlined, ExpandMoreOutlined, ExpandOutlined, FilterList, Fullscreen, LockOutlined, SearchOutlined, SendOutlined } from '@mui/icons-material';
+import { CopyAllOutlined, ExpandMoreOutlined, ExpandOutlined, FilterList, Fullscreen, LanguageOutlined, LockOutlined, SearchOutlined, SendOutlined } from '@mui/icons-material';
 import { DIVIDER_NO_ALPHA_COLOR } from '../Divider';
 import { SIDEBAR_WIDTH } from './Sidebar';
 import { UseBase } from '@/lib/global/useBase';
@@ -12,6 +12,7 @@ import { useRouter } from 'next/router';
 import SmallTextField from '../SmallTextField';
 import ResolveItemIcon from '../ResolveItemIcon';
 import StyledIconButton from '../StyledIconButton';
+import dayjs from '@/lib/utils/dayjs';
 
 const Footer = ({
   Session,
@@ -75,6 +76,26 @@ const Footer = ({
           width: !Session.Preferences.isSidebarDocked ? "100%" : `calc(100% - ${SIDEBAR_WIDTH} - 0.1rem)`,
         }}>
         <div className="flex fit">
+          <Button
+            disableRipple
+            className="flex compact fit"
+            sx={{
+              padding: "0.25rem 0.5rem",
+              borderRadius: "0.25rem",
+              color: theme.palette.text.primary,
+              width: 'fit-content'
+            }}
+          >
+            <LanguageOutlined sx={{
+              fontSize: "1rem",
+            }} />
+            <Typography sx={{
+              fontWeight: 600,
+              fontSize: "0.875rem",
+               opacity: 0.75,
+              // textTransform: 'uppercase'
+            }}>America/Chicago (Hard-coded) ({dayjs().tz('America/Chicago').format("z Z")})</Typography>
+            </Button>
           <Button
             disableRipple
             className="flex compact fit"

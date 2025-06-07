@@ -1,13 +1,14 @@
 'use client';
 import { useRouter } from 'next/router';
 import { AppPageProps } from '@/types/globals';
-import { Typography, useTheme } from '@mui/material';
+import { Typography, useMediaQuery, useTheme } from '@mui/material';
 import MonthView from '@/components/calendar/MonthView';
 import WeekView from '@/components/calendar/WeekView';
 import { MouseEvent, SetStateAction, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { Event } from '@/schema';
 import DataView from '@/components/calendar/DataView';
+import MobileMonthView from '@/components/calendar/MobileMonthView';
 
 const CalendarPage = (props: AppPageProps) => {
     const router = useRouter();
@@ -19,6 +20,8 @@ const CalendarPage = (props: AppPageProps) => {
 
     const item = props.module ? props.module : props.Session.base;
     const prefix = '/be/';
+
+    const isSm = useMediaQuery(theme.breakpoints.down('sm'));
 
     const pushNewView = (tab: string) => {
 
@@ -106,18 +109,28 @@ const CalendarPage = (props: AppPageProps) => {
 
 
     useEffect(() => {
-        if (router.query.view) {
-            const view = router.query.view;
-            if (view === 'month') {
-                Controller.Calendar.goToStartOfMonth(dayjs())
-            }
-            else if (view === 'week') {
-                Controller.Calendar.gotoStartOfWeek(dayjs());
-            }
-            else if (view == 'day') {
-                Controller.Calendar.gotoDate(dayjs());
-            }
+         if (!router.query.view) {
+            const tab = 'calendar';
+            router.replace({
+                pathname: `${`/me/`}${tab}`,
+                query: { ...router.query, view: 'month' }
+            })
+            return;
         }
+
+        // if (router.query.view) {
+        //     const view = router.query.view;
+
+        //     if (view === 'month') {
+        //         Controller.Calendar.goToStartOfMonth(dayjs())
+        //     }
+        //     else if (view === 'week') {
+        //         Controller.Calendar.gotoStartOfWeek(dayjs());
+        //     }
+        //     else if (view == 'day') {
+        //         Controller.Calendar.gotoDate(dayjs());
+        //     }
+        // }
 
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,6 +163,27 @@ const CalendarPage = (props: AppPageProps) => {
     }
 
     if (router.query.view === 'month') {
+
+        if (isSm) {
+            return (
+                <MobileMonthView
+                    Preferences={Session.Preferences}
+                    source={item}
+                    Calendar={Controller.Calendar}
+                    handleCreate={Controller.Creator.startCreator}
+                    handleView={Controller.Viewer.handleOpenEventPopover}
+                    days={Controller.Events.days}
+                    Events={Controller.Events}
+                    selected={null}
+                    setSelected={function (value: SetStateAction<Event[] | null>): void {
+                        throw new Error('Function not implemented.');
+                    }}
+                    handleSelect={function (e: MouseEvent, event: Event): void {
+                        throw new Error('Function not implemented.');
+                    }}
+                />
+            )
+        }
         return (
             <MonthView
                 Preferences={Session.Preferences}

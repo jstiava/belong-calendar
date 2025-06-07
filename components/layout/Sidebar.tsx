@@ -1,11 +1,11 @@
 "use client"
 import { UseSession } from "@/lib/global/useSession";
-import { Event, Member } from "@/schema";
+import { Event, Group, Member } from "@/schema";
 import { Drawer, Button, Typography, useMediaQuery, useTheme, ButtonBase, lighten, Popover, alpha } from "@mui/material";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { UseBase } from "@/lib/global/useBase";
 import { useRouter } from "next/router";
-import { AddOutlined, ArrowBackIosOutlined, ArrowForwardIosOutlined, CloseOutlined, HandshakeOutlined, MoreHorizOutlined, SettingsOutlined, SwitchAccountOutlined } from "@mui/icons-material";
+import { AddOutlined, ArrowBackIosOutlined, ArrowForwardIosOutlined, CloseOutlined, EditOutlined, HandshakeOutlined, MoreHorizOutlined, SettingsOutlined, SwitchAccountOutlined } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import StyledWeekPicker from "../calendar/WeekPicker";
 import Divider, { DIVIDER_NO_ALPHA_COLOR } from "../Divider";
@@ -43,7 +43,8 @@ export default function Sidebar({
 
   const isSm = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const Controller = router.asPath.startsWith('/me') ? Session : Base;
+  const item = router.asPath.startsWith('/me') ? Session.session : module ? module : Session.base;
+  const Controller = router.asPath.startsWith('/me') ? Session : module ? Module : Base;
 
   const pushNewView = (tab: string) => {
 
@@ -70,6 +71,10 @@ export default function Sidebar({
       query: { ...rest, view: theView }
     })
   };
+
+  if (!Controller) {
+    return null;
+  }
 
   return (
     <>
@@ -133,8 +138,9 @@ export default function Sidebar({
               }}>{Session.base instanceof Event ? Session.base.subtitle || Session.base.type : Session.base.type}</Typography>
             </div>
           )}
-          {(Session.base && Session.session) && Session.base.integration && (
+          {(Session.base && Session.session) && (Session.base.integration && (Session.base instanceof Group && Session.base.refresh_token)) && (
             <ButtonBase
+              disableRipple
               onClick={() => {
                 const integration = IntegrationTemplates.find(x => x.slug === Session.base!.integration);
 
@@ -169,6 +175,26 @@ export default function Sidebar({
                 fontSize: "1rem"
               }} />
               <Typography>Renew</Typography>
+            </ButtonBase>
+          )}
+
+
+          {item && (
+            <ButtonBase
+              disableRipple
+              onClick={() => {
+                Controller?.Creator.startCreator(item.type, Mode.Modify, item);
+              }}
+              className="flex compact"
+              sx={{
+                padding: "0.25rem 0.5rem",
+                borderRadius: "0.25rem"
+              }}
+            >
+              <EditOutlined sx={{
+                fontSize: "1rem"
+              }} />
+              <Typography>Edit</Typography>
             </ButtonBase>
           )}
           <ButtonBase
@@ -270,24 +296,29 @@ export default function Sidebar({
           height: "calc(100% - 3.5rem)",
           padding: "0.5rem 0"
         }}>
-          <div className="flex center middle">
-            {router.asPath.startsWith('/me') ? (
-              <StyledWeekPicker
-                mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
-                Calendar={Session.Calendar}
-                value={Session.Calendar.frameDate}
-              />
-            ) : (
-              <StyledWeekPicker
-                mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
-                Calendar={module && Module ? Module.Calendar : Session.base && Base ? Base.Calendar : Session.Calendar}
-                value={module && Module ? Module.Calendar.frameDate : Session.base && Base ? Base.Calendar.frameDate : Session.Calendar.frameDate}
-              />
-            )}
-          </div>
+          {!isSm && item && (
+
+            <div className="flex center middle">
+              {router.asPath.startsWith('/me') ? (
+                <StyledWeekPicker
+                  mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
+                  Calendar={Session.Calendar}
+                  value={Session.Calendar.frameDate}
+                  source={item}
+                />
+              ) : (
+                <StyledWeekPicker
+                  mode={theme.palette.mode === 'dark' ? 'light' : 'dark'}
+                  Calendar={Controller.Calendar}
+                  value={Controller.Calendar.frameDate}
+                  source={item}
+                />
+              )}
+            </div>
+          )}
           <div className="column" style={{
             padding: "1rem 0.5rem",
-            maxHeight: "calc(100% - 23rem)",
+            maxHeight: isSm ? "calc(100% - 5rem)" : "calc(100% - 23rem)",
             overflowY: 'scroll'
           }}>
 
@@ -329,7 +360,7 @@ export default function Sidebar({
 
                   title={"New Calendar"}
                   onClick={() => {
-                    
+
                     Controller?.Creator.startCreator(Type.Event, Mode.Create, new Event({
                       date: null,
                       start_time: null,
@@ -345,7 +376,7 @@ export default function Sidebar({
                 </StyledIconButton>
               </div>
               <div className="column snug">
-                {Controller && Controller.Events.events?.map((item) => {
+                {(Base ? Base.Events.events : Session.Events.events)?.map((item) => {
 
                   if (!isEventCalendar(item) && !(isMultiDayEvent(item) && !item.date.isSame(item.end_date))) {
                     return null;
@@ -365,6 +396,14 @@ export default function Sidebar({
                         const pathParts = router.pathname.split('/');
                         const currentTab = pathParts[3];
                         const { base, module, ...rest } = router.query;
+
+                        if (router.asPath.startsWith('/me')) {
+                          router.push({
+                            pathname: `/be/${item.id()}`,
+                            query: rest
+                          })
+                          return;
+                        }
                         router.push({
                           pathname: `/be/${item.id()}${currentTab ? `/${currentTab}` : ``}`,
                           query: {
@@ -375,7 +414,7 @@ export default function Sidebar({
                       }}
                       onContextMenu={(e) => {
                         e.preventDefault();
-                        Base?.Viewer.handleOpenEventPopover(Type.Event, item, {
+                        Controller?.Viewer.handleOpenEventPopover(Type.Event, item, {
                           e,
                           isRightClick: true
                         })
