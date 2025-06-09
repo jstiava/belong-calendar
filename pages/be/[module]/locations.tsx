@@ -9,7 +9,7 @@ import useIAM from '@/lib/global/useIAM';
 import LargeTextField from '@/components/LargeTextField';
 import SmallTextField from '@/components/SmallTextField';
 import LargeBaseCard from '@/components/bases/LargeBaseCard';
-import { Group } from '@/schema';
+import { Group } from '@jstiava/chronos';
 import ItemStub from '@/components/ItemStub';
 
 const MainBasePage = (props: AppPageProps) => {

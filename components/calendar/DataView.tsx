@@ -17,11 +17,10 @@ import {
 import { useState, useEffect, useRef, MouseEvent, Dispatch } from 'react';
 import CalendarDay from '@/lib/CalendarDay';
 import { UseCalendar } from '@/lib/useCalendar';
-import dayjs from '@/lib/utils/dayjs';
-import { Event, EventData, Group, Member, MemberFactory, Schedule } from "@/schema";
+
+import { Event, EventData, Group, Member, MemberFactory, Schedule, dayjs, isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent, Dayjs } from '@jstiava/chronos';
 import { Mode, Type } from '@/types/globals';
 import { StartCreator } from '@/lib/global/useCreate';
-import { Dayjs } from 'dayjs';
 import { UseEvents } from '@/lib/global/useEvents';
 import useDraggableEventBlock, { DraggedEventBlockProps } from './DraggableEventBlock';
 import { UsePreferences } from '@/lib/global/usePreferences';
@@ -38,7 +37,6 @@ import ItemStub from '../ItemStub';
 import { MEDIA_BASE_URI } from '@/lib/useComplexFileDrop';
 import Image from 'next/image';
 import BackgroundImage from '../Image';
-import { isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
 import { useRouter } from 'next/router';
 
 const CustomCheckbox = (props: any) => {

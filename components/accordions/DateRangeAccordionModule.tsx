@@ -14,14 +14,13 @@ import {
   useTheme,
 } from '@mui/material';
 import { DatePicker, TimePicker, TimePickerProps, renderTimeViewClock } from '@mui/x-date-pickers';
-import { Dayjs } from 'dayjs';
+
 import AccordionCreateModule, {
   AccordionSummaryCreateModule,
   AccordionDetailsCreateModule,
 } from '@/components/accordions/AccordionCreateModule';
-import dayjs from '@/lib/utils/dayjs';
-import { EventData, Events as EventsService } from '@/schema';
-import Chronos from '@/lib/utils/chronos';
+import { EventData, Events as EventsService, dayjs, Chronos, Dayjs } from '@jstiava/chronos';
+
 import { CreatorPanelProps } from '@/lib/global/useCreate';
 
 interface DateRangeAccordionModuleProps {

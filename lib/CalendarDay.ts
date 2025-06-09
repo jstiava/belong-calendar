@@ -1,8 +1,5 @@
 import MinHeap from './MinHeap';
-import { Event, Events } from '@/schema';
-import { Hours } from './utils/medici';
-import dayjs from './utils/dayjs';
-import { Dayjs } from 'dayjs';
+import { Event, Hours, Dayjs, dayjs } from '@jstiava/chronos';
 
 
 export default class CalendarDay {

@@ -1,8 +1,7 @@
 "use client"
 import { StartCreator } from "@/lib/global/useCreate";
 import { UseEvents } from "@/lib/global/useEvents";
-import Chronos from "@/lib/utils/chronos";
-import { EventData } from "@/schema";
+import { EventData, Chronos } from '@jstiava/chronos';
 import { Mode, Type } from "@/types/globals";
 import { RectangleTwoTone } from "@mui/icons-material";
 import { alpha, Typography, useTheme } from "@mui/material";

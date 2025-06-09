@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import axios, { API } from '../utils/axios';
 import { enqueueSnackbar, useSnackbar } from 'notistack';
-import { Group, Event, Member, Profile, MemberFactory, MemberData, GroupData } from '@/schema';
+import { Group, Event, Member, Profile, MemberFactory, MemberData, GroupData } from '@jstiava/chronos';
 import { Type } from '@/types/globals';
 
 export interface UseIAM {

@@ -20,10 +20,8 @@ import AccordionCreateModule, {
   AccordionSummaryCreateModule,
   AccordionDetailsCreateModule,
 } from '@/components/accordions/AccordionCreateModule';
-import Chronos from '@/lib/utils/chronos';
-import { Events as EventsService, ScheduleData } from "@/schema";
+import { Events as EventsService, ScheduleData, Chronos, dayjs } from '@jstiava/chronos';
 import { CreatorPanelProps } from '@/lib/global/useCreate';
-import dayjs from '@/lib/utils/dayjs';
 
 interface DateAccordionModuleProps {
   item: (ScheduleData & CreatorPanelProps) | null;

@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { Avatar, Button, lighten, Typography, useTheme } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { ChangeEvent, useState } from 'react';
-import { Group, Event } from '@/schema';
+import { Group, Event } from '@jstiava/chronos';
 import axiosInstance from '@/lib/utils/axios';
 import ResolveItemIcon from '@/components/ResolveItemIcon';
 

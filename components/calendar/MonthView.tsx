@@ -10,11 +10,10 @@ import {
 import { useState, useEffect, useRef, MouseEvent, Dispatch } from 'react';
 import CalendarDay from '@/lib/CalendarDay';
 import { UseCalendar } from '@/lib/useCalendar';
-import dayjs from '@/lib/utils/dayjs';
-import { Event, EventData, Member, Schedule } from "@/schema";
+
+import { Event, EventData, Member, Schedule, dayjs, Dayjs } from '@jstiava/chronos';
 import { Mode, Type } from '@/types/globals';
 import { StartCreator } from '@/lib/global/useCreate';
-import { Dayjs } from 'dayjs';
 import { UseEvents } from '@/lib/global/useEvents';
 import useDraggableEventBlock, { DraggedEventBlockProps } from './DraggableEventBlock';
 import { UsePreferences } from '@/lib/global/usePreferences';

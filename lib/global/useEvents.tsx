@@ -1,7 +1,7 @@
 "use client"
 import { useSnackbar } from 'notistack';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
-import { Event, EventData, Member, Events, Junction, JunctionStatus, MemberFactory, typeToDirectionality } from '@/schema';
+import { Event, EventData, Member, Events, Junction, JunctionStatus, MemberFactory, typeToDirectionality } from '@jstiava/chronos';
 import { Type } from "@/types/globals"
 import { Dayjs } from 'dayjs';
 import { UseBase } from './useBase';

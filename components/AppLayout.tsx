@@ -7,7 +7,7 @@ import Header from "./layout/Header";
 import Sidebar, { SIDEBAR_WIDTH } from "./layout/Sidebar";
 import { UseSession } from "@/lib/global/useSession";
 import { UseBase } from "@/lib/global/useBase";
-import { Member, MemberFactory, Profile } from "@/schema";
+import { Member, MemberFactory, Profile } from '@jstiava/chronos';
 import { useRouter } from "next/router";
 import { Typography, useTheme, CircularProgress, useMediaQuery } from "@mui/material";
 import useIAM from "@/lib/global/useIAM";

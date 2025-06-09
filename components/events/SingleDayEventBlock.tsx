@@ -1,8 +1,8 @@
 import { Expand, OpenInFull, LocationOnOutlined, VerifiedOutlined, EditOutlined, AddOutlined, BugReportOutlined, DeleteOutline, CalendarMonthOutlined } from '@mui/icons-material';
 import { useTheme, ButtonBase, Zoom, Fab, Typography, Popover, Tabs, Tab, Button, getContrastRatio, darken, SxProps, IconButton } from '@mui/material';
 import { MouseEvent, useState, useRef, useEffect, MutableRefObject } from 'react';
-import Chronos from '@/lib/utils/chronos';
-import { Event, Events, JunctionStatus, Member } from '@/schema';
+
+import { Event, Events, JunctionStatus, Member, Chronos } from '@jstiava/chronos';
 import { Type, Mode } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
 import dayjs, { Dayjs } from 'dayjs';

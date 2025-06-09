@@ -5,9 +5,7 @@ import {
 } from '@mui/material';
 import { useEffect, MouseEvent, Dispatch } from 'react';
 import { UseCalendar } from '@/lib/useCalendar';
-import Chronos from '@/lib/utils/chronos';
-import dayjs from '@/lib/utils/dayjs';
-import { Event, Member, Schedule } from "@/schema";
+import { Event, Member, Schedule, Chronos, dayjs } from '@jstiava/chronos';
 import { StartCreator } from '@/lib/global/useCreate';
 import WeekView from './WeekView';
 import { UseEvents } from '@/lib/global/useEvents';

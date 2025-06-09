@@ -20,15 +20,13 @@ import {
   Popover,
 } from "@mui/material";
 import React, { useState, useEffect, useRef, useCallback, memo, ChangeEvent, Fragment } from "react";
-import { EventData, ImageDisplayType, Junction, JunctionBuilder, Event, Member, MemberData, MemberFactory, Schedule, JunctionData } from "@/schema";
+import { EventData, ImageDisplayType, Junction, JunctionBuilder, Event, Member, MemberData, MemberFactory, Schedule, Chronos, dayjs } from '@jstiava/chronos';
 import { AddOutlined, ArrowBack, CalendarMonthOutlined, ChangeHistoryOutlined, CloseOutlined, EditCalendar, FirstPage, FirstPageOutlined, LastPageOutlined, LinkOutlined, MarkunreadMailboxOutlined, PhotoLibraryOutlined, SaveOutlined, SendOutlined, TextFieldsOutlined } from "@mui/icons-material";
 import { enqueueSnackbar } from "notistack";
 import { CreatePanelProps, CreatorModules, CreatorPanelMobileStyles, CreatorPanelProps, CreatorPanelStyles, SharedCreatorPanelStyles, StartCreator, UseCreateForm } from "./global/useCreate";
 import { TransitionGroup } from 'react-transition-group';
 import { UseSession, UseSession_SessionOnly } from "./global/useSession";
 import { Mode, Type } from "@/types/globals";
-import Chronos from "./utils/chronos";
-import dayjs from "dayjs";
 import axios, { API } from "./utils/axios";
 import { UseBaseCore } from "./global/useBase";
 import useComplexFileDrop, { MEDIA_BASE_URI, UploadType } from "./useComplexFileDrop";

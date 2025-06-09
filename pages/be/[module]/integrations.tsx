@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { Button, lighten, Typography, useTheme } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { ChangeEvent, useState } from 'react';
-import { Group } from '@/schema';
+import { Group } from '@jstiava/chronos';
 
 const MainBasePage = (props: AppPageProps) => {
     const router = useRouter();

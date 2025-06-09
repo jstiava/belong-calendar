@@ -5,7 +5,7 @@ import { Sora } from 'next/font/google';
 import { enqueueSnackbar } from 'notistack';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { UseSession } from '@/lib/global/useSession';
-import { Member, MemberData, MemberFactory, Profile } from '@/schema';
+import { Member, MemberData, MemberFactory, Profile } from '@jstiava/chronos';
 import useCalendar, { UseCalendar } from '../useCalendar';
 import useEvents, { UseEvents } from './useEvents';
 import useCreator, { UseCreator } from './useCreate';

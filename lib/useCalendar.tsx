@@ -1,10 +1,7 @@
 "use client"
 import { useEffect, useMemo, useState } from 'react';
-import dayjs from '@/lib/utils/dayjs';
-import { Dayjs } from 'dayjs';
 import axios, { API } from './utils/axios';
-import { Member, Event } from '@/schema';
-import { isMultiDayEvent } from './CalendarDays';
+import { Member, Event, dayjs, isMultiDayEvent, Dayjs } from '@jstiava/chronos';
 
 export interface UseCalendar {
   frameDate: dayjs.Dayjs;

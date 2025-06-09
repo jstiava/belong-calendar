@@ -12,7 +12,7 @@ import {
   MemberFactory,
   Membership,
   Profile,
-} from '@/schema';
+} from '@jstiava/chronos';
 import { darken, lighten, useTheme } from '@mui/material';
 import { Dispatch, SetStateAction } from 'react';
 import { v4 as uuidv4 } from 'uuid';

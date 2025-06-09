@@ -13,8 +13,8 @@ import TimeLegendColumn from './TimeLegendColumn';
 import DayView from '@/components/calendar/DayView';
 import CalendarDay from '@/lib/CalendarDay';
 import { UseCalendar } from '@/lib/useCalendar';
-import Chronos from '@/lib/utils/chronos';
-import { Event, EventData, Member, MemberFactory, Schedule } from "@/schema";
+
+import { Event, EventData, Member, MemberFactory, Schedule, Chronos } from '@jstiava/chronos';
 import { Mode, Type } from '@/types/globals';
 import { StartCreator } from '@/lib/global/useCreate';
 import { UseEvents } from '@/lib/global/useEvents';

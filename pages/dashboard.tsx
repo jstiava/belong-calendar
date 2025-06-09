@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { GroupData, Group, Member } from '@/schema';
+import { GroupData, Group, Member } from '@jstiava/chronos';
 import LargeBaseCard from '@/components/bases/LargeBaseCard';
 import Header from '@/components/layout/Header';
 import { Search } from '@mui/icons-material';
@@ -48,6 +48,7 @@ export default function Dashboard(props: AppPageProps) {
             marginBottom: '3rem'
             // minHeight: "50vh"
           }}>
+            
             <Typography variant="h3" sx={{ width: "100%" }}>{dayjs().format("h:mm A")}</Typography>
             <Typography variant="h6" sx={{ width: "100%" }}>{dayjs().format("MMM D, YYYY")}</Typography>
             <hr style={{

@@ -1,6 +1,6 @@
 "use client"
 import { UseSession } from "@/lib/global/useSession";
-import { Event, Group, Member } from "@/schema";
+import { Event, Group, Member, dayjs, isEventCalendar, isMultiDayEvent } from '@jstiava/chronos';
 import { Drawer, Button, Typography, useMediaQuery, useTheme, ButtonBase, lighten, Popover, alpha } from "@mui/material";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { UseBase } from "@/lib/global/useBase";
@@ -9,10 +9,8 @@ import { AddOutlined, ArrowBackIosOutlined, ArrowForwardIosOutlined, CloseOutlin
 import { useSnackbar } from "notistack";
 import StyledWeekPicker from "../calendar/WeekPicker";
 import Divider, { DIVIDER_NO_ALPHA_COLOR } from "../Divider";
-import dayjs from "@/lib/utils/dayjs";
 import ItemStub from "../ItemStub";
 import StyledIconButton from "../StyledIconButton";
-import { isEventCalendar, isMultiDayEvent } from "@/lib/CalendarDays";
 import ColorPaletteSelector from "../accordions/ColorPaletteSelector";
 import { Mode, Type } from "@/types/globals";
 import { IntegrationTemplates } from "@/pages/me/integrations";

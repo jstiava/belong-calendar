@@ -4,7 +4,7 @@ import { Mode, SessionProtectedAppPageProps, Type } from '@/types/globals';
 import { Button, ButtonBase, Typography, useTheme, TextField } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { CSSProperties, useState } from 'react';
-import { Group, Member } from '@/schema';
+import { Group, Member } from '@jstiava/chronos';
 import ItemStub from '@/components/ItemStub';
 import { AddOutlined, MoreHorizOutlined, PushPinOutlined, Search } from '@mui/icons-material';
 import StyledIconButton from '@/components/StyledIconButton';

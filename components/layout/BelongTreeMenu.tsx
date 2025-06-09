@@ -1,7 +1,7 @@
 "use client"
 import { StartCreator } from "@/lib/global/useCreate"
 import { UseSession } from "@/lib/global/useSession"
-import { Event, Member } from "@/schema"
+import { Event, Member } from '@jstiava/chronos'
 import EventSidebarCard from "../EventSidebarCard"
 import { JSX, Ref, RefAttributes, forwardRef, useRef } from "react"
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';

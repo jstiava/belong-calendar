@@ -1,13 +1,12 @@
 import { LocationOnOutlined, AddOutlined, ScheduleOutlined } from '@mui/icons-material';
 import { useTheme, ButtonBase, Button, getContrastRatio, alpha } from '@mui/material';
 import { MouseEvent, useState, useRef, useEffect } from 'react';
-import Chronos from '@/lib/utils/chronos';
-import { Event, JunctionStatus, Member, Schedule } from '@/schema';
+
+import { Event, JunctionStatus, Member, Schedule, Chronos, Hours, Segment } from '@jstiava/chronos';
 import { Type, Mode, adjustForContrast } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
 import { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
-import { Hours, Segment } from '@/lib/utils/medici';
 import { v4 as uuidv4 } from 'uuid';
 
 

@@ -7,7 +7,7 @@ import { Source_Sans_3 } from 'next/font/google';
 import { useRouter } from 'next/router';
 import NextNProgress from 'nextjs-progressbar';
 import React, { useEffect, useRef, useState } from 'react';
-import { Event, Member } from "@/schema";
+import { Event, Member, dayjs } from '@jstiava/chronos';
 import Sidebar from './layout/Sidebar';
 import {
   DndContext,
@@ -25,7 +25,6 @@ import {
 import { useSnackbar } from 'notistack';
 import UnAuthProvider from './UnAuthProvider';
 import { Mode, Type } from '@/types/globals';
-import dayjs from 'dayjs';
 import AppLayout from './AppLayout';
 
 const sora = Source_Sans_3({ subsets: ['latin'] });

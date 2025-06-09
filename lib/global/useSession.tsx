@@ -2,7 +2,7 @@
 import { useRouter } from 'next/router';
 import { enqueueSnackbar } from 'notistack';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
-import { Group, Member, MemberData, Profile, MemberFactory, GroupData, Event } from '@/schema';
+import { Group, Member, MemberData, Profile, MemberFactory, GroupData, Event } from '@jstiava/chronos';
 import useCalendar, { UseCalendar } from '../useCalendar';
 import { Type, UseSocket } from '@/types/globals';
 import useEvents, { UseEvents } from './useEvents';

@@ -1,5 +1,5 @@
 import { SxProps } from "@mui/material"
-import { Event, Group, Member, Profile } from "@/schema"
+import { Event, Group, Member, Profile } from '@jstiava/chronos'
 import { CalendarMonthOutlined, ElectricalServices, ElectricalServicesOutlined, Google, LocationOnOutlined, Microsoft, PersonOutline, WorkspacesOutlined } from "@mui/icons-material"
 import Image from "next/image"
 import GithubIcon from "./icons/GithubIcon"

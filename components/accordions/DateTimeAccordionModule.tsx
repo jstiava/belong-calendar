@@ -7,9 +7,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import dayjs from '@/lib/utils/dayjs';
-import { EventData, Events, Schedule } from '@/schema';
-import Chronos from '@/lib/utils/chronos';
+import { Chronos, EventData, Events, Schedule, dayjs } from '@jstiava/chronos';
 import { CreatorPanelProps } from '@/lib/global/useCreate';
 import StyledDatePicker from '../StyledDatePicker';
 import StyledTimePicker from '../TimePicker';
@@ -21,7 +19,7 @@ import CodeMirrorEditor from '../CodeMirrorEditor';
 
 
 interface DateTimeAccordionModuleProps {
-  item: (EventData & CreatorPanelProps) | null;
+  item: any | null;
   handleChange: any;
   expanded: any;
   onChange: any;

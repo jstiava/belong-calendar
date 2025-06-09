@@ -9,9 +9,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import dayjs from '@/lib/utils/dayjs';
-import { EventData, Events, GroupData, Member, MemberFactory, Schedule } from '@/schema';
-import Chronos from '@/lib/utils/chronos';
+import { EventData, Events, GroupData, Member, MemberFactory, Schedule, Chronos } from '@jstiava/chronos';
 import { CreatorPanelProps, StartCreator } from '@/lib/global/useCreate';
 import StyledDatePicker from '../StyledDatePicker';
 import StyledTimePicker from '../TimePicker';

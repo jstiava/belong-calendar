@@ -6,15 +6,14 @@ import { Avatar, Button, ButtonBase, lighten, Typography, useMediaQuery, useThem
 import { useSnackbar } from 'notistack';
 import { ChangeEvent, CSSProperties, useEffect, useState } from 'react';
 import axiosInstance from '@/lib/utils/axios';
-import { MemberFactory } from '@/schema';
+import { MemberFactory, isNotScheduled } from '@jstiava/chronos';
 import ResolveItemIcon from '@/components/ResolveItemIcon';
 import StyledIconButton from '@/components/StyledIconButton';
 import { ArrowBackIosNewOutlined, OpenInNewOutlined, RocketLaunchOutlined } from '@mui/icons-material';
 import JotformForm from '@/components/icons/JotformForm';
-import { Event } from '@/schema';
+import { Event } from '@jstiava/chronos';
 import { DIVIDER_NO_ALPHA_COLOR } from '@/components/Divider';
 import GoogleCalendarIcon from '@/components/icons/GoogleCalendarIcon';
-import { isNotScheduled } from '@/lib/CalendarDays';
 
 
 

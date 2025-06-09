@@ -24,10 +24,9 @@ import {
 } from '@mui/x-data-grid';
 
 import { AppPageProps, getIntegrationIcon, Mode, Type } from '@/types/globals';
-import dayjs from '@/lib/utils/dayjs';
-import { Dayjs } from 'dayjs';
+
 import useIAM, { UseIAM } from '@/lib/global/useIAM';
-import { Group, Member } from '@/schema';
+import { Group, Member, dayjs, Dayjs } from '@jstiava/chronos';
 import { MEDIA_BASE_URI } from '@/lib/useComplexFileDrop';
 import { PortraitImage } from '@/components/Image';
 import useInviteMembers from '@/lib/useInviteMembers';

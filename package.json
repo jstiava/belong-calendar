@@ -2,6 +2,7 @@
   "name": "belong-integrations-api",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,6 +12,7 @@
     "test:ci": "jest --ci"
   },
   "dependencies": {
+    "@jstiava/chronos": "git+https://<token>@github.com/jstiava/chronos.git",
     "@codemirror/gutter": "^0.19.9",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-json": "^6.0.1",
@@ -39,7 +41,6 @@
     "color": "^4.2.3",
     "cookie": "^0.6.0",
     "date-fns": "^3.6.0",
-    "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "editorjs-mention-tool": "^1.0.2",
     "es-define-property": "^1.0.0",

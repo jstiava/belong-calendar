@@ -1,4 +1,4 @@
-import { Member } from "@/schema";
+import { Member } from '@jstiava/chronos';
 import { Type } from "@/types/globals";
 
 

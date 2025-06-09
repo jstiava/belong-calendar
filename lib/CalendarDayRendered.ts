@@ -1,11 +1,6 @@
 import MinHeap from './MinHeap';
-import { Event, Events } from '@/schema';
-import { Hours } from './utils/medici';
-import dayjs from './utils/dayjs';
-import { Dayjs } from 'dayjs';
+import { Event, isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent, Dayjs, Chronos, dayjs } from '@jstiava/chronos';
 import CalendarDay from './CalendarDay';
-import { isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent } from './CalendarDays';
-import Chronos from './utils/chronos';
 
 function doesCollide(
   event1: Event,

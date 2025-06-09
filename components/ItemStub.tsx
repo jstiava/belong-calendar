@@ -1,9 +1,8 @@
 import { MEDIA_BASE_URI } from "@/lib/useComplexFileDrop"
-import { Event, Group, Member, Profile } from "@/schema"
+import { Event, Group, Member, Profile, isAllSingleDay, isEventCalendar, isMoment, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from '@jstiava/chronos'
 import { CalendarMonthOutlined, WorkspacesOutlined, LocationOnOutlined, PersonOutline, Google, ScheduleOutlined, TodayOutlined } from "@mui/icons-material";
 import { Avatar, AvatarGroup, ButtonBase, CircularProgress, Skeleton, SxProps, Typography, useTheme } from "@mui/material"
 import ResolveItemIcon from "./ResolveItemIcon";
-import { isAllSingleDay, isEventCalendar, isMoment, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from "@/lib/CalendarDays";
 
 
 function ResolveItemSubtitle({

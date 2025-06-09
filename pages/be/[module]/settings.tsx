@@ -9,7 +9,7 @@ import useIAM from '@/lib/global/useIAM';
 import LargeTextField from '@/components/LargeTextField';
 import SmallTextField from '@/components/SmallTextField';
 import LargeBaseCard from '@/components/bases/LargeBaseCard';
-import { Group, ImageDisplayType, MemberFactory } from '@/schema';
+import { Group, ImageDisplayType, MemberFactory } from '@jstiava/chronos';
 import ItemStub from '@/components/ItemStub';
 import axiosInstance from '@/lib/utils/axios';
 import { SaveOutlined, PhotoLibraryOutlined } from '@mui/icons-material';
@@ -31,7 +31,7 @@ const MainBasePage = (props: AppPageProps) => {
 
     const [newItem, setNewItem] = useState(item);
     const [uploads, setUploads] = useState<UploadType[]>([]);
-    const { FileUpload, FilePreview, handleUpload, openDialog, isUploadPresent, isFileUploadOpen, uploadCount } = useComplexFileDrop(MemberFactory.collect_media(item), uploads, setUploads);
+    const { FileUpload, FilePreview, handleUpload, openDialog, isUploadPresent, isFileUploadOpen, uploadCount } = useComplexFileDrop(MemberFactory.collect_media(item as any), uploads, setUploads);
     const prefix = '/me/';
 
     const handleChange = (eventOrName: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string, value: any) => {

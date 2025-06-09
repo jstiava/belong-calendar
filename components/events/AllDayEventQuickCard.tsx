@@ -1,9 +1,8 @@
 import { useTheme, ButtonBase, Typography, Slider, SliderValueLabelProps, Tooltip } from '@mui/material';
 import { MouseEvent, useState, useRef, useEffect } from 'react';
-import { Event, JunctionStatus, Member } from '@/schema';
+import { Event, JunctionStatus, Member, Dayjs } from '@jstiava/chronos';
 import { Type } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
-import { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 
 

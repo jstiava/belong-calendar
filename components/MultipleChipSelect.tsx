@@ -12,7 +12,7 @@ import SmallTextField from './SmallTextField';
 import { Avatar, Fade, Popover, TextField, Typography, useMediaQuery } from '@mui/material';
 import Fuse from 'fuse.js';
 import ItemStub from './ItemStub';
-import { Member, MemberFactory } from '@/schema';
+import { Member, MemberFactory } from '@jstiava/chronos';
 import { MEDIA_BASE_URI } from '@/lib/useComplexFileDrop';
 import ResolveItemIcon from './ResolveItemIcon';
 import { InfoOutlined, WarningOutlined } from '@mui/icons-material';

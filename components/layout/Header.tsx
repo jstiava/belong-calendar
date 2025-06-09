@@ -53,9 +53,8 @@ import StyledIconButton from '../StyledIconButton';
 import StyledToggleButtonGroup from '../StyledToggleButtonGroup';
 import router, { useRouter } from 'next/router';
 import ItemStub from '../ItemStub';
-import { Member, Event } from '@/schema';
+import { Member, Event, isMoment } from '@jstiava/chronos';
 import { UseBase } from '@/lib/global/useBase';
-import { isMoment } from '@/lib/CalendarDays';
 import StyledWeekPicker from '../calendar/WeekPicker';
 const MEDIA_BASE_URI = "https://mozi-belong-media-public-demo.s3.us-east-2.amazonaws.com";
 

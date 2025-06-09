@@ -1,7 +1,5 @@
 import { UseCalendar } from '@/lib/useCalendar';
 import { ArrowRight, ChevronLeft, ChevronRight } from '@mui/icons-material';
-import Chronos from '@/lib/utils/chronos';
-import dayjs from '@/lib/utils/dayjs';
 import { useTheme, Typography, Tooltip, IconButton } from '@mui/material';
 
 export default function WeekLegendColumn({

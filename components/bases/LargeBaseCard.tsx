@@ -21,7 +21,7 @@ import { Google, Portrait } from '@mui/icons-material';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useRouter } from 'next/router';
 import { useSnackbar } from 'notistack';
-import { Group, Member, Membership } from '@/schema';
+import { Group, Member, Membership } from '@jstiava/chronos';
 import { AppPageProps, getIntegrationIcon } from '@/types/globals';
 
 const MEDIA_BASE_URI = "https://mozi-belong-media-public-demo.s3.us-east-2.amazonaws.com";

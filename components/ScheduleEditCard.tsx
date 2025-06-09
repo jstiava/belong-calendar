@@ -1,8 +1,7 @@
 import { MouseEvent } from 'react';
 import { AllInclusiveOutlined, DateRangeOutlined, DeleteOutline, EditOutlined, LocationOnOutlined, RemoveCircleOutline, ScheduleOutlined, SecurityOutlined, VerifiedOutlined } from "@mui/icons-material";
 import { ButtonBase, Typography, Tooltip, IconButton, Button, Chip, useTheme, CircularProgress } from "@mui/material";
-import { Location, LocationData, Schedule, ScheduleData } from '@/schema';
-import dayjs from '@/lib/utils/dayjs';
+import { Location, LocationData, Schedule, ScheduleData, dayjs } from '@jstiava/chronos';
 import DaySchedulePuck from './DaySchedulePuck';
 
 const ScheduleEditCard = ({ item, onClick, onEdit, onRemove }:

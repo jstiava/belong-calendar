@@ -23,7 +23,7 @@ import { Delete } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { v4 as uuidv4 } from 'uuid';
 import axios, { API } from './utils/axios';
-import { ImageDisplayType, ImageStub } from '@/schema';
+import { ImageDisplayType, ImageStub } from '@jstiava/chronos';
 
 
 

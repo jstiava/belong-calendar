@@ -2,10 +2,7 @@
 import { useEffect, useState } from 'react';
 import axios, { API } from '../utils/axios';
 import { enqueueSnackbar } from 'notistack';
-import { Group, Event, Location, Member, Locations, LocationData, Junction, JunctionStatus, MemberFactory } from '@/schema';
-import dayjs from '../utils/dayjs';
-import Chronos from '../utils/chronos';
-import { Dayjs } from 'dayjs';
+import { Group, Event, Location, Member, Locations, LocationData, Junction, JunctionStatus, MemberFactory, dayjs, Dayjs, Chronos } from '@jstiava/chronos';
 import { Type } from '@/types/globals';
 
 export interface UseLocations {

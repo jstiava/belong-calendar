@@ -14,15 +14,14 @@ import React, {
   useRef,
   MouseEvent,
 } from 'react';
-import dayjs from '@/lib/utils/dayjs';
-import { Event, Member, Schedule } from '@/schema';
+
+import { Event, Member, Schedule, dayjs, isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from '@jstiava/chronos';
 import { Mode, Type } from '@/types/globals';
 import { AddOutlined, BugReportOutlined, CopyAllOutlined } from '@mui/icons-material';
 import { StartViewer } from '@/lib/global/useView';
 import { UseCalendar } from '@/lib/useCalendar';
 import { MultiDayEventBlock } from '../events/MultiDayEventBlock';
 import CalendarDayRendered from '@/lib/CalendarDayRendered';
-import { isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
 import CalendarDay from '@/lib/CalendarDay';
 import { StackedEventBlock } from '../events/StackedEventBlock';
 import { StackedMomentBlock } from '../events/StackedMomentBlock';

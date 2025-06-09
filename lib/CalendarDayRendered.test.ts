@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import CalendarDay from './CalendarDay';
 import MinHeap from './MinHeap';
-import { Event, EventData, Schedule } from "@/schema";
+import { Event, EventData, Schedule } from '@jstiava/chronos';
 import Chronos from './utils/chronos';
 import dayjs from 'dayjs';
 import CalendarDayRendered from './CalendarDayRendered';

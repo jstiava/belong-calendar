@@ -8,8 +8,7 @@ import {
 } from '@mui/material';
 import React, { useState, useMemo, useCallback, CSSProperties, JSX } from 'react';
 import { UseBaseCore } from './useBase';
-import { Type, Mode } from '@/types/globals';
-import { Member, MemberFactory, Schedule } from "@/schema";
+import { Member, MemberFactory, Mode, Schedule, Type } from '@jstiava/chronos';
 import { TransitionGroup } from 'react-transition-group';
 import { useSnackbar } from 'notistack';
 import { UseSession, UseSession_SessionOnly } from './useSession';

@@ -5,14 +5,14 @@ import { CopyAllOutlined, ExpandMoreOutlined, ExpandOutlined, FilterList, Fullsc
 import { DIVIDER_NO_ALPHA_COLOR } from '../Divider';
 import { SIDEBAR_WIDTH } from './Sidebar';
 import { UseBase } from '@/lib/global/useBase';
-import { Member } from '@/schema';
+import { Member, dayjs } from '@jstiava/chronos';
 import StyledToggleButtonGroup from '../StyledToggleButtonGroup';
 import ItemStub from '../ItemStub';
 import { useRouter } from 'next/router';
 import SmallTextField from '../SmallTextField';
 import ResolveItemIcon from '../ResolveItemIcon';
 import StyledIconButton from '../StyledIconButton';
-import dayjs from '@/lib/utils/dayjs';
+
 
 const Footer = ({
   Session,

@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { API } from '@/lib/utils/axios';
 import { useSnackbar } from 'notistack';
-import { Profile, ProfileData } from '@/schema';
+import { Profile, ProfileData } from '@jstiava/chronos';
 import { UseIAM } from './global/useIAM';
 import axiosInstance from '@/lib/utils/axios';
 

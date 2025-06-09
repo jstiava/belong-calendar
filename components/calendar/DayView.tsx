@@ -16,18 +16,14 @@ import React, {
 } from 'react';
 import { CalendarEventBox } from '@/components/events/EventBlock';
 import CalendarDay from '@/lib/CalendarDay';
-import Chronos from '@/lib/utils/chronos';
-import dayjs from '@/lib/utils/dayjs';
-import { Event, Member } from '@/schema';
+import { Event, Member, Hours, dayjs, Chronos, isMoment, isNotScheduled, isSingleTimeEvent } from '@jstiava/chronos';
 import { Mode, Type } from '@/types/globals';
 import { AddOutlined, BugReportOutlined, ContentPasteOutlined, CopyAllOutlined, PlayArrow } from '@mui/icons-material';
 import { StartViewer } from '@/lib/global/useView';
-import { Hours } from '@/lib/utils/medici';
 import { MomentBlock } from '../events/MomentBlock';
 import { SourceScheduleBlock } from '../events/SourceScheduleBlock';
 import { StartCreator } from '@/lib/global/useCreate';
 import CalendarDayRendered from '@/lib/CalendarDayRendered';
-import { isMoment, isNotScheduled, isSingleTimeEvent } from '@/lib/CalendarDays';
 
 
 const Now = ({ standardHeight, startCreator }: { standardHeight: number, startCreator: StartCreator }) => {
@@ -294,7 +290,7 @@ function DayView({
       >
 
         <div style={{ position: 'relative' }}>
-          {source instanceof Event && (!source.start_time && !source.date) && (
+          {/* {source instanceof Event && (!source.start_time && !source.date) && (
             <SourceScheduleBlock
               column={0}
               key={`${source.id()}`}
@@ -310,7 +306,7 @@ function DayView({
               swap={swap}
               replace={replace}
             />
-          )}
+          )} */}
           <div style={{ position: 'relative', width: "calc(100% - 1.5rem)", marginLeft: "0.25rem" }}>
 
             {calendarDayRendered &&

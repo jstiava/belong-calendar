@@ -2,11 +2,11 @@
 import { Expand, OpenInFull, LocationOnOutlined, VerifiedOutlined, EditOutlined, AddOutlined } from '@mui/icons-material';
 import { useTheme, ButtonBase, Zoom, Fab, Typography, Popover, Tabs, Tab, Button, getContrastRatio, darken, alpha } from '@mui/material';
 import { MouseEvent, useState, useRef } from 'react';
-import Chronos from '@/lib/utils/chronos';
-import { Event, Events, JunctionStatus } from '@/schema';
+
+import { Event, Events, dayjs, Chronos } from '@jstiava/chronos';
 import { Type, Mode } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
-import dayjs from '@/lib/utils/dayjs';
+
 import { Dayjs } from 'dayjs';
 
 

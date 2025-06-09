@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
 import { CalendarMonthOutlined, LinkOutlined, VisibilityOffOutlined } from "@mui/icons-material";
 import { alpha, Avatar, ButtonBase, IconButton, Typography, useTheme } from "@mui/material";
-import { Event, Member, Schedule } from '@/schema';
+import { Event, Member, Schedule, dayjs, isMoment } from '@jstiava/chronos';
 import { Type } from '@/types/globals';
 import { StartCreator } from '@/lib/global/useCreate';
 import { DragOverlay, useDraggable } from '@dnd-kit/core'
 import { StartViewer } from '@/lib/global/useView';
-import dayjs from '@/lib/utils/dayjs';
 import { useRouter } from 'next/router';
 import { MEDIA_BASE_URI } from '@/lib/useComplexFileDrop';
-import { isMoment } from '@/lib/CalendarDays';
 
 export default function EventSidebarCard({ id, event, startCreator, base, startViewer }: { id?: string; event: Event; startCreator: StartCreator, base: Member, startViewer: StartViewer }) {
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);

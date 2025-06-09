@@ -1,38 +1,7 @@
 "use client"
 import { Dayjs } from "dayjs";
 import CalendarDay from "./CalendarDay";
-import Chronos from "./utils/chronos";
-import { Event, Schedule } from "@/schema";
-import dayjs from '@/lib/utils/dayjs';
-
-
-export function isEventCalendar(event: Event): event is Event & { end_date: null } {
-    return (!event.date || !event.end_date) && !event.start_time;
-}
-
-export function isMultiDayEvent(event: Event): event is Event & { date: Dayjs; end_date: Dayjs } {
-    return dayjs.isDayjs(event.date) && dayjs.isDayjs(event.end_date);
-}
-
-export function isAllSingleDay(event: Event): event is Event & { date: Dayjs; end_date: Dayjs, start_time: null, end_time: null } {
-    return isMultiDayEvent(event) && (event.date.isSame(event.end_date));
-}
-
-export function isMoment(event: Event): event is Event & { date: Dayjs; start_time: Chronos; end_time: null, end_date: null } {
-    return dayjs.isDayjs(event.date) && (event.start_time instanceof Chronos && !event.end_time)
-}
-
-export function isSingleTimeEvent(event: Event): event is Event & { date: Dayjs; start_time: Chronos; end_time: Chronos, end_date: null } {
-    return dayjs.isDayjs(event.date) && (event.start_time instanceof Chronos && event.end_time instanceof Chronos)
-}
-
-export function isNotScheduled(event: Event): event is Event & { date: Dayjs, start_time: Chronos } {
-    return dayjs.isDayjs(event.date) && event.start_time instanceof Chronos;
-}
-
-export function isScheduled(event: Event): event is Event & { schedules: Schedule[]} {
-    return 'schedules' in event && event.schedules != null;
-}
+import { Event, Schedule, dayjs, Chronos, isMoment, isAllSingleDay, isMultiDayEvent, isNotScheduled, isSingleTimeEvent } from '@jstiava/chronos';
 
 
 export class CalendarDays<T extends CalendarDay> {

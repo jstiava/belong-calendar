@@ -5,8 +5,7 @@ import { Typography, useTheme } from '@mui/material';
 import MonthView from '@/components/calendar/MonthView';
 import WeekView from '@/components/calendar/WeekView';
 import { MouseEvent, SetStateAction, useEffect } from 'react';
-import dayjs from 'dayjs';
-import { Event } from '@/schema';
+import { Event, dayjs, Dayjs } from '@jstiava/chronos';
 import DataView from '@/components/calendar/DataView';
 
 const CalendarPage = (props: AppPageProps) => {

@@ -2,7 +2,7 @@ import { Typography, useMediaQuery, useTheme } from "@mui/material";
 import { Source_Sans_3 } from 'next/font/google';
 import { useEffect, useState } from "react";
 import { UnAuthPageProps } from "@/types/globals";
-import { Group, Profile } from "@/schema";
+import { Group, Profile } from '@jstiava/chronos';
 import { useRouter } from "next/router";
 import MonthView from "@/components/calendar/MonthView";
 import AppLayout from "@/components/AppLayout";

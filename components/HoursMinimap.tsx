@@ -1,7 +1,6 @@
 "use client"
-import Chronos from "@/lib/utils/chronos";
-import { Hours } from "@/lib/utils/medici"
-import { Schedule } from "@/schema"
+
+import { Schedule, Chronos, Hours } from '@jstiava/chronos'
 import { CloseOutlined, RemoveOutlined, WarningOutlined } from "@mui/icons-material";
 import { Box, Button, ButtonBase, IconButton, Popover, Popper, TextField, ThemeProvider, Tooltip, Typography, useTheme } from "@mui/material"
 import dayjs, { Dayjs } from "dayjs";

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import dayjs from '@/lib/utils/dayjs';
+
 import isBetweenPlugin from 'dayjs/plugin/isBetween';
 import { styled, useTheme } from '@mui/material/styles';
 import { Badge, Button, CircularProgress, IconButton, lighten, Stack, Typography } from '@mui/material';
@@ -8,11 +8,9 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateCalendar, DateCalendarProps, PickersCalendarHeader, PickersCalendarHeaderProps } from '@mui/x-date-pickers/DateCalendar';
 import { PickersDay, PickersDayProps } from '@mui/x-date-pickers/PickersDay';
-import { Dayjs } from 'dayjs';
 import { KeyboardArrowDownOutlined, KeyboardArrowLeft, KeyboardArrowRight, KeyboardArrowUpOutlined, SkipNextOutlined, SkipPreviousOutlined } from '@mui/icons-material';
 import { UseCalendar } from '@/lib/useCalendar';
-import { Member, Event } from '@/schema';
-import { isEventCalendar, isMultiDayEvent, isNotScheduled } from '@/lib/CalendarDays';
+import { Member, Event, dayjs, Dayjs, isEventCalendar, isMultiDayEvent, isNotScheduled } from '@jstiava/chronos';
 
 interface CustomCalendarHeaderProps extends PickersCalendarHeaderProps<Dayjs> {
   Calendar: UseCalendar;

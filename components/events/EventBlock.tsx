@@ -1,11 +1,10 @@
 import { Expand, OpenInFull, LocationOnOutlined, VerifiedOutlined, EditOutlined, AddOutlined, BugReportOutlined, DeleteOutline, HideImageOutlined } from '@mui/icons-material';
 import { useTheme, ButtonBase, Zoom, Fab, Typography, Popover, Tabs, Tab, Button, getContrastRatio, darken, alpha } from '@mui/material';
 import { MouseEvent, useState, useRef, useEffect, CSSProperties } from 'react';
-import Chronos from '@/lib/utils/chronos';
-import { Event, Events, Junction, JunctionStatus, Member, typeToDirectionality } from '@/schema';
+
+import { Event, Events, Junction, JunctionStatus, Member, typeToDirectionality, Chronos, dayjs, Dayjs } from '@jstiava/chronos';
 import { Type, Mode, adjustForContrast } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
-import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 
 

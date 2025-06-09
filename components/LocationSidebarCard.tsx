@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { CalendarMonthOutlined, LocationOnOutlined } from "@mui/icons-material";
 import { alpha, Avatar, ButtonBase, Typography, useTheme } from "@mui/material";
-import { Event, Location, Member, Schedule } from '@/schema';
+import { Event, Location, Member, Schedule, dayjs } from '@jstiava/chronos';
 import { Type } from '@/types/globals';
 import { StartCreator } from '@/lib/global/useCreate';
 import { DragOverlay, useDraggable } from '@dnd-kit/core'
 import { StartViewer } from '@/lib/global/useView';
-import dayjs from '@/lib/utils/dayjs';
+
 import { useRouter } from 'next/router';
 import { MEDIA_BASE_URI } from '@/lib/useComplexFileDrop';
 

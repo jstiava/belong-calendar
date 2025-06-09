@@ -1,7 +1,7 @@
 import { LocationOnOutlined, EditOutlined, AddOutlined, BugReportOutlined, DeleteOutline, CalendarMonthOutlined } from '@mui/icons-material';
 import { useTheme, ButtonBase, Popover, Button, alpha, Typography } from '@mui/material';
 import { MouseEvent, useState, useRef, useEffect, MutableRefObject } from 'react';
-import { Event, JunctionStatus, Member } from '@/schema';
+import { Event, JunctionStatus, Member } from '@jstiava/chronos';
 import { Type, Mode } from '@/types/globals';
 import { StartViewer } from '@/lib/global/useView';
 import { Dayjs } from 'dayjs';
