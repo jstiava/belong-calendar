@@ -101,7 +101,7 @@ export default function RegisterPage(props: any) {
     // }
 
     axios
-      .post('/api/register', { ...newProfile, username: newProfile.username ? newProfile.username : newProfile.email })
+      .post('/api/register', { ...newProfile, username: newProfile.username ? newProfile.username : newProfile.email, token: router.query.token })
       .then(res => {
         enqueueSnackbar('Profile successfully created.', {
           variant: 'success',
