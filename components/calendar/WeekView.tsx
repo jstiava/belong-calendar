@@ -24,6 +24,7 @@ import { useSwipeable } from 'react-swipeable';
 import { CalendarDays } from '@/lib/CalendarDays';
 import { DIVIDER_NO_ALPHA_COLOR } from '../Divider';
 import DayHeader from './DayHeader';
+import { useDraggable } from '@dnd-kit/core';
 
 interface WeekViewProps {
   selected: Event[] | null;
@@ -98,42 +99,9 @@ const WeekView = ({
     handleCreate(Type.Event, Mode.Modify, copy);
   }
 
-  const handleUpOnCreate = async (item: DraggedEventBlockProps) => {
+ 
 
-    if (!item.dragDay.isSame(item.dragEndDay, 'date')) {
-
-      const presetSchedule = Schedule.createOffDrag(item.dragDay, item.dragEndDay, new Chronos(item.currStart.getHMN(15)), new Chronos(item.currEnd.getHMN(15)));
-
-      const presets: Partial<EventData> = {
-        date: null,
-        end_date: null,
-        start_time: null,
-        end_time: null,
-        schedules: [presetSchedule.eject()],
-        is_local: true
-      }
-
-      handleCreate(Type.Event, Mode.Create, new Event(presets), {
-        callback: Events.add
-      });
-
-      return;
-    }
-
-    const presets: Partial<EventData> = {
-      // uuid: null,
-      date: item.currStart.getHMN() < 6 ? item.dragDay.add(1, 'day').yyyymmdd() : item.dragDay.yyyymmdd(),
-      end_date: item.dragDay.isSame(item.dragEndDay, 'date') ? null : item.currEnd.getHMN() < 6 ? item.dragEndDay.add(1, 'day').yyyymmdd() : item.dragEndDay.yyyymmdd(),
-      start_time: String(item.currStart.getDayjs(5).toLocalChronos().getHMN()),
-      end_time: String(item.currEnd.getDayjs(5).toLocalChronos().getHMN()),
-      is_local: true
-    }
-
-    handleCreate(Type.Event, Mode.Create, new Event(presets));
-  }
-
-  const { block, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(standardHeight, null, handleUpOnMove, handleUpOnCreate);
-
+  const { blocks, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(standardHeight, null, handleUpOnMove, handleCreate);
 
   const [sequence, setSequence] = useState<number[] | null>(null);
 
@@ -278,7 +246,7 @@ const WeekView = ({
           </div>
         </div>
 
-        <div className="flex left snug top">
+        <div className="flex left snug top" data-type="dragging_interface_top">
           <div className="column snug" style={{
             width: "5rem",
             borderRight: `0.1rem solid ${theme.palette.divider}`,
@@ -292,13 +260,15 @@ const WeekView = ({
               standardHeight={standardHeight}
             />
           </div>
-          <div {...handlers} style={{
-            display: "flex",
-            alignItems: 'flex-start',
-            position: 'relative',
-            width: `calc(100% - 5rem)`,
-          }}>
-            {/* {RenderedBlock} */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: 'flex-start',
+              position: 'relative',
+              width: `calc(100% - 5rem)`,
+            }}>
+
+            {RenderedBlock}
             {Calendar.days.map((date, index) => {
               return (
                 <DayView

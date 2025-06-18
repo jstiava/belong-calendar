@@ -32,7 +32,11 @@ export default function TimeLegendColumn({
           const theTime = new Chronos(time);
 
           return (
-            <Typography
+            <div style={{
+              width: '100%',
+              padding: '0 0.5rem'
+            }}>
+              <Typography
               key={time}
               component="p"
               sx={{
@@ -48,7 +52,7 @@ export default function TimeLegendColumn({
             >
               <span style={{
                 height: "fit-content",
-                padding: "0.1rem 0.25rem",
+                padding: "0.1rem 0.15rem",
                 backgroundColor: time % 1 === 0 && theTime.getAMP() === 'AM' ? 'white' : 'unset',
                 color: theTime.getAMP() === 'AM' ? 'black' : 'lightGrey',
                 borderRadius: "0.125rem"
@@ -69,6 +73,7 @@ export default function TimeLegendColumn({
                 }
               </span>
             </Typography>
+            </div>
 
           )
         })}

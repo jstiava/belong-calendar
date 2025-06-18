@@ -52,6 +52,9 @@ const CalendarPage = (props: AppPageProps) => {
 
     const handleKeyPress = (event: KeyboardEvent) => {
 
+        // TODO - disabled
+        return;
+
         if (Controller.Creator.isOpen) {
             return;
         }
@@ -118,19 +121,19 @@ const CalendarPage = (props: AppPageProps) => {
             return;
         }
 
-        // if (router.query.view) {
-        //     const view = router.query.view;
+        if (router.query.view) {
+            const view = router.query.view;
 
-        //     if (view === 'month') {
-        //         Controller.Calendar.goToStartOfMonth(dayjs())
-        //     }
-        //     else if (view === 'week') {
-        //         Controller.Calendar.gotoStartOfWeek(dayjs());
-        //     }
-        //     else if (view == 'day') {
-        //         Controller.Calendar.gotoDate(dayjs());
-        //     }
-        // }
+            if (view === 'month') {
+                Controller.Calendar.goToStartOfMonth(dayjs())
+            }
+            else if (view === 'week') {
+                Controller.Calendar.gotoStartOfWeek(dayjs());
+            }
+            else if (view == 'day') {
+                Controller.Calendar.gotoDate(dayjs());
+            }
+        }
 
 
         // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -209,7 +209,7 @@ const StyledWeekPicker = styled((props: StyledDateCalendarProps) => {
   const { mode = 'light', Calendar, source, ...rest } = props;
   const calendarRef = useRef<any>(null);
 
-  if (!Calendar || !Calendar.days) {
+  if (!Calendar || !Calendar.days || Calendar.days.length < 7) {
     return <CircularProgress />
   }
 

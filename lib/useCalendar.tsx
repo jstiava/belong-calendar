@@ -41,9 +41,15 @@ export default function useCalendar() {
     if (!theSource) return;
     setSource(theSource);
 
+    const rightNow = dayjs();
+
     if (theSource instanceof Event) {
 
       if (isMultiDayEvent(theSource)) {
+
+        if (rightNow.isAfter(theSource.date) && rightNow.isBefore(theSource.end_date)) {
+          goToStartOfMonth(dayjs().tz('America/Chicago'));
+        }
         const duration = theSource.end_date.diff(theSource.date, 'd');
         if (duration < 8) {
           gotoStartOfWeek(theSource.date);

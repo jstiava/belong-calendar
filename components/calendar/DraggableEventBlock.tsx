@@ -1,10 +1,10 @@
 "use client"
 import { StartCreator } from "@/lib/global/useCreate";
 import { UseEvents } from "@/lib/global/useEvents";
-import { EventData, Chronos } from '@jstiava/chronos';
+import { EventData, Chronos, Schedule, Event, Events, isSingleTimeEvent } from '@jstiava/chronos';
 import { Mode, Type } from "@/types/globals";
-import { RectangleTwoTone } from "@mui/icons-material";
-import { alpha, Typography, useTheme } from "@mui/material";
+import { AddOutlined, CloseOutlined, RectangleTwoTone } from "@mui/icons-material";
+import { alpha, Button, IconButton, Typography, useTheme } from "@mui/material";
 import dayjs from "dayjs";
 import { useState, MouseEvent } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -13,6 +13,8 @@ import { v4 as uuidv4 } from "uuid";
 export enum DragMode {
     Moving = "moving",
     DragToCreate = "dragToCreate",
+    Paused = "paused",
+    AdjustByTop = "adjustByTop"
 }
 
 export interface DraggedEventBlockProps {
@@ -36,17 +38,148 @@ export default function useDraggableEventBlock(
     standardHeight: number,
     topAdjustmentRef: any | null = null,
     handleUpOnMove: (props: any) => Promise<void>,
-    handleUpOnCreate: (props: any) => Promise<void>
+    handleCreate: StartCreator
 ) {
 
     const theme = useTheme();
 
-    const [block, setBlock] = useState<DraggedEventBlockProps | null>(null);
+    const [blocks, setBlocks] = useState<DraggedEventBlockProps[] | null>(null);
+    // const [block, setBlock] = useState<DraggedEventBlockProps | null>(null);
     const [mode, setMode] = useState<DragMode | null>(null);
+    const [focused, setFocused] = useState<number | null>(null);
+
+
+    const removeBlock = (i: number) => {
+
+        setBlocks(prev => {
+            if (!prev) {
+                return null;
+            }
+
+            const filtered = prev.filter((b, index) => i != index);
+            return filtered;
+        })
+    }
+
+    const handleUpOnCreate = async () => {
+
+        if (!blocks || blocks.length === 0) {
+            return;
+        }
+
+
+
+        if (blocks.length === 1) {
+
+            const item = blocks[0];
+            if (!item.dragDay.isSame(item.dragEndDay, 'date')) {
+
+                const presetSchedule = Schedule.createOffDrag(item.dragDay, item.dragEndDay, new Chronos(item.currStart.getHMN(15)), new Chronos(item.currEnd.getHMN(15)));
+
+                const presets: Partial<EventData> = {
+                    date: null,
+                    end_date: null,
+                    start_time: null,
+                    end_time: null,
+                    schedules: [presetSchedule.eject()],
+                    is_local: true
+                }
+
+                handleCreate(Type.Event, Mode.Create, new Event(presets));
+
+                return;
+            }
+
+            const presets: Partial<EventData> = {
+                // uuid: null,
+                date: item.currStart.getHMN() < 6 ? item.dragDay.add(1, 'day').yyyymmdd() : item.dragDay.yyyymmdd(),
+                end_date: item.dragDay.isSame(item.dragEndDay, 'date') ? null : item.currEnd.getHMN() < 6 ? item.dragEndDay.add(1, 'day').yyyymmdd() : item.dragEndDay.yyyymmdd(),
+                start_time: String(item.currStart.getDayjs(5).toLocalChronos().getHMN()),
+                end_time: String(item.currEnd.getDayjs(5).toLocalChronos().getHMN()),
+                is_local: true
+            }
+
+            handleCreate(Type.Event, Mode.Create, new Event(presets));
+        }
+        else {
+
+            const objects = [];
+            for (const item of blocks) {
+
+                const presets: Partial<EventData> = {
+                    date: item.currStart.getHMN() < 6 ? item.dragDay.add(1, 'day').yyyymmdd() : item.dragDay.yyyymmdd(),
+                    end_date: item.dragDay.isSame(item.dragEndDay, 'date') ? null : item.currEnd.getHMN() < 6 ? item.dragEndDay.add(1, 'day').yyyymmdd() : item.dragEndDay.yyyymmdd(),
+                    start_time: String(item.currStart.getDayjs(5).toLocalChronos().getHMN()),
+                    end_time: String(item.currEnd.getDayjs(5).toLocalChronos().getHMN()),
+                    is_local: true
+                }
+
+                objects.push(new Event(presets));
+            }
+
+            console.log(objects);
+
+
+            const merged = new Schedule();
+            for (const item of objects) {
+                if (isSingleTimeEvent(item)) {
+                    merged.mask({
+                        dow: item.date.day(),
+                        start_time: item.start_time,
+                        end_time: item.end_time
+                    });
+                }
+            }
+
+            console.log(merged)
+
+            handleCreate(Type.Event, Mode.Create, new Event({
+                name: "",
+                schedules: [merged.eject()]
+            }));
+        }
+    }
+
+    const pushNewBlock = (newBlock: DraggedEventBlockProps) => {
+
+
+        setFocused(blocks ? blocks.length : 0);
+        setBlocks(prev => {
+
+            if (!prev) {
+                return [newBlock];
+            }
+            const filtered = [...prev];
+            filtered.push(newBlock)
+
+            return filtered;
+        });
+    }
+
+
+    const updateBlock = (newBlock: DraggedEventBlockProps) => {
+
+        setBlocks(prev => {
+
+            if (!prev) {
+                return null;
+            }
+
+            if (focused === null) {
+                return prev;
+            }
+
+            const filtered = [...prev];
+            filtered[focused] = newBlock;
+
+            return filtered;
+        })
+    }
+
 
     const handleStartDragToMove = (
         e: MouseEvent,
-        props: any
+        props: any,
     ) => {
         let rect: HTMLDivElement = e.target as HTMLDivElement;
         while (!rect.classList.contains('eventButton')) {
@@ -84,7 +217,7 @@ export default function useDraggableEventBlock(
             name: props.name ? props.name : null
         };
 
-        setBlock(newEventBlock)
+        updateBlock(newEventBlock, i)
         setMode(DragMode.Moving);
         return;
     }
@@ -93,6 +226,7 @@ export default function useDraggableEventBlock(
     const handleDragStart = (
         e: MouseEvent,
         props: any,
+        i: number
     ) => {
 
         const RIGHT_CLICK = 2;
@@ -102,18 +236,26 @@ export default function useDraggableEventBlock(
 
         if (!e.target) return;
         let target: HTMLDivElement = e.target as HTMLDivElement;
+        while (target.dataset.type !== 'emptyEvent') {
+            if (target.parentElement === null) {
+                return;
+            }
+            console.log(target);
+            target = target.parentElement as HTMLDivElement;
+        }
+
         if (target.dataset.type !== 'emptyEvent') {
             return handleStartDragToMove(e, props);
         }
-        
+
         const dayElement = target.parentElement;
         const dayContainer = dayElement?.parentElement;
         const totalView = dayContainer?.parentElement;
-        
+
         console.log(target);
 
         const rect: DOMRect = target.getBoundingClientRect();
-        const totalViewRect= totalView?.getBoundingClientRect();
+        const totalViewRect = totalView?.getBoundingClientRect();
 
         if (!totalViewRect) {
             return;
@@ -127,9 +269,9 @@ export default function useDraggableEventBlock(
         console.log(topAdjustmentRef);
         // const adjustedTop = (isClosestToTop ? rect.bottom : rect.top) + (topAdjustmentRef ? topAdjustmentRef.current.scrollHeight : window.scrollY);
         const adjustedTop = (isClosestToTop ? rect.bottom : rect.top) - totalViewRect.top;
-        const adjustedLeft = rect.left - totalViewRect.left;
+        const adjustedLeft = dayContainer.getBoundingClientRect().left - totalViewRect.left;
 
-        setBlock({
+        pushNewBlock({
             uuid: String(uuidv4()),
             display: 'flex',
             top: adjustedTop,
@@ -142,11 +284,20 @@ export default function useDraggableEventBlock(
             dragEndDay: props.date,
             dragStart: startDateObject,
             currStart: startDateObject,
-            currEnd: startDateObject.add(rect.height / standardHeight / 2)
+            currEnd: startDateObject.add(rect.height / standardHeight / 2),
+            totalViewTop: totalViewRect.top
         })
     }
 
     const handleMouseMoveOnMoving = (e: MouseEvent, props: any) => {
+
+        if (focused === null) {
+            return;
+        }
+        const block = blocks ? blocks[focused] : null;
+        if (!block) {
+            return;
+        }
 
         let rect: HTMLDivElement = e.target as HTMLDivElement;
         const isEmptyEventSlot = rect.dataset.type === 'emptyEvent';
@@ -155,183 +306,290 @@ export default function useDraggableEventBlock(
 
         if (!block || !block.dragDay) {
             setMode(null);
-            setBlock(null);
+            removeBlock();
             return;
         }
 
         if (props.hoverOverPreview) {
-            setBlock((prev) => {
-                if (!prev) return null;
-
-                const newStart = prev.dragStart.add((e.pageY - prev.startY) / standardHeight / 2);
-                return {
-                    ...prev,
-                    display: 'flex',
-                    top: e.pageY,
-                    currY: e.pageY,
-                    currStart: newStart,
-                    currEnd: newStart.add(prev.height / standardHeight / 2)
-                }
-            })
-
-            return;
-        }
-
-        setBlock((prev) => {
-            if (!prev) return null;
-
-            const newStart = prev.dragStart.add((e.pageY - prev.startY) / standardHeight / 2);
-            return {
-                ...prev,
+            const newStart = block.dragStart.add((e.pageY - block.startY) / standardHeight / 2);
+            updateBlock({
+                ...block,
                 display: 'flex',
                 top: e.pageY,
                 currY: e.pageY,
-                dragDay: props.date,
-                left: isEmptyEventSlot ? rectDOM.left : prev.left,
                 currStart: newStart,
-                currEnd: newStart.add(prev.height / standardHeight / 2)
-            }
+                currEnd: newStart.add(block.height / standardHeight / 2)
+            })
+        }
+
+        const newStart = block.dragStart.add((e.pageY - block.startY) / standardHeight / 2);
+        updateBlock({
+            ...block,
+            display: 'flex',
+            top: e.pageY,
+            currY: e.pageY,
+            dragDay: props.date,
+            left: isEmptyEventSlot ? rectDOM.left : block.left,
+            currStart: newStart,
+            currEnd: newStart.add(block.height / standardHeight / 2)
         })
         return;
     }
 
     const handleMouseUpOnMoving = async () => {
+
+
+        if (focused === null) {
+            return;
+        }
+        const block = blocks ? blocks[focused] : null;
+        if (!block) {
+            return;
+        }
+
         if (!block) return null;
 
         if (block.startY === block.currY) {
             setMode(null);
-            setBlock(null);
+            removeBlock();
             return null;
         }
 
         if (!block.uuid) {
             setMode(null);
-            setBlock(null);
+            removeBlock();
             return null;
         }
 
         await handleUpOnMove(block)
-        setBlock(null);
+        removeBlock();
         setMode(null);
         return;
     }
 
 
     const handleMouseMove = (e: MouseEvent, props: any) => {
+
+        if (focused === null) {
+            return;
+        }
+        const block = blocks ? blocks[focused] : null;
+        if (!block) {
+            return;
+        }
+
+
         if (!mode) return;
         // console.log(e.target)
 
+        if (mode === DragMode.Paused) return;
         if (mode === DragMode.Moving) return handleMouseMoveOnMoving(e, props);
 
         let target: HTMLDivElement = e.target as HTMLDivElement;
 
-        if (target.tagName === "SPAN") {
-            return;
-        }
+        // if (target.tagName === "SPAN") {
+        //     return;
+        // }
 
-        if (target.dataset.type !== 'emptyEvent') {
-            return handleStartDragToMove(e, props);
-        }
+        // if (target.dataset.type !== 'emptyEvent') {
+        //     return handleStartDragToMove(e, props);
+        // }
 
-        while (!target.classList.contains('event-block') && target.dataset.type != 'emptyEvent') {
+        while (target.dataset.type !== 'dragging_interface_top') {
             if (target.parentElement === null) {
                 return;
             }
+            console.log(target);
             target = target.parentElement as HTMLDivElement;
         }
-        const rect: DOMRect = (target as HTMLDivElement).getBoundingClientRect();
-        const dayElement = target.parentElement;
-        const dayContainer = dayElement?.parentElement;
-        const totalView = dayContainer?.parentElement;
-        const totalViewRect= totalView?.getBoundingClientRect();
 
-        if (!totalViewRect) {
+        console.log(target);
+
+        if (!target) {
             return;
         }
 
-        const adjustedTop = rect.bottom - totalViewRect.top;
+        const yRelative = e.clientY - target.getBoundingClientRect().top + target.scrollTop;
 
-        if (topAdjustmentRef) {
+        if (mode === DragMode.AdjustByTop) {
 
-            setBlock((prev) => {
-                if (!prev) return null;
-                return {
-                    ...prev,
-                    height: prev.currY - adjustedTop,
-                    dragEndDay: props.date || prev.dragEndDay,
-                    currY: adjustedTop,
-                    currEnd: prev.dragStart.add((prev.startY) / standardHeight / 2),
-                };
+            const height = yRelative - block.startY;
+
+            updateBlock({
+                ...block,
+                dragEndDay: props.date || block.dragEndDay,
+                startY: yRelative,
+                top: yRelative
             })
 
             return;
         }
 
-        setBlock((prev) => {
-            if (!prev) return null;
-            return {
-                ...prev,
-                height: e.pageY - prev.startY,
-                dragEndDay: props.date || prev.dragEndDay,
-                currY: e.pageY,
-                currEnd: prev.dragStart.add((e.pageY - prev.startY) / standardHeight / 2)
-            }
+        const height = yRelative - block.startY;
+        updateBlock({
+            ...block,
+            height,
+            dragEndDay: props.date || block.dragEndDay,
+            currY: yRelative,
+            currEnd: block.dragStart.add(height / standardHeight / 2)
         })
 
         return;
     }
 
     const handleMouseUp = () => {
-        if (!block) return;
 
         if (mode === DragMode.Moving) return handleMouseUpOnMoving();
 
-        if (mode !== DragMode.DragToCreate) {
-            setBlock(null);
-            return;
-        };
+        // if (mode !== DragMode.DragToCreate) {
+        //     setBlock(null);
+        //     return;
+        // };
 
-        handleUpOnCreate(block)
-        setBlock(null);
-        setMode(null);
+        setMode(DragMode.Paused);
+        // handleUpOnCreate(block)
+        // setBlock(null);
+        // setMode(null);
         return;
     }
 
 
     const RenderedBlock = (
-        <>
-            {block ? (
-                <div
-                    onMouseMove={(e) => handleMouseMove(e, { hoverOverPreview: true })}
-                    key="moving-event-block"
-                    className="event-block"
-                    style={{
-                        display: block.display,
-                        position: 'absolute',
-                        zIndex: 2,
-                        backgroundColor: alpha(theme.palette.primary.main, 0.5),
-                        top: block ? `${block.top}px` : 0,
-                        width: block ? block.width : 0,
-                        height: block ? block.height : 0,
-                        left: block ? block.left : 0,
-                        borderRadius: '0.25rem',
-                        padding: '0.5rem',
-                        color: theme.palette.primary.contrastText,
-                    }}
-                >
-                    <span style={{ fontSize: '0.75rem', margin: 0, height: "fit-content" }}>
-                        {block.name && <><span style={{ fontWeight: 700 }}>{block.name && block.name}</span> <br /></>}
-                        {block.currStart.to(block.currEnd, 5)}
-                    </span>
-                </div>
-            ) : (
-                <></>
-            )}
-        </>
+        <div
+            onMouseMove={(e) => handleMouseMove(e, { hoverOverPreview: true })}
+        >
+            {blocks && blocks.map((block, i) => {
+
+
+                return (
+                    <div
+                        id={`moving_event_block_${i}`}
+                        key={`moving_event_block_${i}`}
+                        className="event-block"
+                        style={{
+                            display: block.display,
+                            position: 'absolute',
+                            zIndex: 2,
+                            border: `0.15rem solid ${alpha(theme.palette.primary.main, 0.5)}`,
+                            top: block ? `${block.top}px` : 0,
+                            width: block ? block.width : 0,
+                            height: block ? block.height : 0,
+                            left: block ? block.left : 0,
+                            borderRadius: '0.25rem',
+                            padding: '0.5rem',
+                            color: theme.palette.primary.main,
+                            backgroundColor: theme.palette.background.paper,
+                        }}
+                    >
+                        <span style={{ fontSize: '0.75rem', margin: 0, height: "fit-content" }}>
+                            {block.name && <><span style={{ fontWeight: 700 }}>{block.name && block.name}</span> <br /></>}
+                            {block.currStart.to(block.currEnd, 5)}
+                        </span>
+
+                        <>
+                            <div
+                                onMouseDown={e => {
+                                    setFocused(i)
+                                    setMode(DragMode.DragToCreate)
+                                }}
+                                onMouseUp={e => setMode(DragMode.Paused)}
+                                className="flex center middle fit" style={{
+                                    position: 'absolute',
+                                    width: "0.75rem",
+                                    height: "0.75rem",
+                                    backgroundColor: theme.palette.background.paper,
+                                    // padding: "0.25rem",
+                                    borderRadius: '100vh',
+                                    bottom: "-0.45rem",
+                                    left: "50%",
+                                    transform: 'translateX(-50%)',
+                                    cursor: "ns-resize",
+                                }}>
+                                <div style={{
+                                    width: "0.5rem",
+                                    borderRadius: '100vh',
+                                    height: "0.5rem",
+                                    backgroundColor: theme.palette.background.paper,
+                                    border: `0.15rem solid ${theme.palette.primary.main}`,
+                                }}></div>
+                            </div>
+                            <div
+                                onMouseDown={e => {
+                                    setFocused(i)
+                                    setMode(DragMode.AdjustByTop)
+                                }}
+                                onMouseUp={e => setMode(DragMode.Paused)}
+                                className="flex center middle fit" style={{
+                                    position: 'absolute',
+                                    width: "0.75rem",
+                                    height: "0.75rem",
+                                    backgroundColor: theme.palette.background.paper,
+                                    // padding: "0.25rem",
+                                    borderRadius: '100vh',
+                                    top: "-0.45rem",
+                                    left: "50%",
+                                    transform: 'translateX(-50%)',
+                                    cursor: "ns-resize",
+                                }}>
+                                <div style={{
+                                    width: "0.5rem",
+                                    borderRadius: '100vh',
+                                    height: "0.5rem",
+                                    backgroundColor: theme.palette.background.paper,
+                                    border: `0.15rem solid ${theme.palette.primary.main}`,
+                                }}></div>
+                            </div>
+
+                            <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+
+                            }}>
+                                <IconButton onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    removeBlock(i);
+                                    setMode(null);
+                                }} >
+                                    <CloseOutlined sx={{
+                                        fontSize: '0.875rem'
+                                    }} />
+                                </IconButton>
+                            </div>
+
+                            <div style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                right: 0,
+
+                            }}>
+                                <Button size="small" onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleUpOnCreate()
+                                    // removeBlock(i);
+                                    // setMode(null);
+                                }}
+                                    startIcon={<AddOutlined sx={{
+                                        fontSize: "0.75rem",
+                                        marginRight: "-0.25rem"
+                                    }}
+                                    />
+                                    }
+                                >
+                                    Create
+                                </Button>
+                            </div>
+                        </>
+                    </div>
+                )
+            })}
+        </div>
     )
 
 
 
 
-    return { block, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp }
+    return { blocks, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp }
 }

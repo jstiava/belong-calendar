@@ -148,25 +148,38 @@ const CalendarDayTimeSlot = ({
         onMouseMove={handleMouseMove}
         onContextMenu={onContextMenu}
         style={{
-          display: 'flex',
-          position: 'relative',
-          color: 'grey',
-          fontSize: '0.875rem',
-          height: standardHeight,
-          borderBottom: '1px solid',
-          borderColor: color,
-          alignItems: 'start',
-          // marginRight: '0.5rem',
-          width: "100%",
-          opacity: isPast ? 0.5 : 1,
-          // backgroundColor: "grey"
-        }}
-      >
-        {/* <span style={{ position: "relative", color: "lightGrey", fontSize: "0.7rem", height: 0, padding: 0, margin: 0 }}>{new Chronos(time - 0.5).getHMN()}</span> */}
+          padding: '0 0.5rem'
+        }}>
+        <div
+          style={{
+            display: 'flex',
+            position: 'relative',
+            color: 'grey',
+            fontSize: '0.875rem',
+            height: standardHeight,
+            borderBottom: '1px solid',
+            borderColor: color,
+            alignItems: 'start',
+            width: "100%",
+            opacity: isPast ? 0.5 : 1,
+          }}
+        >
+          {/* <span style={{ position: "relative", color: "lightGrey", fontSize: "0.7rem", height: 0, padding: 0, margin: 0 }}>{new Chronos(time - 0.5).getHMN()}</span> */}
+        </div>
       </div>
     </>
   );
 };
+
+
+// interface EventCardProps {
+//   event: any,
+//   Cart: any
+// }
+
+// export default function EventCart(props: EventCardProps)
+
+
 
 function DayView({
   index,
@@ -307,7 +320,7 @@ function DayView({
               replace={replace}
             />
           )} */}
-          <div style={{ position: 'relative', width: "calc(100% - 1.5rem)", marginLeft: "0.25rem" }}>
+          <div style={{ position: 'relative', width: "100%" }}>
 
             {calendarDayRendered &&
               calendarDayRendered.aside.map((event, index) => {

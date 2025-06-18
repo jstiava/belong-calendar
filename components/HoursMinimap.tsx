@@ -540,14 +540,6 @@ export default function HoursMinimap({
                                                     dow: index
                                                 });
                                                 theCopy.as_text = theCopy.to_string();
-                                                console.log({
-                                                    original: schedule,
-                                                    past,
-                                                    present,
-                                                    dow: index,
-                                                    theCopy,
-                                                    message: "onAdd"
-                                                })
                                                 if (onChange) {
                                                     onChange(theCopy)
                                                 }

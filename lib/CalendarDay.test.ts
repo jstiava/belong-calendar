@@ -1,8 +1,7 @@
 import '@testing-library/jest-dom';
 import CalendarDay from './CalendarDay';
 import MinHeap from './MinHeap';
-import { Event, Schedule } from '@jstiava/chronos';
-import Chronos from './utils/chronos';
+import { Event, Schedule, Chronos } from '@jstiava/chronos';
 import dayjs from 'dayjs';
 import CalendarDayRendered from './CalendarDayRendered';
 import { CalendarDays } from './CalendarDays';
@@ -16,7 +15,6 @@ test('test remove', () => {
     const schedule = Schedule.createOffDrag(dayjs(String(20250330)), null, new Chronos(9), new Chronos(19));
 
     const events = [
-
         new Event({
             name: "Date, start, end time",
             start_time: String(9),

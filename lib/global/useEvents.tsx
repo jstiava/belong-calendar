@@ -1,7 +1,7 @@
 "use client"
 import { useSnackbar } from 'notistack';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
-import { Event, EventData, Member, Events, Junction, JunctionStatus, MemberFactory, typeToDirectionality } from '@jstiava/chronos';
+import { Event, EventData, Member, Events, Junction, JunctionStatus, MemberFactory, typeToDirectionality, JunctionBuilder } from '@jstiava/chronos';
 import { Type } from "@/types/globals"
 import { Dayjs } from 'dayjs';
 import { UseBase } from './useBase';
@@ -37,6 +37,7 @@ export interface UseEvents {
    * @returns 
    */
   swap: (target: Event) => void;
+  colors: Set<string> | null;
 }
 
 
@@ -47,6 +48,8 @@ export default function useEvents(
 ): UseEvents {
   const { enqueueSnackbar } = useSnackbar();
 
+
+  const [colors, setColors] = useState<Set<string> | null>(null);
   const [days, setDays] = useState<CalendarDays<CalendarDay> | null>(null);
   const [events, setEvents] = useState<Event[] | null>(null);
   const [cache, setCache] = useState<{ id: string, start: Dayjs | null, end: Dayjs | null }>({ id: '', start: null, end: null });
@@ -212,7 +215,27 @@ export default function useEvents(
     for (const newEvent of newEvents) {
 
       const localObject = new Event(newEvent, true);
-      const globalObject = new Event(newEvent, true).globalize();
+      const globalObject = localObject.copy().globalize();
+
+      if (sharing) {
+        for (const share of sharing) {
+          const theJunctions = new JunctionBuilder()
+            .from({
+              type: share.type,
+              value: share.uuid
+            })
+            .to({
+              type: Type.Event,
+              value: localObject.id()
+            })
+            .denyAll()
+            .fromChildToParent()
+            .allowAll();
+
+          localObject.junctions.set(`${share.uuid}_${typeToDirectionality(share.type, false)}`, theJunctions.buildParentToChild())
+          localObject.junctions.set(`${share.uuid}_${share.type === Type.Event ? 'from_child_event_to' : 'from_event_to'}`, theJunctions.buildChildToParent())
+        }
+      }
 
       globals.push(globalObject);
       newDays.add(localObject);
@@ -361,11 +384,15 @@ export default function useEvents(
       .then(async (res) => {
         setCache(prev => { return { ...prev, id: source.id() } });
 
+        const theColors = new Set<string>();
         const eventsArray: Event[] = [];
         const theCalDays = new CalendarDays(start, end, (x: number) => new CalendarDay(x));
 
         const eventObjects = res.events.map((e) => {
           const newEvent = new Event(e).localize();
+          if (newEvent.theme_color) {
+            theColors.add(newEvent.theme_color);
+          }
           return newEvent;
         }).sort(Events.sortByTime);
 
@@ -390,6 +417,7 @@ export default function useEvents(
         setEventsSearch(fuse);
         setEvents(eventsArray);
         setDays(theCalDays);
+        setColors(theColors);
 
       })
       .catch(err => {
@@ -418,7 +446,8 @@ export default function useEvents(
       reload,
       update,
       debug,
-      search
+      search,
+      colors
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cache, events, days, source]);

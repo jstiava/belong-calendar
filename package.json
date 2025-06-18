@@ -12,7 +12,7 @@
     "test:ci": "jest --ci"
   },
   "dependencies": {
-    "@jstiava/chronos": "git+https://<token>@github.com/jstiava/chronos.git",
+    "@jstiava/chronos": "git+https://github.com/jstiava/chronos.git",
     "@codemirror/gutter": "^0.19.9",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-json": "^6.0.1",

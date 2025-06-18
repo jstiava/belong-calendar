@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, IconButton, Link, Avatar, AvatarGroup, Button, ButtonBase, Typography, useTheme, Popover, ToggleButton } from '@mui/material';
+import { Avatar, AvatarGroup, Button, ButtonBase, Typography, useTheme, ToggleButton } from '@mui/material';
 import { UseSession } from '@/lib/global/useSession';
-import { CopyAllOutlined, ExpandMoreOutlined, ExpandOutlined, FilterList, Fullscreen, LanguageOutlined, LockOutlined, SearchOutlined, SendOutlined } from '@mui/icons-material';
-import { DIVIDER_NO_ALPHA_COLOR } from '../Divider';
+import { CopyAllOutlined, FilterList, Fullscreen, LanguageOutlined, LockOutlined, SendOutlined } from '@mui/icons-material';
 import { SIDEBAR_WIDTH } from './Sidebar';
 import { UseBase } from '@/lib/global/useBase';
-import { Member, dayjs } from '@jstiava/chronos';
+import { Member, MemberFactory, dayjs } from '@jstiava/chronos';
 import StyledToggleButtonGroup from '../StyledToggleButtonGroup';
 import ItemStub from '../ItemStub';
 import { useRouter } from 'next/router';
 import SmallTextField from '../SmallTextField';
 import ResolveItemIcon from '../ResolveItemIcon';
 import StyledIconButton from '../StyledIconButton';
+import Flyout from '../Flyout';
+import axiosInstance from '@/lib/utils/axios';
+import { useSnackbar } from 'notistack';
 
 
 const Footer = ({
@@ -28,11 +30,17 @@ const Footer = ({
 
   const router = useRouter();
   const theme = useTheme();
+  const { enqueueSnackbar } = useSnackbar();
 
   const Controller = router.asPath.startsWith('/me') ? Session : module ? Module : Base;
+  const item = router.asPath.startsWith('/me') ? Session.session : module ? module : Session.base;
 
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const isIAMOpen = Boolean(anchorEl);
+  const isOpen = Boolean(anchorEl);
+
+  const [anchorElForIAM, setAnchorElForIAM] = useState<HTMLButtonElement | null>(null);
+  const isIAMOpen = Boolean(anchorElForIAM);
+
   const [searchQuery, setSearchQuery] = useState(null);
   const [searchResults, setSearchResults] = useState<Member[] | null>(null);
 
@@ -61,6 +69,10 @@ const Footer = ({
       query: { ...rest, view: theView }
     })
   };
+
+  if (!Controller || !item) {
+    return null;
+  }
 
   return (
     <>
@@ -92,11 +104,15 @@ const Footer = ({
             <Typography sx={{
               fontWeight: 600,
               fontSize: "0.875rem",
-               opacity: 0.75,
+              opacity: 0.75,
               // textTransform: 'uppercase'
             }}>America/Chicago (Hard-coded) ({dayjs().tz('America/Chicago').format("z Z")})</Typography>
-            </Button>
+          </Button>
           <Button
+            onClick={(e: any) => {
+              const target = e.currentTarget || e.target;
+              setAnchorEl(target)
+            }}
             disableRipple
             className="flex compact fit"
             sx={{
@@ -115,6 +131,35 @@ const Footer = ({
               textTransform: 'uppercase'
             }}>Filters</Typography>
           </Button>
+          <Flyout
+            isOpen={isOpen}
+            anchorEl={anchorEl}
+            onClose={() => setAnchorEl(null)}
+            sx={{
+              padding: "1.5rem",
+              width: "15rem"
+            }}
+          >
+            <div className="flex compact wrap" style={{
+              marginBottom: '-0.5rem'
+            }}>
+              {Controller?.Events.colors && Controller?.Events.colors.values().map(color => {
+                return (
+                  <div
+                    key={color}
+                    style={{
+                      width: "1rem",
+                      height: "1rem",
+                      borderRadius: '100vh',
+                      backgroundColor: color,
+                      // border: `0.15rem solid ${theme.palette.getContrastText(color)}`,
+                      marginBottom: '0.5rem'
+                    }}
+                  ></div>
+                )
+              })}
+            </div>
+          </Flyout>
           <Typography sx={{
             fontSize: "0.875rem",
             opacity: 0.75,
@@ -137,7 +182,7 @@ const Footer = ({
                 }}
                 onClick={(e: any) => {
                   const target = e.currentTarget || e.target;
-                  setAnchorEl(target)
+                  setAnchorElForIAM(target)
                 }}
               >
                 <AvatarGroup
@@ -197,29 +242,22 @@ const Footer = ({
         </div>
       </footer>
 
-      <Popover
-        anchorEl={anchorEl}
-        open={isIAMOpen}
-        // placement='left-start'
-        onClose={(e: any) => {
-          e.stopPropagation();
-          setAnchorEl(null)
-        }}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
+      <Flyout
+
+        isOpen={isIAMOpen}
+        anchorEl={anchorElForIAM}
+        onClose={() => setAnchorElForIAM(null)}
+        sx={{
+          padding: "0.5rem",
+          width: "32.5rem"
         }}
       >
         <div
           className="column"
           style={{
-            width: "30rem",
+            width: "100%",
             borderRadius: "0.25rem",
-            padding: '1rem 1.5rem',
+            padding: '1rem 1rem',
             position: 'relative'
           }}>
 
@@ -314,12 +352,40 @@ const Footer = ({
                 sx={{
                   width: 'fit-content'
                 }}
+                onClick={e => {
+
+                  enqueueSnackbar('Generating link...', {
+                    variant: 'warning',
+                    autoHideDuration: 500
+                  })
+
+                  axiosInstance.get(`/api/v1/iam/invite`, {
+                    params: {
+                      type: 'invite_link',
+                      source: MemberFactory.getToken(item)
+                    }
+                  })
+                    .then(res => {
+                      navigator.clipboard.writeText(res.data.link).then(() => {
+                        enqueueSnackbar('Link copied', {
+                          variant: 'success'
+                        })
+                      }).catch((err) => {
+                        enqueueSnackbar('Something went wrong.', {
+                          variant: 'error'
+                        })
+                      });
+
+                    })
+
+
+                }}
               >Copy Invite Link</Button>
             </div>
           )}
 
         </div>
-      </Popover>
+      </Flyout>
     </>
 
   );

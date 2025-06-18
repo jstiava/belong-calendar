@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import React, { useState, useMemo, useCallback, CSSProperties, JSX } from 'react';
 import { UseBaseCore } from './useBase';
-import { Member, MemberFactory, Mode, Schedule, Type } from '@jstiava/chronos';
+import { Member, MemberFactory, Mode, Schedule, Type, typeToDirectionality } from '@jstiava/chronos';
 import { TransitionGroup } from 'react-transition-group';
 import { useSnackbar } from 'notistack';
 import { UseSession, UseSession_SessionOnly } from './useSession';
@@ -238,8 +238,8 @@ export default function useCreator(
           key = true;
           if (!props.doNotPrepJunctions) {
 
-            if (source) item.junctions.set(source.id(), MemberFactory.connect(source, item));
-            if (parent) item.junctions.set(parent.id(), MemberFactory.connect(parent, item));
+            if (source) item.junctions.set(`${source.id()}_${typeToDirectionality(item.type, source.type === Type.Event)}`, MemberFactory.connect(source, item));
+            if (parent) item.junctions.set(`${source.id()}_${typeToDirectionality(item.type, source.type === Type.Event)}`, MemberFactory.connect(parent, item));
             if (Session && ((!source && !parent) && Session.session)) {
               item.junctions.set(Session.session.id(), MemberFactory.connect(Session.session, item))
             }

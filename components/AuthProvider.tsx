@@ -29,7 +29,7 @@ import AppLayout from './AppLayout';
 
 const sora = Source_Sans_3({ subsets: ['latin'] });
 const protectedPaths = ['/be/', '/at/', 'be/at/'];
-const unprotected = ['/login', '/register', '/', '/theme', 'test'];
+const unprotected = ['/login', '/register', '/', '/theme', 'test', '/invited'];
 
 const session_protected = ['/dashboard', '/me'];
 

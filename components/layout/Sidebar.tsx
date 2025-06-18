@@ -5,7 +5,7 @@ import { Drawer, Button, Typography, useMediaQuery, useTheme, ButtonBase, lighte
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { UseBase } from "@/lib/global/useBase";
 import { useRouter } from "next/router";
-import { AddOutlined, ArrowBackIosOutlined, ArrowForwardIosOutlined, CloseOutlined, EditOutlined, HandshakeOutlined, MoreHorizOutlined, SettingsOutlined, SwitchAccountOutlined } from "@mui/icons-material";
+import { AddOutlined, ArrowBackIosOutlined, ArrowForwardIosOutlined, BadgeOutlined, CloseOutlined, EditOutlined, HandshakeOutlined, MoreHorizOutlined, SettingsOutlined, SwitchAccountOutlined } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import StyledWeekPicker from "../calendar/WeekPicker";
 import Divider, { DIVIDER_NO_ALPHA_COLOR } from "../Divider";
@@ -195,6 +195,24 @@ export default function Sidebar({
               <Typography>Edit</Typography>
             </ButtonBase>
           )}
+
+           <ButtonBase
+
+            onClick={() => {
+              pushNewView('me')
+            }}
+            className="flex compact"
+            sx={{
+              padding: "0.25rem 0.5rem",
+              borderRadius: "0.25rem"
+            }}
+          >
+            <BadgeOutlined sx={{
+              fontSize: "1rem"
+            }} />
+            <Typography>My Identity</Typography>
+          </ButtonBase>
+
           <ButtonBase
 
             onClick={() => {

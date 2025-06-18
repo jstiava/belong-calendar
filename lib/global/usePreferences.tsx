@@ -11,7 +11,7 @@ export interface UsePreferences {
 
 export default function usePreferences(): UsePreferences {
   const theme = useTheme();
-  const [mode, setMode] = useState('dark');
+  const [mode, setMode] = useState('light');
   const isLg = useMediaQuery(theme.breakpoints.down('lg'));
   const [isSidebarDocked, setIsSidebarDocked] = useState<boolean>(true);
 

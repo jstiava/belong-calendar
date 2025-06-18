@@ -724,7 +724,7 @@ const DataViewPreview = ({
                   }}
                 >Open Link</Button>
               )}
-              <Button
+              {/* <Button
                 fullWidth
                 variant='contained'
                 size="large"
@@ -740,7 +740,7 @@ const DataViewPreview = ({
                     }
                   })
                 }}
-              >Open In Full</Button>
+              >Open In Full</Button> */}
               <Button
                 fullWidth
                 variant='contained'

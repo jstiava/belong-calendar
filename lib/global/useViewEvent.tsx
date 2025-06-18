@@ -45,6 +45,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MEDIA_BASE_URI } from '../useComplexFileDrop';
 import { BackgroundImageGallery, PortraitImage } from '@/components/Image';
 import HoursMinimap from '@/components/HoursMinimap';
+import AnalogClockIcon from '@/components/AnalogClockIcon';
 
 
 export default function useViewEvent(
@@ -416,54 +417,78 @@ export default function useViewEvent(
           </div>
         )}
         <div className="column" style={{
-          padding: "1.5rem"
+          padding: "1rem",
         }}>
 
           <div className="column snug">
+
+            {source && (
+              <div style={{
+                position: 'absolute',
+                right: "1rem",
+                top: "1rem"
+              }}>
+                <Button
+                  size='small'
+                  sx={{ padding: "0", fontSize: "0.9375rem", color: 'inherit' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditEventRequest()
+                  }}
+                  startIcon={<EditOutlined />}
+                >
+                  Edit
+                </Button>
+              </div>
+            )}
 
 
             <div className="flex between">
 
               <div style={{ display: 'inline' }}>
-                <Link variant="h5" component="h2"
-                  className="hover-underline"
-                  sx={{
-                    display: 'inline',
-                    backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${theme.palette.primary.contrastText}, ${theme.palette.primary.contrastText})`,
-                    textDecoration: `none`,
-                    backgroundSize: `100% 0.15rem, 0 0.15rem`,
-                    backgroundPosition: `100% 100%,0 100%`,
-                    backgroundRepeat: `no-repeat`,
-                    transition: `background-size .3s`,
-                    color: 'inherit',
-                    cursor: "pointer",
-                    whiteSpace: "pre-wrap",
-                    fontWeight: 700,
-                    textAlign: 'left',
-                    lineHeight: '115%',
-                    fontSize: "1.25rem"
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCloseEvent();
-                    const currentQuery = router.query;
 
-                    const pathParts = router.pathname.split('/');
-                    const currentTab = pathParts[3];
-                    const { base, module, ...rest } = router.query;
-                    if (event) {
-                      router.push({
-                        pathname: `${router.asPath.startsWith('/me') ? '/me/' : '/be/'}${event.id()}${currentTab ? `/${currentTab}` : ``}`,
-                        query: {
-                          ...rest,
-                          base: source?.id()
-                        }
-                      })
-                    }
-                  }}>
+                {event && (
 
-                  {event && <span dangerouslySetInnerHTML={{ __html: event.name }} />}
-                </Link>
+                  <Link variant="h5" component="h2"
+                    className="hover-underline"
+                    sx={{
+                      display: 'inline',
+                      backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${theme.palette.getContrastText(event.theme_color)}, ${theme.palette.getContrastText(event.theme_color)})`,
+                      textDecoration: `none`,
+                      backgroundSize: `100% 0.15rem, 0 0.15rem`,
+                      backgroundPosition: `100% 100%,0 100%`,
+                      backgroundRepeat: `no-repeat`,
+                      transition: `background-size .3s`,
+                      color: 'inherit',
+                      cursor: "pointer",
+                      whiteSpace: "pre-wrap",
+                      fontWeight: 700,
+                      textAlign: 'left',
+                      lineHeight: '115%',
+                      fontSize: "1.25rem"
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCloseEvent();
+                      const currentQuery = router.query;
+
+                      const pathParts = router.pathname.split('/');
+                      const currentTab = pathParts[3];
+                      const { base, module, ...rest } = router.query;
+                      if (event) {
+                        router.push({
+                          pathname: `${router.asPath.startsWith('/me') ? '/me/' : '/be/'}${event.id()}${currentTab ? `/${currentTab}` : ``}`,
+                          query: {
+                            ...rest,
+                            base: source?.id()
+                          }
+                        })
+                      }
+                    }}>
+
+                    <span dangerouslySetInnerHTML={{ __html: event.name }} />
+                  </Link>
+                )}
               </div>
               {event && (event.icon_img && !event.cover_img) ? (
                 <PortraitImage
@@ -499,7 +524,7 @@ export default function useViewEvent(
                     <>
                       <div className="column compact" style={{ width: "100%", color: isOpenDetailed.schedule.isNotRegular() ? warningColor : 'inherit' }}>
                         <div className="flex compact" style={{ color: isOpenDetailed.schedule.isNotRegular() ? warningColor : 'inherit' }}>
-                          <ScheduleOutlined fontSize="small" />
+                          <ScheduleOutlined fontSize='small' />
                           <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{isOpenDetailed.date.format("ddd")} <span style={{ opacity: 0.75 }}>&middot; {isOpenDetailed.hours && isOpenDetailed.hours instanceof Hours ? isOpenDetailed.hours.as_text : isOpenDetailed.hours ? "Open" : "Closed"}{isOpenDetailed.schedule.isNotRegular() && <> &middot; {isOpenDetailed.schedule.name}</>}</span></Typography>
                         </div>
                       </div>
@@ -507,7 +532,7 @@ export default function useViewEvent(
 
                   ) : (
                     <div className="div flex compact">
-                      <ScheduleOutlined fontSize="small" />
+                      <ScheduleOutlined fontSize='small' />
                       <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{isOpenDetailed.schedule.as_text} </Typography>
                     </div>
                   )}
@@ -522,7 +547,11 @@ export default function useViewEvent(
                       <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.date.to(event.end_date)}</Typography>
                     </div>
                     <div className="flex compact fit">
-                      <ScheduleOutlined fontSize="small" />
+                      <AnalogClockIcon
+                        hour={event.start_time.getHour()}
+                        minute={event.start_time.getMinute()}
+                        color={theme.palette.getContrastText(event.theme_color)}
+                      />
                       <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.start_time.to(event.end_time)}</Typography>
                     </div>
                   </div>
@@ -586,55 +615,25 @@ export default function useViewEvent(
               )
             })()
           )}
-          <div
-            className="flex between"
-            style={{
-              padding: "0.5rem 0",
-            }}>
-            {source && (
-              <>
-                <Button
-                  size='small'
-                  sx={{ padding: "0", fontSize: "0.9375rem", color: 'inherit' }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditEventRequest()
-                  }}
-                  startIcon={<EditOutlined />}
-                >
-                  Edit
-                </Button>
-
-                <Button
-                  size='small'
-                  sx={{ padding: "0", fontSize: "0.9375rem", color: 'inherit' }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsRightClick(true);
-                  }}
-                  startIcon={<MoreOutlined />}
-                >
-                  More
-                </Button>
-              </>
-            )}
-            {(event && source) && event.junctions.has(source.id()) && event.junctions.get(source.id())?.status != JunctionStatus.Accepted && (
-              <div className="column compact" style={{ margin: "0.5rem 0" }}>
-                <Button size="small" variant="flipped" onClick={async (e) => {
-                  e.stopPropagation();
-                  event.updateHost(source, {
-                    status: JunctionStatus.Accepted
-                  })
-                    .then(newEvent => {
-                      setEvent(newEvent);
-                      Events.swap(newEvent);
-                    })
-                    .catch(() => {
-                      return;
-                    })
-                }}>Accept</Button>
-              </div>
-            )}
+          <div className="flex right">
+           {event && (
+             <Button
+              variant={'flipped'}
+              size="small"
+              sx={{
+                fontWeight: 600,
+                textTransform: "uppercase",
+                color: event.theme_color,
+                backgroundColor: theme.palette.getContrastText(event.theme_color)
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                // window.open(String(theLink.link), '_blank')
+              }}
+            >
+              More
+            </Button>
+           )}
           </div>
         </div>
       </Box>
@@ -855,8 +854,8 @@ export default function useViewEvent(
                 />
               )}
             </div>
-             <div className="flex">
-               <Button onClick={e => {
+            <div className="flex">
+              <Button onClick={e => {
                 setSchedule(null);
               }}>Cancel</Button>
               <Button onClick={e => {
@@ -868,7 +867,7 @@ export default function useViewEvent(
                 event.pushSchedule(newObject);
                 Events.update(event.eject());
               }} variant="contained">Save</Button>
-             </div>
+            </div>
           </div>
         </Popover>
       </div>

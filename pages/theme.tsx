@@ -277,6 +277,10 @@ export default function ThemePage(props: AppPageProps) {
                     })}
                 </div>
 
+                <div className="flex left center"></div>
+                <div className="column right top"></div>
+                
+
                 {/* {Object.entries(QUESTIONS).map(([key, q]) => {
 
                     if (['control_textbox', 'control_email'].some(x => x === q.type)) {

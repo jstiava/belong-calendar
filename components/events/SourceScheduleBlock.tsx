@@ -70,10 +70,10 @@ export const SourceScheduleBlock = ({
     }
 
     if (event.collisions === 0) {
-      return event.id() === source.id() ? "0rem" : source instanceof Event ? "0.75rem" : "0rem";
+      return event.id() === source.id() ? "0rem" : source instanceof Event ? "0rem" : "0rem";
     }
 
-    return `calc(calc(${column} * 1rem) + ${source instanceof Event ? "0.75rem" : "0rem"})`
+    return `calc(calc(${column} * 0.5rem) + ${source instanceof Event ? "0rem" : "0rem"})`
   };
 
   const [isMember, setIsMember] = useState(false);
@@ -294,7 +294,7 @@ export const SourceScheduleBlock = ({
             zIndex: Math.max(1, Math.round(3 * (1 / (end.getHMN() - start.getHMN())))),
             top: calculateTop(start) | 0,
             left: formatLeftShift(),
-            width: '0.25rem',
+            width: '0.5rem',
             textAlign: 'left',
             fontFamily: 'inherit',
             borderRadius: '0.25rem',
@@ -316,9 +316,9 @@ export const SourceScheduleBlock = ({
             sx={{
               position: 'absolute',
               top: 0,
-              width: "2rem",
-              height: "2rem",
-              transform: "translate(0.2rem, -1.55rem)",
+              width: "1.5rem",
+              height: "1.5rem",
+              transform: "translate(0.25rem, -1.25rem)",
               fontSize: "0.85rem",
               backgroundColor: event.theme_color || theme.palette.background.paper,
               color: event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.text.primary,
@@ -333,12 +333,11 @@ export const SourceScheduleBlock = ({
             position: 'absolute',
             bottom: 0,
             transform: "translate(0, 50%)",
-            width: "1rem",
-            height: "1rem",
+            width: "0.5rem",
+            height: "0.5rem",
             borderRadius: "100vh",
-            borderColor: event.theme_color || theme.palette.primary.main,
             backgroundColor: theme.palette.background.paper,
-            border: "0.25rem solid"
+            border: `0.1rem solid ${event.theme_color}`
           }}></div>
         </ButtonBase>
       ))}
