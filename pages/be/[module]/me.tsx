@@ -20,7 +20,6 @@ import jwt, { Secret } from 'jsonwebtoken';
 function decode(data: string) {
     const base = jwt.decode(String(data)) as any;
     if (!base) {
-        fail("Invalid base token")
         throw Error("No base found")
     }
 
