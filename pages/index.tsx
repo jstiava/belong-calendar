@@ -53,7 +53,10 @@ export default function LoginPage(props: {
       });
     }
     setTheState('loading')
-    props.Session.login(loginCred)
+    props.Session.login({
+      ...loginCred,
+      token: router.query.token
+    })
       .then((res) => {
         if (res) {
           setTheState('success');
