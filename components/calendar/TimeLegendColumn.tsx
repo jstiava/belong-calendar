@@ -32,12 +32,14 @@ export default function TimeLegendColumn({
           const theTime = new Chronos(time);
 
           return (
-            <div style={{
+            <div 
+            key={time}
+            style={{
               width: '100%',
               padding: '0 0.5rem'
             }}>
               <Typography
-              key={time}
+              
               component="p"
               sx={{
                 display: 'flex',

@@ -361,7 +361,6 @@ function DayView({
                       handleDragStart={handleDragStart}
                       isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
                       source={source}
-                      swap={swap}
                     />
                   )
 
@@ -428,7 +427,6 @@ function DayView({
                           handleDragStart={handleDragStart}
                           isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
                           source={source}
-                          swap={swap}
                         />
                       )
 
@@ -523,7 +521,6 @@ function DayView({
                             handleSelect={handleSelect}
                             handleDragStart={handleDragStart}
                             isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
-                            swap={swap}
                           />
                         )
                       }
@@ -576,7 +573,6 @@ function DayView({
                       handleDragStart={handleDragStart}
                       isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
                       source={source}
-                      swap={swap}
                     />
                   )
 

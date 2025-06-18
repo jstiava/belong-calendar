@@ -439,9 +439,6 @@ const DataView = ({
     });
   }
 
-  const { block, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(standardHeight, null, handleUpOnMove, handleUpOnCreate);
-
-
   const handleDayTimeClick = (e: MouseEvent) => {
     const RIGHT_CLICK = 2;
     if (e.button === RIGHT_CLICK) {

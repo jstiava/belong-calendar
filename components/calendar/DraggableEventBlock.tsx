@@ -32,6 +32,7 @@ export interface DraggedEventBlockProps {
     currStart: Chronos;
     currEnd: Chronos;
     name?: string | null;
+    totalViewTop: number | null;
 }
 
 export default function useDraggableEventBlock(
@@ -217,7 +218,7 @@ export default function useDraggableEventBlock(
             name: props.name ? props.name : null
         };
 
-        updateBlock(newEventBlock, i)
+        updateBlock(newEventBlock)
         setMode(DragMode.Moving);
         return;
     }
@@ -257,7 +258,7 @@ export default function useDraggableEventBlock(
         const rect: DOMRect = target.getBoundingClientRect();
         const totalViewRect = totalView?.getBoundingClientRect();
 
-        if (!totalViewRect) {
+        if (!totalViewRect || !dayContainer) {
             return;
         }
 
@@ -306,7 +307,7 @@ export default function useDraggableEventBlock(
 
         if (!block || !block.dragDay) {
             setMode(null);
-            removeBlock();
+            // NEED BACK - removeBlock();
             return;
         }
 
@@ -351,18 +352,18 @@ export default function useDraggableEventBlock(
 
         if (block.startY === block.currY) {
             setMode(null);
-            removeBlock();
+            // removeBlock();
             return null;
         }
 
         if (!block.uuid) {
             setMode(null);
-            removeBlock();
+            // removeBlock();
             return null;
         }
 
         await handleUpOnMove(block)
-        removeBlock();
+        // removeBlock();
         setMode(null);
         return;
     }

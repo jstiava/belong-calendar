@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { JSX, useState, Ref } from "react";
 
 
-export default function Flyout({ isOpen, anchorEl, onClose, children, sx = {} }: { isOpen: boolean, anchorEl: HTMLButtonElement | null, onClose?: () => any, children: JSX.Element, sx?: SxProps }) {
+export default function Flyout({ isOpen, anchorEl, onClose, children, sx = {} }: { isOpen: boolean, anchorEl: HTMLButtonElement | null, onClose?: () => any, children: JSX.Element, sx?: any }) {
 
     const theme = useTheme();
     const router = useRouter();
@@ -60,7 +60,7 @@ export default function Flyout({ isOpen, anchorEl, onClose, children, sx = {} }:
                         boxShadow: 14,
                         '& .MuiPopover-paper': {
                             ...sx,
-                            width: isRightClick ? '15rem' : sx.width ? sx.width : '25rem',
+                            width: isRightClick ? '15rem' : sx && sx.width ? sx.width : '25rem',
                             boxShadow: 5,
                             marginTop: isRightClick ? "0.25rem" : "0",
                             // backgroundColor: isRightClick ? theme.palette.background.paper : event && event.theme_color || lighten(theme.palette.background.paper, 0.05),

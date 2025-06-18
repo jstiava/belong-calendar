@@ -166,7 +166,7 @@ const MonthView = ({
     });
   }
 
-  const { block, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(standardHeight, null, handleUpOnMove, handleUpOnCreate);
+  const { blocks, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(standardHeight, null, handleUpOnMove, handleCreate);
 
 
   const handleDayTimeClick = (e: MouseEvent) => {
@@ -308,7 +308,7 @@ const MonthView = ({
                         calendarDay={calendarDay}
                         nextCalendarDay={nextCalendarDay}
                         standardHeight={standardHeight}
-                        handleDragStart={handleDragStart}
+                        // handleDragStart={handleDragStart}
                         handleMouseMove={handleMouseMove}
                         handleView={handleOpenEventPopover}
                         selected={selected}

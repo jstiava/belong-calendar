@@ -51,6 +51,8 @@ export default function DateTimeAccordionModule({
     if (item && (item.schedules && item.schedules.length > 0)) {
       setSchedule(new Schedule(item.schedules[0]));
     }
+
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!item) {

@@ -453,7 +453,7 @@ export default function useViewEvent(
                     className="hover-underline"
                     sx={{
                       display: 'inline',
-                      backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${theme.palette.getContrastText(event.theme_color)}, ${theme.palette.getContrastText(event.theme_color)})`,
+                      backgroundImage: `linear-gradient(#00000000, #00000000), linear-gradient(${event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText}, ${event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.contrastText})`,
                       textDecoration: `none`,
                       backgroundSize: `100% 0.15rem, 0 0.15rem`,
                       backgroundPosition: `100% 100%,0 100%`,
@@ -550,7 +550,7 @@ export default function useViewEvent(
                       <AnalogClockIcon
                         hour={event.start_time.getHour()}
                         minute={event.start_time.getMinute()}
-                        color={theme.palette.getContrastText(event.theme_color)}
+                        color={event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.main}
                       />
                       <Typography sx={{ fontWeight: 600, fontSize: "0.85rem" }}>{event.start_time.to(event.end_time)}</Typography>
                     </div>
@@ -624,7 +624,7 @@ export default function useViewEvent(
                 fontWeight: 600,
                 textTransform: "uppercase",
                 color: event.theme_color,
-                backgroundColor: theme.palette.getContrastText(event.theme_color)
+                backgroundColor: event.theme_color && theme.palette.getContrastText(event.theme_color)
               }}
               onClick={(e) => {
                 e.stopPropagation();
