@@ -226,8 +226,7 @@ export default function useDraggableEventBlock(
 
     const handleDragStart = (
         e: MouseEvent,
-        props: any,
-        i: number
+        props: any
     ) => {
 
         const RIGHT_CLICK = 2;
