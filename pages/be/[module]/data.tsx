@@ -109,6 +109,8 @@ const DataPage = (props: AppPageProps) => {
 
 
     useEffect(() => {
+        // const { base, ...rest } = router.query;
+
         // if (!router.query.format) {
         //     const tab = 'data';
         //     router.replace({
@@ -144,23 +146,23 @@ const DataPage = (props: AppPageProps) => {
 
     return (
 
-    
-    <DataView
-        Preferences={Session.Preferences}
-        source={item}
-        Calendar={Controller.Calendar}
-        handleCreate={Controller.Creator.startCreator}
-        handleView={Controller.Viewer.handleOpenEventPopover}
-        days={Controller.Events.days}
-        Events={Controller.Events}
-        selected={null}
-        setSelected={function (value: SetStateAction<Event[] | null>): void {
-            throw new Error('Function not implemented.');
-        }}
-        handleSelect={function (e: MouseEvent, event: Event): void {
-            throw new Error('Function not implemented.');
-        }}
-    />
+
+        <DataView
+            Preferences={Session.Preferences}
+            source={item}
+            Calendar={Controller.Calendar}
+            handleCreate={Controller.Creator.startCreator}
+            handleView={Controller.Viewer.handleOpenEventPopover}
+            days={Controller.Events.days}
+            Events={Controller.Events}
+            selected={null}
+            setSelected={function (value: SetStateAction<Event[] | null>): void {
+                throw new Error('Function not implemented.');
+            }}
+            handleSelect={function (e: MouseEvent, event: Event): void {
+                throw new Error('Function not implemented.');
+            }}
+        />
     )
 
 }

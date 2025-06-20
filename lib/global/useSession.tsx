@@ -192,7 +192,15 @@ export default function useSession(): UseSession {
           }
         }
       },
+      MuiBaseButton: {
+        defaultProps: {
+          disableRipple: true
+        }
+      },
       MuiButton: {
+        defaultProps: {
+          disableRipple: true
+        },
         styleOverrides: {
           root: {
             textTransform: 'capitalize',
@@ -295,7 +303,7 @@ export default function useSession(): UseSession {
 
     await axios.post('/api/v1/groups', {
       base: newBase,
-      source: base ? MemberFactory.getToken(base) : null
+      source: router.asPath.startsWith('/me') ? null : base ? MemberFactory.getToken(base) : null
     })
       .then(res => {
         const theNewBase = new Group(res.data.group);
@@ -333,6 +341,7 @@ export default function useSession(): UseSession {
 
   const changeBase = async (newBase: Member | null): Promise<boolean> => {
 
+
     if (!newBase) {
       // enqueueSnackbar("No base to change to.", {
       //   variant: "error"
@@ -341,9 +350,11 @@ export default function useSession(): UseSession {
       return false;
     };
 
+    const copy = newBase.copy();
+
     try {
-      await MemberFactory.login(newBase, session ? session : undefined);
-      setBase(newBase);
+      await MemberFactory.login(copy, session ? session : undefined);
+      setBase(copy);
     }
     catch (err) {
       enqueueSnackbar("Could not sign into base.", {

@@ -5,35 +5,50 @@ import { Box, Button, Checkbox, Chip, styled, Typography, useTheme } from '@mui/
 import { useSnackbar } from 'notistack';
 import { Group, Member, dayjs } from '@jstiava/chronos';
 import ItemStub from '@/components/ItemStub';
-import { DataGrid, GridColDef, GridRenderCellParams, useGridApiRef } from '@mui/x-data-grid';
+import { DataGrid, GRID_CHECKBOX_SELECTION_COL_DEF, GridColDef, GridRenderCellParams, useGridApiRef } from '@mui/x-data-grid';
 import { Dayjs } from 'dayjs';
 import { useState } from 'react';
 import Divider, { DIVIDER_NO_ALPHA_COLOR } from '@/components/Divider';
 import StyledIconButton from '@/components/StyledIconButton';
 import { CloseOutlined } from '@mui/icons-material';
-
-const CustomCheckbox = (props: any) => (
-    <Checkbox
-        {...props}
-        size="small"
-    />
-);
+import { CustomCheckbox, DataViewPreview } from '@/components/calendar/DataView';
 
 const PREVIEW_SIZE = '30rem';
 
 const MainBasePage = (props: AppPageProps) => {
+    const item = props.module ? props.module : props.Session.base;
+    const IAM = props.module ? props.Module.IAM : props.Base.IAM;
+    const Controller = props.module ? props.Module : props.Base;
+
+
     const router = useRouter();
     const theme = useTheme();
     const { enqueueSnackbar } = useSnackbar();
 
+    const [previewed, setPreviewed] = useState<Member | null>(IAM.members && IAM.members.length > 0 ? IAM.members[0] : null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(true);
 
     const apiRef = useGridApiRef();
 
-    const item = props.module ? props.module : props.Session.base;
-    const IAM = props.module ? props.Module.IAM : props.Base.IAM;
 
     const columns: GridColDef[] = [
+        {
+            ...GRID_CHECKBOX_SELECTION_COL_DEF,
+            width: 50,
+            renderCell: (params) => {
+                return (
+                    <div style={{
+                        width: "100%",
+                        height: '100%'
+                    }}
+                        onClick={e => {
+                            const isSelected = apiRef.current.getSelectedRows().has(params.id);
+                            apiRef.current.selectRow(params.id, !isSelected);
+                        }}
+                    ></div>
+                )
+            }
+        },
         {
             field: 'name',
             headerName: 'Name',
@@ -71,13 +86,18 @@ const MainBasePage = (props: AppPageProps) => {
                             )} */}
 
                             <Button
+                                disableRipple
                                 size="small"
                                 variant="outlined"
                                 onClick={() => {
+                                    setPreviewed(params.row);
                                     setIsPreviewOpen(true)
                                 }}
                                 sx={{
-                                    backgroundColor: theme.palette.background.paper
+                                    backgroundColor: theme.palette.background.paper,
+                                    padding: "0.05rem 0.5rem",
+                                    width: "fit-content",
+                                    minWidth: 'unset'
                                 }}
                             >
                                 Open
@@ -176,6 +196,7 @@ const MainBasePage = (props: AppPageProps) => {
 
             }}>
                 <DataGrid
+
                     apiRef={apiRef}
                     loading={!IAM || !IAM.members}
                     getRowId={row => {
@@ -186,6 +207,13 @@ const MainBasePage = (props: AppPageProps) => {
                         minHeight: "calc(100% - 5rem) !important",
                         borderRadius: "0",
                         border: 0,
+                        '--DataGrid-rowBorderColor': theme.palette.divider,
+                        '& .MuiDataGrid-columnSeparator': {
+                            color: theme.palette.divider
+                        },
+                        '& .MuiDataGrid-withBorderColor': {
+                            borderColor: theme.palette.divider
+                        }
                     }}
                     columnHeaderHeight={48}
                     columns={columns}
@@ -202,7 +230,7 @@ const MainBasePage = (props: AppPageProps) => {
                     pageSizeOptions={[50, 100]}
                     checkboxSelection
                     slots={{
-                        baseCheckbox: CustomCheckbox,
+                        // baseCheckbox: CustomCheckbox,
                         noRowsOverlay: CustomNoRowsOverlay,
                     }}
                     slotProps={{
@@ -211,6 +239,9 @@ const MainBasePage = (props: AppPageProps) => {
                             noRowsVariant: 'skeleton',
                         },
                     }}
+
+
+
                 // slots={{
                 //     toolbar: () => (
                 //         <CustomToolbar
@@ -227,46 +258,13 @@ const MainBasePage = (props: AppPageProps) => {
                 // hideFooter
                 />
             </div>
-            <div className="column top" style={{
-                position: 'relative',
-                margin: '1.5rem',
-                width: PREVIEW_SIZE,
-                height: 'calc(100% - 2rem)',
-                display: isPreviewOpen ? 'flex' : 'none'
-            }}>
-                <div className="column compact" style={{
-                    position: 'relative'
-                }}>
-                    <Typography variant="h4">Jeremy Stiava</Typography>
-                    <Typography>Profile</Typography>
-
-                    <div style={{
-                        position: 'absolute',
-                        top: "-1rem",
-                        right: "-1rem"
-                    }}>
-                        <StyledIconButton title="Close Preview" onClick={() => {
-                            setIsPreviewOpen(false);
-                        }}>
-                            <CloseOutlined sx={{
-                                fontSize: "1rem"
-                            }} />
-                        </StyledIconButton>
-                    </div>
-                </div>
-
-                <div className="column compact" style={{
-                    position: 'absolute',
-                    bottom: "1rem",
-                    width: '100%',
-                }}>
-                    <Button
-                        fullWidth
-                        variant='contained'
-                        size="large"
-                    >Edit</Button>
-                </div>
-            </div>
+            {item && <DataViewPreview
+                source={item}
+                previewed={previewed}
+                handleCreate={Controller.Creator.startCreator}
+                isPreviewOpen={isPreviewOpen}
+                setIsPreviewOpen={setIsPreviewOpen}
+            />}
 
         </div>
     );

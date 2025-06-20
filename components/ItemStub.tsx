@@ -207,7 +207,7 @@ export default function ItemStub({
     return (
         <ButtonBase className="flex left compact top"
             sx={{
-                width: "calc(100% - 1rem)",
+                width: "100%",
                 ...sx
             }}
             onClick={e => {

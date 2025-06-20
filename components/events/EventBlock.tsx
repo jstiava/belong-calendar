@@ -58,19 +58,32 @@ export const CalendarEventBox = ({
   const [isMember, setIsMember] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  const check = () => {
 
-
-  useEffect(() => {
-    if (!source) {
+    if (!source || !event) {
       return;
     }
-    const member = event.junctions.get(`${source.id()}_${typeToDirectionality(event.type, source.type === Type.Event)}`);
+    const check = `${source.id()}_${typeToDirectionality(event.type, source.type === Type.Event)}`;
+    const member = event.junctions.get(check);
+    console.log({
+      event,
+      check,
+      member,
+      result: !member ? false : member.status === JunctionStatus.Accepted
+    })
     if (!member) return;
     if (member.status === JunctionStatus.Accepted) {
       setIsMember(true);
     }
+  }
+
+
+  useEffect(() => {
+    check();
+
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source]);
+  }, [source, event]);
 
 
 
@@ -143,13 +156,13 @@ export const CalendarEventBox = ({
   };
 
   const DYNAMIC_STYLES = {
-    backgroundColor: isMember ? event.theme_color || theme.palette.primary.main : `${theme.palette.background.paper}ee`,
-    color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.main : event.theme_color || theme.palette.primary.main,
+    backgroundColor: isMember ? event.theme_color ? event.theme_color : theme.palette.primary.main : `${theme.palette.background.paper}ee`,
+    color: isMember ? event.theme_color ? theme.palette.getContrastText(event.theme_color) : theme.palette.primary.main : event.theme_color ? event.theme_color :  theme.palette.primary.main,
     padding: '0.3rem',
   }
 
 
-  if (!start) {
+  if (!start || !event) {
     return <></>;
   }
 
@@ -212,34 +225,34 @@ export const CalendarEventBox = ({
 
         </div>
 
-       {isHovered && (
-        <>
-         <div style={{
-          position: 'absolute',
-          width: "0.5rem",
-          height: "0.5rem",
-          backgroundColor: DYNAMIC_STYLES.backgroundColor,
-          border: `0.15rem solid ${DYNAMIC_STYLES.color}`,
-          borderRadius: '100vh',
-          bottom: "-0.25rem",
-          left: "50%",
-          transform: 'translateX(-50%)',
-          cursor: "ns-resize",
-        }}></div>
-         <div style={{
-          position: 'absolute',
-          width: "0.5rem",
-          height: "0.5rem",
-          backgroundColor: DYNAMIC_STYLES.backgroundColor,
-          border: `0.15rem solid ${DYNAMIC_STYLES.color}`,
-          borderRadius: '100vh',
-          top: "-0.25rem",
-          left: "50%",
-          transform: 'translateX(-50%)',
-          cursor: "ns-resize",
-        }}></div>
-        </>
-       )}
+        {isHovered && (
+          <>
+            <div style={{
+              position: 'absolute',
+              width: "0.5rem",
+              height: "0.5rem",
+              backgroundColor: DYNAMIC_STYLES.backgroundColor,
+              border: `0.15rem solid ${DYNAMIC_STYLES.color}`,
+              borderRadius: '100vh',
+              bottom: "-0.25rem",
+              left: "50%",
+              transform: 'translateX(-50%)',
+              cursor: "ns-resize",
+            }}></div>
+            <div style={{
+              position: 'absolute',
+              width: "0.5rem",
+              height: "0.5rem",
+              backgroundColor: DYNAMIC_STYLES.backgroundColor,
+              border: `0.15rem solid ${DYNAMIC_STYLES.color}`,
+              borderRadius: '100vh',
+              top: "-0.25rem",
+              left: "50%",
+              transform: 'translateX(-50%)',
+              cursor: "ns-resize",
+            }}></div>
+          </>
+        )}
       </ButtonBase>
     )
   }
@@ -299,37 +312,47 @@ export const CalendarEventBox = ({
             </div>
           </>
         )}
+        {isMember ? (
+          <div className="column snug" key="isMember">
+             <span style={{ fontSize: '0.75rem' }}>Is Member</span>
+          </div>
+        ) : (
+           <div className="column snug" key="notMember">
+             <span style={{ fontSize: '0.75rem' }}>Not member</span>
+             <span style={{ fontSize: '0.75rem' }}>{JSON.stringify(check(), null, 2)}</span>
+          </div>
+        )}
 
       </div>
 
-       {isHovered && (
+      {isHovered && (
         <>
-         <div style={{
-          position: 'absolute',
-          width: "0.5rem",
-          height: "0.5rem",
-          backgroundColor: DYNAMIC_STYLES.backgroundColor,
-          border: `0.15rem solid ${DYNAMIC_STYLES.color}`,
-          borderRadius: '100vh',
-          bottom: "-0.25rem",
-          left: "50%",
-          transform: 'translateX(-50%)',
-          cursor: "ns-resize",
-        }}></div>
-         <div style={{
-          position: 'absolute',
-          width: "0.5rem",
-          height: "0.5rem",
-          backgroundColor: DYNAMIC_STYLES.backgroundColor,
-          border: `0.15rem solid ${DYNAMIC_STYLES.color}`,
-          borderRadius: '100vh',
-          top: "-0.25rem",
-          left: "50%",
-          transform: 'translateX(-50%)',
-          cursor: "ns-resize",
-        }}></div>
+          <div style={{
+            position: 'absolute',
+            width: "0.5rem",
+            height: "0.5rem",
+            backgroundColor: DYNAMIC_STYLES.backgroundColor,
+            border: `0.15rem solid ${DYNAMIC_STYLES.color}`,
+            borderRadius: '100vh',
+            bottom: "-0.25rem",
+            left: "50%",
+            transform: 'translateX(-50%)',
+            cursor: "ns-resize",
+          }}></div>
+          <div style={{
+            position: 'absolute',
+            width: "0.5rem",
+            height: "0.5rem",
+            backgroundColor: DYNAMIC_STYLES.backgroundColor,
+            border: `0.15rem solid ${DYNAMIC_STYLES.color}`,
+            borderRadius: '100vh',
+            top: "-0.25rem",
+            left: "50%",
+            transform: 'translateX(-50%)',
+            cursor: "ns-resize",
+          }}></div>
         </>
-       )}
+      )}
     </ButtonBase>
   );
 };

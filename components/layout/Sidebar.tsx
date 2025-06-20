@@ -163,7 +163,7 @@ export default function Sidebar({
                   }
                 })
               }}
-              className="flex compact"
+              className="flex compact left"
               sx={{
                 padding: "0.25rem 0.5rem",
                 borderRadius: "0.25rem"
@@ -183,7 +183,7 @@ export default function Sidebar({
               onClick={() => {
                 Controller?.Creator.startCreator(item.type, Mode.Modify, item);
               }}
-              className="flex compact"
+              className="flex compact left"
               sx={{
                 padding: "0.25rem 0.5rem",
                 borderRadius: "0.25rem"
@@ -201,7 +201,7 @@ export default function Sidebar({
             onClick={() => {
               pushNewView('me')
             }}
-            className="flex compact"
+            className="flex compact left"
             sx={{
               padding: "0.25rem 0.5rem",
               borderRadius: "0.25rem"
@@ -214,11 +214,10 @@ export default function Sidebar({
           </ButtonBase>
 
           <ButtonBase
-
             onClick={() => {
               pushNewView('settings')
             }}
-            className="flex compact"
+            className="flex compact left"
             sx={{
               padding: "0.25rem 0.5rem",
               borderRadius: "0.25rem"

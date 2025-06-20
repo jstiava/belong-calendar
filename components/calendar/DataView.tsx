@@ -18,7 +18,7 @@ import { useState, useEffect, useRef, MouseEvent, Dispatch } from 'react';
 import CalendarDay from '@/lib/CalendarDay';
 import { UseCalendar } from '@/lib/useCalendar';
 
-import { Event, EventData, Group, Member, MemberFactory, Schedule, dayjs, isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent, Dayjs } from '@jstiava/chronos';
+import { Event, EventData, Group, Member, MemberFactory, Schedule, dayjs, isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent, Dayjs, Events } from '@jstiava/chronos';
 import { Mode, Type } from '@/types/globals';
 import { StartCreator } from '@/lib/global/useCreate';
 import { UseEvents } from '@/lib/global/useEvents';
@@ -39,7 +39,7 @@ import Image from 'next/image';
 import BackgroundImage from '../Image';
 import { useRouter } from 'next/router';
 
-const CustomCheckbox = (props: any) => {
+export const CustomCheckbox = (props: any) => {
 
   const apiRef = useGridApiContext();
   const isSelected = props.value;
@@ -69,6 +69,43 @@ interface DataViewProps {
   schedule?: Partial<Schedule>;
 }
 
+const addDividers = (events: Event[]) => {
+
+  const today = dayjs();
+
+  const copy = [...events].sort(Events.sortByDate)
+
+  console.log({
+    message: "Sorted",
+    before: events.map(x => x.name),
+    after: copy.map(x => x.name),
+  });
+
+  for (let i = 0; i < copy.length - 1; i++) {
+
+    const event = copy[i];
+    const next = copy[i + 1].date
+
+    if (!next) {
+      continue;
+    }
+
+    if (next.isToday() || next.isAfter(today, 'd')) {
+      const dividerRow = {
+        id: 'divider',
+        type: 'divider',
+      };
+      return [
+        ...copy.slice(0, i + 1),
+        dividerRow,
+        ...copy.slice(i + 1),
+      ];
+    }
+  }
+
+  return copy;
+};
+
 const DataView = ({
   selected,
   setSelected,
@@ -87,6 +124,20 @@ const DataView = ({
   const calendarRef = useRef<HTMLDivElement>(null);
   const [standardHeight, setStandardHeight] = useState(40);
   const apiRef = useGridApiRef();
+
+  const [events, setEvents] = useState<(Event | any)[] | null>(null);
+
+  useEffect(() => {
+
+    if (!Events.events) {
+      return;
+    }
+
+    const sortedAndDividerAdded = addDividers(Events.events);
+
+    setEvents(sortedAndDividerAdded)
+
+  }, [Events])
 
 
   const { EventPopover, handleOpenEventPopover } = useViewEvent(
@@ -166,6 +217,15 @@ const DataView = ({
       ...GRID_CHECKBOX_SELECTION_COL_DEF,
       width: 50,
       renderCell: (params) => {
+
+        if (params.row.type === 'divider') {
+          return <div style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: theme.palette.primary.main
+          }}></div>
+        }
+
         return (
           <div style={{
             width: "100%",
@@ -183,7 +243,16 @@ const DataView = ({
       field: 'name',
       headerName: 'Name',
       width: 300,
-      renderCell: (params: GridRenderCellParams<Member, any>) => {
+      renderCell: (params: GridRenderCellParams<Member | any, any>) => {
+
+        if (params.row.type === 'divider') {
+          return <div style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: theme.palette.primary.main
+          }}></div>
+        }
+
         const prefix = params.row instanceof Group ? 'be' : params.row instanceof Event ? 'event' : null;
         return (
           <div className='flex compact left middle' style={{ position: 'relative', height: '100%' }}>
@@ -232,8 +301,16 @@ const DataView = ({
     {
       field: 'date',
       headerName: 'Start',
-      width: 200,
-      renderCell: (params: GridRenderCellParams<Member, Dayjs>) => {
+      width: 150,
+      renderCell: (params: GridRenderCellParams<Member | any, Dayjs>) => {
+
+        if (params.row.type === 'divider') {
+          return <div style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: theme.palette.primary.main
+          }}></div>
+        }
 
         if (!params.value) {
           return null;
@@ -270,7 +347,12 @@ const DataView = ({
           }}>{date.format("ddd, MMM DD")}</Typography>
         </div>
       ),
-      valueGetter: (value: any, row: Event) => {
+      valueGetter: (value: any, row: Event | any) => {
+        if (row.type === 'divider') {
+
+          return null;
+        }
+
 
         if (isMoment(row)) {
 
@@ -289,7 +371,17 @@ const DataView = ({
           }
         }
 
-        if (isMoment(row) || isSingleTimeEvent(row)) {
+        if (isSingleTimeEvent(row)) {
+
+          if (row.date.isSame(date, 'd')) {
+            return {
+              type: 'single_time',
+              date: row.date,
+              start_time: row.start_time,
+              end_time: row.end_time
+            }
+          }
+
           return {
             type: 'single_time'
           }
@@ -317,7 +409,15 @@ const DataView = ({
 
         return null;
       },
-      renderCell: (params: GridRenderCellParams<Member, any>) => {
+      renderCell: (params: GridRenderCellParams<Event | any, any>) => {
+
+        if (params.row.type === 'divider') {
+          return <div style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: theme.palette.primary.main
+          }}></div>
+        }
 
         if (!params.value) {
           return null;
@@ -351,8 +451,87 @@ const DataView = ({
           return null;
         }
 
-        if (params.value.type === 'multi_day') {
-          return null;
+        if (params.value.type === 'single_time') {
+
+          if (date.yyyymmdd() != params.row.date?.yyyymmdd()) {
+            return null;
+          }
+
+          return (
+            <div className="flex left middle" style={{
+              width: '100%',
+              height: '100%'
+            }}>
+              <span style={{
+                width: "100%",
+                height: 'fit-content',
+                textAlign: 'left',
+                margin: "auto 0",
+                lineHeight: '115%',
+                whiteSpace: "normal",
+                overflow: "clip",
+                textOverflow: "ellipsis",
+                display: "-webkit-box",
+                WebkitBoxOrient: "vertical",
+                WebkitLineClamp: 2,
+              }}>{params.value.start_time.to(params.value.end_time)}</span>
+            </div>
+          )
+        }
+
+        if (params.value.type === 'single_day' && isAllSingleDay(params.row)) {
+          if (date.yyyymmdd() != params.row.date?.yyyymmdd()) {
+            return null;
+          }
+
+          return (
+            <ButtonBase className="flex left middle"
+              onContextMenu={e => {
+                e.preventDefault();
+                handleView(Type.Event, params.row, {
+                  e,
+                  isRightClick: true,
+                  date
+                })
+              }}
+              sx={{
+                width: '100%',
+                height: '100%',
+                backgroundColor: params.row.theme_color ? params.row.theme_color : theme.palette.primary.main,
+                padding: "0 0.5rem",
+                color: params.row.theme_color ? theme.palette.getContrastText(params.row.theme_color) : theme.palette.primary.contrastText
+              }}>
+              <Typography variant="caption">Single All-Day</Typography>
+            </ButtonBase>
+          )
+        }
+
+        if (params.value.type === 'multi_day' && isMultiDayEvent(params.row)) {
+
+          if (date.isAfter(params.row.date.subtract(1, 'd'), 'D') && date.isBefore(params.row.end_date.add(1, 'd'), 'D')) {
+            return (
+              <ButtonBase className="flex left middle"
+                onContextMenu={e => {
+                  e.preventDefault();
+                  handleView(Type.Event, params.row, {
+                    e,
+                    isRightClick: true,
+                    date
+                  })
+                }}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: params.row.theme_color ? params.row.theme_color : theme.palette.primary.main,
+                  padding: "0 0.5rem",
+                  color: params.row.theme_color ? theme.palette.getContrastText(params.row.theme_color) : theme.palette.primary.contrastText
+                }}>
+                <Typography variant="caption">All-Day</Typography>
+              </ButtonBase>
+            )
+          }
+
+          return null
         }
 
         if (params.value.type === 'schedule') {
@@ -449,10 +628,11 @@ const DataView = ({
 
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', "Fri", "Sat"];
 
-  if (!Events.events) {
+
+
+  if (!events) {
     return null;
   }
-
 
   return (
     <div className="flex snug top" style={{
@@ -467,11 +647,16 @@ const DataView = ({
       }}>
         <DataGrid
           apiRef={apiRef}
-          loading={!Events || !Events.events}
+          loading={!events}
           getRowId={row => {
+            if (row.type && String(row.type).startsWith('divider')) {
+              return 'divider'
+            }
             return row.id();
           }}
-          rows={Events.events}
+          sortingMode='client'
+          rows={events}
+          isRowSelectable={(row : any) => row.type !== 'divider'}
           sx={{
             minHeight: "calc(100% - 5rem) !important",
             borderRadius: "0",
@@ -482,6 +667,9 @@ const DataView = ({
             },
             '& .MuiDataGrid-withBorderColor': {
               borderColor: theme.palette.divider
+            },
+            '& .MuiDataGrid-cell': {
+              padding: 0
             }
           }}
           columnHeaderHeight={48}
@@ -491,7 +679,11 @@ const DataView = ({
               paginationModel: { page: 0, pageSize: 50 },
             },
           }}
-          getRowHeight={() => {
+          disableColumnSorting
+          getRowHeight={(params) => {
+            if (params.id === 'divider') {
+              return 4;
+            }
             return 40;
           }}
           disableDensitySelector
@@ -541,7 +733,7 @@ const DataView = ({
 export default DataView;
 
 
-const DataViewPreview = ({
+export const DataViewPreview = ({
   previewed, handleCreate, isPreviewOpen, setIsPreviewOpen,
   source
 }: {
@@ -555,8 +747,8 @@ const DataViewPreview = ({
   const theme = useTheme();
   const router = useRouter();
 
-  const hasDataStore =
-    typeof (previewed as any).data_store === 'object' && (previewed as any).data_store !== null;
+  const hasDataStore = previewed ?
+    typeof (previewed as any).data_store === 'object' && (previewed as any).data_store !== null : null;
 
 
   if (!previewed) {

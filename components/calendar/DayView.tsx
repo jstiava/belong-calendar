@@ -394,6 +394,9 @@ function DayView({
                 <Fragment key={`${date.yyyymmdd()}-column-${index}}`}>
                   {column.map(event => {
 
+                    if (event.start_time && event.start_time.isBefore(new Chronos(6))) {
+                      return null;
+                    }
 
                     if (isMoment(event)) {
                       return (
@@ -521,6 +524,7 @@ function DayView({
                             handleSelect={handleSelect}
                             handleDragStart={handleDragStart}
                             isSelected={!selected ? false : selected.some((item) => item.uuid === event.uuid)}
+                            source={source}
                           />
                         )
                       }
