@@ -132,15 +132,15 @@ export const IntegrationTemplates = [
         },
     },
      {
-        name: "Connect to Instagram (Meta)",
-        slug: 'instagram',
-        url: "https://api.instagram.com/oauth/authorize",
+        name: "Connect to Meta",
+        slug: 'meta',
+        url: "https://www.facebook.com/v23.0/dialog/oauth",
         type: "OAuth2",
         subtitle: "Integrate with your social media.",
         theme_color: '#DD2A7B',
         query: {
             client_id: "714918767854790",
-            scope: 'name,email'
+            scope: 'email,instagram_basic'
         },
     },
     {
