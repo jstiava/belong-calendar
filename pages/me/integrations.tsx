@@ -140,7 +140,7 @@ export const IntegrationTemplates = [
         theme_color: '#DD2A7B',
         query: {
             client_id: "714918767854790",
-            scope: 'email,instagram_basic'
+            scope: 'email,pages_show_list,pages_manage_posts,pages_manage_engagement'
         },
     },
     {
