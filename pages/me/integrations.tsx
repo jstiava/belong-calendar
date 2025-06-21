@@ -214,7 +214,7 @@ const MainBasePage = (props: AppPageProps) => {
             pathname: integration.url,
             query: {
                 ...integration.query,
-                redirect_uri: 'https://belong.day/api/v1/auth/callback',
+                redirect_uri: 'https://api.belong.day/api/v1/auth/callback',
                 state: JSON.stringify({
                     integration: integration.slug,
                     from: router.asPath,
