@@ -194,7 +194,7 @@ export default function AuthProvider({
         .then((res: boolean) => {
           if (!res) {
             if (router.asPath != '/login') {
-              router.push('/login')
+              // router.push('/login')
               return;
             }
           }

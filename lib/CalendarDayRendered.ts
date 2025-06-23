@@ -67,7 +67,7 @@ export default class CalendarDayRendered implements CalendarDay {
         }
       }
 
-      this.stack = this.stack.sort((a, b) => -1 * Events.sortByRemainingDays(this.date, a, b));
+      this.stack = this.stack.sort((a, b) => Events.sortByRemainingDays(this.date, a, b));
     }
 
     return;
