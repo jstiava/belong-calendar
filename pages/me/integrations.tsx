@@ -15,7 +15,7 @@ const Actions = {
 
 export const IntegrationTemplates = [
     {
-        name: "Connect to Jotform",
+        name: "Jotform",
         slug: 'jotform',
         url: "https://api.jotform.com/user/",
         type: "Key",
@@ -55,7 +55,7 @@ export const IntegrationTemplates = [
         }
     },
     {
-        name: "Connect to Strava",
+        name: "Strava",
         slug: 'strava',
         url: 'https://www.strava.com/oauth/authorize',
         type: "OAuth2",
@@ -69,7 +69,7 @@ export const IntegrationTemplates = [
         },
     },
     {
-        name: "Connect to Stripe",
+        name: "Stripe",
         slug: 'stripe',
         url: 'https://connect.stripe.com/oauth/authorize',
         type: "OAuth2",
@@ -93,7 +93,7 @@ export const IntegrationTemplates = [
         },
     },
     {
-        name: "Connect to Google",
+        name: "Google",
         slug: 'google',
         url: "https://accounts.google.com/o/oauth2/v2/auth",
         type: "OAuth2",
@@ -120,7 +120,7 @@ export const IntegrationTemplates = [
         },
     },
     {
-        name: "Connect to Clickup",
+        name: "Clickup",
         slug: 'clickup',
         url: "https://app.clickup.com/api",
         type: "OAuth2",
@@ -132,7 +132,7 @@ export const IntegrationTemplates = [
         },
     },
      {
-        name: "Connect to Meta",
+        name: "Meta",
         slug: 'meta',
         url: "https://www.facebook.com/v23.0/dialog/oauth",
         type: "OAuth2",
@@ -144,7 +144,7 @@ export const IntegrationTemplates = [
         },
     },
     {
-        name: "Connect to Canvas (Instructure)",
+        name: "Canvas (Instructure)",
         slug: 'canvas',
         url: "http://localhost:3000/api/v1/auth/callback",
         type: "OAuth2",
@@ -153,7 +153,7 @@ export const IntegrationTemplates = [
         query: {},
     },
     {
-        name: "Connect to Zoom",
+        name: "Zoom",
         slug: 'zoom',
         url: "https://zoom.us/oauth/authorize",
         type: "OAuth2",

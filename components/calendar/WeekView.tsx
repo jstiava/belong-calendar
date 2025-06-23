@@ -99,7 +99,7 @@ const WeekView = ({
     handleCreate(Type.Event, Mode.Modify, copy);
   }
 
- 
+
 
   const { blocks, RenderedBlock, handleDragStart, handleMouseMove, handleMouseUp } = useDraggableEventBlock(standardHeight, null, handleUpOnMove, handleCreate);
 
@@ -183,6 +183,14 @@ const WeekView = ({
                   <div className="flex center middle compact"
 
                   >
+                    <Typography sx={{
+                      fontSize: "0.75rem",
+                      textTransform: 'uppercase',
+                      textAlign: "center",
+                      color: darken(theme.palette.text.primary, 0.2),
+                      letterSpacing: "0.1rem",
+                      fontWeight: 800
+                    }}>{daysOfWeek[date.day()]}</Typography>
                     <ButtonBase
                       sx={{
                         display: 'flex',
@@ -204,18 +212,12 @@ const WeekView = ({
                       onClick={(e) => {
                         Calendar.gotoStartOfWeek(date);
                       }}
-                    ><Typography sx={{
-                      fontSize: "0.85rem",
-                      fontWeight: 800
-                    }}>{date.format('D')}</Typography></ButtonBase>
-                    <Typography sx={{
-                      fontSize: "0.75rem",
-                      textTransform: 'uppercase',
-                      textAlign: "center",
-                      color: darken(theme.palette.text.primary, 0.2),
-                      letterSpacing: "0.1rem",
-                      fontWeight: 800
-                    }}>{daysOfWeek[date.day()]}</Typography>
+                    >
+                      <Typography sx={{
+                        fontSize: "0.85rem",
+                        fontWeight: 800
+                      }}>{date.format('D')}</Typography>
+                    </ButtonBase>
                   </div>
 
 

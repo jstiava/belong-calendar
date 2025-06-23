@@ -1,5 +1,5 @@
 import MinHeap from './MinHeap';
-import { Event, isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent, Dayjs, Chronos, dayjs } from '@jstiava/chronos';
+import { Event, isAllSingleDay, isMoment, isMultiDayEvent, isNotScheduled, isSingleTimeEvent, Dayjs, Chronos, dayjs, Events } from '@jstiava/chronos';
 import CalendarDay from './CalendarDay';
 
 function doesCollide(
@@ -51,7 +51,7 @@ export default class CalendarDayRendered implements CalendarDay {
   chaos: Event[][] = [];
   aside: Event[] = [];
 
-  constructor(dateNumber: number, calDay? : CalendarDay) {
+  constructor(dateNumber: number, calDay?: CalendarDay) {
     this.date = dayjs(String(dateNumber));
 
     if (calDay) {
@@ -66,13 +66,14 @@ export default class CalendarDayRendered implements CalendarDay {
           })
         }
       }
-    }
 
+      this.stack = this.stack.sort((a, b) => -1 * Events.sortByRemainingDays(this.date, a, b));
+    }
 
     return;
   }
 
-  private addToChaos(event : Event) {
+  private addToChaos(event: Event) {
     let placed = false;
     for (const column of this.chaos) {
       if (doesCollide(event, column[column.length - 1], this.date)) {
@@ -85,13 +86,19 @@ export default class CalendarDayRendered implements CalendarDay {
         placed = true;
       }
     }
-    
+
     if (!placed) {
       this.chaos.push([event]);
     }
 
   }
 
+
+  /**
+   * @param event 
+   * @param target 
+   * @returns 
+   */
   add(event: Event, target?: keyof this & ('stack' | 'aside' | 'chaos')) {
 
     if (isMoment(event)) {

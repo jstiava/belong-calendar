@@ -63,7 +63,7 @@ const MainBasePage = (props: AppPageProps) => {
                     <div className="column compact left">
                         <Typography variant="h6" sx={{
                             textTransform: 'capitalize !important'
-                        }}>Connect to Jotform</Typography>
+                        }}>Jotform</Typography>
                         <Typography variant="caption">Import a form, extend its functionality, track respondents, manage your notifications, and close automatically.</Typography>
                     </div>
                     <Button sx={{
@@ -84,7 +84,7 @@ const MainBasePage = (props: AppPageProps) => {
                     <div className="column compact left">
                         <Typography variant="h6" sx={{
                             textTransform: 'capitalize !important'
-                        }}>Connect to Strava</Typography>
+                        }}>Strava</Typography>
                         <Typography variant="caption">Import my activities, track workouts, and visualize progress.</Typography>
                     </div>
                     <Button sx={{

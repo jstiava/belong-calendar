@@ -291,6 +291,7 @@ export default function useCreatePanel(
     return expanded === key ? setExpanded('') : setExpanded(key);
   };
 
+
   const handleChange = (eventOrName: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string, value: any) => {
     if (typeof eventOrName === "string") {
       setNewItem((prev: any) => ({
@@ -614,7 +615,7 @@ export default function useCreatePanel(
               return (
 
                 <div className="column compact" key={x}>
-                  <Typography variant="h5">Connect to Jotform</Typography>
+                  <Typography variant="h5">Jotform</Typography>
                   <SmallTextField
                     name="apiKey"
                     variant="standard"

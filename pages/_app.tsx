@@ -47,7 +47,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 const lightTheme = createTheme({
   palette: {
     primary: {
-      main: "#0fd9c1",
+      main: "#d9d9d9",
     },
     secondary: {
       main: "#ffffff",
@@ -165,7 +165,7 @@ const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: "#0fd9c1",
+      main: "#d9d9d9",
     },
   },
   components: {

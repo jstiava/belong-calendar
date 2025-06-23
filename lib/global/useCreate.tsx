@@ -141,7 +141,6 @@ export default function useCreator(
   const [isOpen, setIsOpen] = useState(false);
   const [panels, setPanels] = useState<CreatorPanel[]>([]);
 
-
   const { enqueueSnackbar } = useSnackbar();
 
   const toggleDrawer = useCallback((open: boolean): void => {
